@@ -1,0 +1,182 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* GemEx Color Palette - Dark Mode First */
+  --charcoal-grey: #1e1e2b;
+  --midst-grey: #f0f0f0;
+  --vivid-violet: #641ae4;
+  --amethyst-purple: #9a24d2;
+  --neon-lime: #c8f55a;
+
+  /* Light mode defaults */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #641ae4;
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: #c8f55a;
+  --secondary-foreground: #1e1e2b;
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: #641ae4;
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #641ae4;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #641ae4;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  /* <CHANGE> GemEx Dark Mode - Primary colors */
+  --background: #1e1e2b;
+  --foreground: #f0f0f0;
+  --card: #1e1e2b;
+  --card-foreground: #f0f0f0;
+  --popover: #1e1e2b;
+  --popover-foreground: #f0f0f0;
+  --primary: #641ae4;
+  --primary-foreground: #f0f0f0;
+  --secondary: #c8f55a;
+  --secondary-foreground: #1e1e2b;
+  --muted: #2d2d3d;
+  --muted-foreground: #b0b0b8;
+  --accent: #641ae4;
+  --accent-foreground: #f0f0f0;
+  --destructive: #ff5555;
+  --destructive-foreground: #f0f0f0;
+  --border: #2d2d3d;
+  --input: #2d2d3d;
+  --ring: #641ae4;
+  --chart-1: #641ae4;
+  --chart-2: #9a24d2;
+  --chart-3: #c8f55a;
+  --chart-4: #f0f0f0;
+  --chart-5: #b0b0b8;
+  --sidebar: #1e1e2b;
+  --sidebar-foreground: #f0f0f0;
+  --sidebar-primary: #641ae4;
+  --sidebar-primary-foreground: #f0f0f0;
+  --sidebar-accent: #2d2d3d;
+  --sidebar-accent-foreground: #f0f0f0;
+  --sidebar-border: #2d2d3d;
+  --sidebar-ring: #641ae4;
+}
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* <CHANGE> GemEx Typography - Clean modern sans-serif */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-foreground;
+  }
+
+  /* <CHANGE> GemEx Form inputs - Neon Lime underline on focus */
+  input,
+  textarea,
+  select {
+    @apply bg-card border-b-2 border-b-transparent focus:border-b-[#C8F55A] transition-colors;
+  }
+}
+
+@layer components {
+  /* GemEx Utility Classes */
+  .gemex-card {
+    @apply bg-card text-card-foreground border border-border rounded-lg p-6 backdrop-blur-sm;
+  }
+
+  .gemex-button {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all;
+  }
+
+  .gemex-button-primary {
+    @apply gemex-button bg-[#641AE4] text-white hover:bg-[#9A24D2] active:scale-95;
+  }
+
+  .gemex-button-secondary {
+    @apply gemex-button bg-[#C8F55A] text-[#1E1E2B] hover:opacity-90 active:scale-95;
+  }
+
+  .gemex-glow-violet {
+    @apply shadow-lg shadow-[#641AE4]/20;
+  }
+
+  .gemex-glow-lime {
+    @apply shadow-lg shadow-[#C8F55A]/20;
+  }
+
+  .gemex-gradient-violet {
+    @apply bg-gradient-to-r from-[#641AE4] to-[#9A24D2];
+  }
+}

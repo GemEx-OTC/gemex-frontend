@@ -161,11 +161,11 @@
   }
 
   .gemex-button-primary {
-    @apply gemex-button bg-[#641AE4] text-white hover:bg-[#9A24D2] active:scale-95;
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all bg-[#641AE4] text-white hover:bg-[#9A24D2] active:scale-95;
   }
 
   .gemex-button-secondary {
-    @apply gemex-button bg-[#C8F55A] text-[#1E1E2B] hover:opacity-90 active:scale-95;
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all bg-[#C8F55A] text-[#1E1E2B] hover:opacity-90 active:scale-95;
   }
 
   .gemex-glow-violet {

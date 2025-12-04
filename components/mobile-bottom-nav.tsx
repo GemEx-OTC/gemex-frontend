@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Wallet, Settings, LayoutDashboard, Users, LogOut } from "lucide-react"
+import { Home, FileText, Wallet, Settings, LayoutDashboard, Users } from "lucide-react"
 
 interface MobileBottomNavProps {
   role: "client" | "dealer" | "admin"
@@ -34,12 +34,6 @@ const roleNavItems = {
 export function MobileBottomNav({ role }: MobileBottomNavProps) {
   const pathname = usePathname()
   const navItems = roleNavItems[role]
-
-  const handleLogout = () => {
-    sessionStorage.clear()
-    localStorage.clear()
-    window.location.href = "/auth/login"
-  }
 
   return (
     <motion.nav
@@ -74,16 +68,6 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
             </Link>
           )
         })}
-
-        {/* Logout Button */}
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleLogout}
-          className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-red-400"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="text-xs font-medium">Logout</span>
-        </motion.button>
       </div>
     </motion.nav>
   )

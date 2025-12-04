@@ -3,7 +3,9 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { GemExLogo } from "./gemex-logo"
+import { LogOut, User } from "lucide-react"
 
 interface SidebarProps {
   role: "client" | "dealer" | "admin"
@@ -36,28 +38,23 @@ const roleMenus = {
 
 export function DashboardSidebar({ role, currentPath }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const router = useRouter()
   const menu = roleMenus[role]
+
+  const handleLogout = () => {
+    // Clear any session data
+    sessionStorage.clear()
+    localStorage.clear()
+    // Redirect to login
+    router.push("/auth/login")
+  }
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-lg bg-[#2D2D3D] text-[#F0F0F0]"
-      >
-        ☰
-      </button>
-
-      {/* Overlay for mobile */}
-      {mobileOpen && <div onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 md:hidden bg-black/50" />}
-
-      {/* Sidebar */}
+      {/* Sidebar - Hidden on mobile, visible on desktop */}
       <motion.aside
-        initial={{ x: -250 }}
-        animate={{ x: mobileOpen ? 0 : 0 }}
-        className={`fixed left-0 top-0 h-screen w-64 bg-[#1E1E2B] border-r border-[#2D2D3D] z-30 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } transition-transform md:relative md:h-auto`}
+        initial={{ x: 0 }}
+        className="hidden md:block w-64 bg-[#1E1E2B] border-r border-[#2D2D3D] h-screen"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -96,10 +93,32 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-[#2D2D3D] space-y-2">
+          <div className="p-4 border-t border-[#2D2D3D] space-y-3">
+            {/* User Info */}
+            <div className="flex items-center gap-3 px-3 py-2 bg-[#2D2D3D]/50 rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#641AE4] to-[#9A24D2] flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#F0F0F0] truncate capitalize">{role} User</p>
+                <p className="text-xs text-[#B0B0B8] truncate">{role}@gemex.demo</p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-[#F0F0F0] bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </motion.button>
+
+            {/* Version */}
             <div className="text-xs text-[#B0B0B8] text-center">
-              <p className="font-medium text-[#F0F0F0] mb-1">GemEx OTC Desk</p>
-              <p>v1.0.0</p>
+              <p>GemEx OTC v1.0.0</p>
             </div>
           </div>
         </div>

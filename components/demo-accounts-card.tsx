@@ -12,10 +12,13 @@ interface DemoAccountsCardProps {
 export function DemoAccountsCard({ onSelectAccount }: DemoAccountsCardProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    setTimeout(() => setCopiedField(null), 2000)
+  const copyToClipboard = async (text: string, field: string) => {
+    const { copyToClipboard: copy } = await import("@/lib/clipboard")
+    const success = await copy(text)
+    if (success) {
+      setCopiedField(field)
+      setTimeout(() => setCopiedField(null), 2000)
+    }
   }
 
   const accounts = [

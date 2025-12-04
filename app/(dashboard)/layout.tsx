@@ -4,6 +4,7 @@ import type React from "react"
 
 import { usePathname } from "next/navigation"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 export default function DashboardLayout({
   children,
@@ -27,10 +28,13 @@ export default function DashboardLayout({
       <DashboardSidebar role={role} currentPath={pathname} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">{children}</div>
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+          <div className="p-4 md:p-8">{children}</div>
         </main>
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav role={role} />
     </div>
   )
 }

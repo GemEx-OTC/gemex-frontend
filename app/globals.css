@@ -180,3 +180,18 @@
     @apply bg-gradient-to-r from-[#641AE4] to-[#9A24D2];
   }
 }
+
+.debug{
+  border:1px solid red;
+}
+
+/* Remove arrows from number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}

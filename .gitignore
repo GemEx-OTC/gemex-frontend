@@ -48,3 +48,9 @@ pnpm-debug.log*
 
 # OS
 Thumbs.db
+
+# Kiro Markdown files
+*.md
+
+# PDF Files
+*.pdf

@@ -9,7 +9,7 @@ import { Wallet, Copy, Check } from "lucide-react"
 export default function WalletVerificationPage() {
   const router = useRouter()
   const [walletAddress, setWalletAddress] = useState("")
-  const [walletType, setWalletType] = useState<"ethereum" | "bitcoin" | "other">("ethereum")
+  const [walletType, setWalletType] = useState<"TRC20" | "BSC" | "ERC20" | "BTC">("TRC20")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -19,9 +19,19 @@ export default function WalletVerificationPage() {
       return false
     }
 
-    // Basic validation (you'd want more robust validation in production)
-    if (walletType === "ethereum" && !walletAddress.startsWith("0x")) {
-      setError("Ethereum addresses must start with 0x")
+    // Basic validation based on network type
+    if ((walletType === "ERC20" || walletType === "BSC") && !walletAddress.startsWith("0x")) {
+      setError("ERC20/BSC addresses must start with 0x")
+      return false
+    }
+
+    if (walletType === "TRC20" && !walletAddress.startsWith("T")) {
+      setError("TRC20 addresses must start with T")
+      return false
+    }
+
+    if (walletType === "BTC" && !walletAddress.match(/^(bc1|[13])/)) {
+      setError("Invalid Bitcoin address format")
       return false
     }
 
@@ -69,28 +79,29 @@ export default function WalletVerificationPage() {
             </p>
           </div>
 
-          {/* Wallet Type Selection */}
+          {/* Network Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-[#F0F0F0] mb-3">Wallet Type</label>
-            <div className="grid grid-cols-3 gap-4">
+            <label className="block text-sm font-medium text-[#F0F0F0] mb-3">Select Network</label>
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { value: "ethereum", label: "Ethereum", icon: "Ξ" },
-                { value: "bitcoin", label: "Bitcoin", icon: "₿" },
-                { value: "other", label: "Other", icon: "💰" },
+                { value: "TRC20", label: "Tron (TRC20)", desc: "USDT", color: "from-[#FF0013]/20" },
+                { value: "BSC", label: "BNB Chain", desc: "USDT, USDC", color: "from-[#F3BA2F]/20" },
+                { value: "ERC20", label: "Ethereum", desc: "USDT, USDC", color: "from-[#627EEA]/20" },
+                { value: "BTC", label: "Bitcoin", desc: "BTC", color: "from-[#F7931A]/20" },
               ].map((type) => (
                 <motion.button
                   key={type.value}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setWalletType(type.value as any)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
                     walletType === type.value
-                      ? "border-[#C8F55A] bg-[#C8F55A]/10"
+                      ? "border-[#C8F55A] bg-gradient-to-br " + type.color + " to-transparent"
                       : "border-[#2D2D3D] bg-[#2D2D3D]/50 hover:border-[#641AE4]/40"
                   }`}
                 >
-                  <div className="text-2xl mb-2">{type.icon}</div>
-                  <div className="text-sm font-medium text-[#F0F0F0]">{type.label}</div>
+                  <div className="font-semibold text-[#F0F0F0] mb-1">{type.label}</div>
+                  <div className="text-xs text-[#B0B0B8]">{type.desc}</div>
                 </motion.button>
               ))}
             </div>
@@ -108,9 +119,11 @@ export default function WalletVerificationPage() {
                   setError("")
                 }}
                 placeholder={
-                  walletType === "ethereum"
-                    ? "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-                    : "Enter your wallet address"
+                  walletType === "TRC20"
+                    ? "TXYZa1K2L3M4N5O6P7Q8R9S0T1U2V3W4X5"
+                    : walletType === "BTC"
+                    ? "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                    : "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
                 }
                 className={`w-full bg-[#2D2D3D] border-b-2 ${
                   error ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
@@ -118,8 +131,9 @@ export default function WalletVerificationPage() {
               />
               {walletAddress && (
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(walletAddress)
+                  onClick={async () => {
+                    const { copyToClipboard } = await import("@/lib/clipboard")
+                    await copyToClipboard(walletAddress)
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-[#641AE4]/20 rounded transition-colors"
                 >

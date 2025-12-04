@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Shield, AlertTriangle } from "lucide-react"
+import { Shield, AlertTriangle, LogOut } from "lucide-react"
 
 export default function AdminSettingsPage() {
+  const router = useRouter()
   const [exchangeRates, setExchangeRates] = useState({
     btcNgn: "43500000",
     ethNgn: "2850000",
@@ -224,6 +226,21 @@ export default function AdminSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Logout Button - Visible on Mobile */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            sessionStorage.clear()
+            localStorage.clear()
+            router.push("/auth/login")
+          }}
+          className="md:hidden w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-[#F0F0F0] bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all mt-4"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </motion.button>
       </motion.div>
     </motion.div>
   )

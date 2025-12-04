@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetricCard } from "@/components/metric-card"
 
@@ -22,12 +22,25 @@ const itemVariants = {
 }
 
 export default function DealerDashboardPage() {
-  const [metrics] = useState({
-    totalLocked: "$2,450,000",
-    awaitingPayouts: "$180,500",
-    payoutBalance: "₦1.2M",
+  const [metrics, setMetrics] = useState({
+    totalLocked: 2450000,
+    awaitingPayouts: 180500,
+    payoutBalance: 1200000,
     pendingCount: 12,
   })
+
+  // Simulate real-time data updates with pulse effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics((prev) => ({
+        totalLocked: prev.totalLocked + Math.floor(Math.random() * 10000) - 5000,
+        awaitingPayouts: prev.awaitingPayouts + Math.floor(Math.random() * 5000) - 2500,
+        payoutBalance: prev.payoutBalance + Math.floor(Math.random() * 50000) - 25000,
+        pendingCount: Math.max(0, prev.pendingCount + Math.floor(Math.random() * 3) - 1),
+      }))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const [recentQuotes] = useState([
     { id: "QT001", customer: "Client A", amount: "$25,000", status: "Pending", time: "2 min ago" },
@@ -46,12 +59,101 @@ export default function DealerDashboardPage() {
         }}
       />
 
-      {/* Key Metrics - Real-time Monitoring */}
+      {/* Key Metrics - Real-time Monitoring with Pulse Animation */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Total Amount Locked" value={metrics.totalLocked} accent="violet" isHighlight />
-        <MetricCard label="Awaiting Payouts" value={metrics.awaitingPayouts} accent="purple" />
-        <MetricCard label="Payout Balance" value={metrics.payoutBalance} accent="lime" />
-        <MetricCard label="Pending Quotes" value={metrics.pendingCount} change="Active now" accent="violet" />
+        <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-[#B0B0B8]">Total Amount Locked</span>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-2 h-2 rounded-full bg-[#C8F55A]"
+            />
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={metrics.totalLocked}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-[#C8F55A]"
+            >
+              ${metrics.totalLocked.toLocaleString()}
+            </motion.div>
+          </AnimatePresence>
+          <p className="text-xs text-[#B0B0B8] mt-1">Live</p>
+        </div>
+
+        <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-[#B0B0B8]">Awaiting Payouts</span>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+              className="w-2 h-2 rounded-full bg-[#9A24D2]"
+            />
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={metrics.awaitingPayouts}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-[#F0F0F0]"
+            >
+              ${metrics.awaitingPayouts.toLocaleString()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-[#B0B0B8]">Payout Balance</span>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              className="w-2 h-2 rounded-full bg-[#C8F55A]"
+            />
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={metrics.payoutBalance}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-[#C8F55A]"
+            >
+              ₦{(metrics.payoutBalance / 1000).toFixed(1)}M
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-[#B0B0B8]">Pending Payouts</span>
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1.5 }}
+              className="w-2 h-2 rounded-full bg-[#641AE4]"
+            />
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={metrics.pendingCount}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-[#F0F0F0]"
+            >
+              {metrics.pendingCount}
+            </motion.div>
+          </AnimatePresence>
+          <p className="text-xs text-[#B0B0B8] mt-1">Active now</p>
+        </div>
       </motion.div>
 
       {/* Active Quotes Queue */}

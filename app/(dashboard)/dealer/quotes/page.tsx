@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 
@@ -20,6 +20,7 @@ const itemVariants = {
 export default function DealerQuotesPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all")
   const [selectedQuote, setSelectedQuote] = useState<string | null>(null)
+  const [newQuoteGlow, setNewQuoteGlow] = useState<Record<string, boolean>>({})
 
   const quotes = [
     {
@@ -29,6 +30,7 @@ export default function DealerQuotesPage() {
       type: "BTC→NGN",
       status: "pending",
       createdAt: "2 min ago",
+      isNew: true,
     },
     {
       id: "QT002",
@@ -37,6 +39,7 @@ export default function DealerQuotesPage() {
       type: "BTC→NGN",
       status: "approved",
       createdAt: "15 min ago",
+      isNew: false,
     },
     {
       id: "QT003",
@@ -45,6 +48,7 @@ export default function DealerQuotesPage() {
       type: "USDT→NGN",
       status: "pending",
       createdAt: "28 min ago",
+      isNew: false,
     },
     {
       id: "QT004",
@@ -53,6 +57,7 @@ export default function DealerQuotesPage() {
       type: "ETH→NGN",
       status: "approved",
       createdAt: "45 min ago",
+      isNew: false,
     },
     {
       id: "QT005",
@@ -61,8 +66,27 @@ export default function DealerQuotesPage() {
       type: "BTC→NGN",
       status: "rejected",
       createdAt: "1 hour ago",
+      isNew: false,
     },
   ]
+
+  // Fade out glow after 5 seconds for new quotes
+  useEffect(() => {
+    const newQuotes = quotes.filter((q) => q.isNew)
+    const initialGlow: Record<string, boolean> = {}
+    newQuotes.forEach((q) => {
+      initialGlow[q.id] = true
+    })
+    setNewQuoteGlow(initialGlow)
+
+    const timers = newQuotes.map((q) =>
+      setTimeout(() => {
+        setNewQuoteGlow((prev) => ({ ...prev, [q.id]: false }))
+      }, 5000)
+    )
+
+    return () => timers.forEach(clearTimeout)
+  }, [])
 
   const filteredQuotes = quotes.filter((q) => filter === "all" || q.status === filter)
 
@@ -97,8 +121,21 @@ export default function DealerQuotesPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
             onClick={() => setSelectedQuote(selectedQuote === quote.id ? null : quote.id)}
-            className="p-5 bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-lg hover:border-[#641AE4]/40 transition-all cursor-pointer group"
+            className={`relative p-5 bg-[#1E1E2B]/60 rounded-lg transition-all cursor-pointer group ${
+              newQuoteGlow[quote.id]
+                ? "border-2 border-[#641AE4] shadow-lg shadow-[#641AE4]/50"
+                : "border border-[#2D2D3D] hover:border-[#641AE4]/40"
+            }`}
           >
+            {/* Glow effect for new quotes */}
+            {newQuoteGlow[quote.id] && (
+              <motion.div
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 5 }}
+                className="absolute inset-0 bg-gradient-to-r from-[#641AE4]/20 via-[#9A24D2]/20 to-transparent rounded-lg pointer-events-none"
+              />
+            )}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 flex-1">
                 <div className="flex-1">

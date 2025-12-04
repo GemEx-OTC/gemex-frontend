@@ -8,7 +8,7 @@ interface DataTableProps {
   columns: {
     key: string
     label: string
-    render?: (value: any) => React.ReactNode
+    render?: (value: any, row: Record<string, any>) => React.ReactNode
   }[]
   data: Record<string, any>[]
   onRowClick?: (row: Record<string, any>) => void
@@ -42,24 +42,22 @@ export function DataTable({ columns, data, onRowClick }: DataTableProps) {
             ))}
           </tr>
         </thead>
-        <tbody>
-          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            {data.map((row, idx) => (
-              <motion.tr
-                key={idx}
-                variants={rowVariants}
-                onClick={() => onRowClick?.(row)}
-                className="border-b border-[#2D2D3D] hover:bg-[#2D2D3D]/50 transition-colors cursor-pointer"
-              >
-                {columns.map((col) => (
-                  <td key={`${idx}-${col.key}`} className="px-6 py-4 text-sm text-[#F0F0F0]">
-                    {col.render ? col.render(row[col.key]) : row[col.key]}
-                  </td>
-                ))}
-              </motion.tr>
-            ))}
-          </motion.div>
-        </tbody>
+        <motion.tbody variants={containerVariants} initial="hidden" animate="visible">
+          {data.map((row, idx) => (
+            <motion.tr
+              key={idx}
+              variants={rowVariants}
+              onClick={() => onRowClick?.(row)}
+              className="border-b border-[#2D2D3D] hover:bg-[#2D2D3D]/50 transition-colors cursor-pointer"
+            >
+              {columns.map((col) => (
+                <td key={`${idx}-${col.key}`} className="px-6 py-4 text-sm text-[#F0F0F0]">
+                  {col.render ? col.render(row[col.key], row) : row[col.key]}
+                </td>
+              ))}
+            </motion.tr>
+          ))}
+        </motion.tbody>
       </table>
     </div>
   )

@@ -110,6 +110,12 @@ export default function Home() {
             >
               Sign In
             </Link>
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-[#C8F55A]/30 text-[#C8F55A] rounded-lg hover:bg-[#C8F55A]/10 transition-colors font-medium"
+            >
+              🎭 Try Demo
+            </Link>
           </motion.div>
         </motion.div>
 

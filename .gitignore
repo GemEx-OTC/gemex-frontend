@@ -47,3 +47,4 @@ pnpm-debug.log*
 Thumbs.db
 
 .vscode
+app/(dashboard)/client/dashboard/page.tsx.backup

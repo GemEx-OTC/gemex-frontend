@@ -1,197 +1,313 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { KycProgressBar } from "@/components/kyc-progress-bar"
-import Link from "next/link"
-
-const formVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-}
+import { useRouter } from "next/navigation"
+import { KYCProgressBar } from "@/components/kyc-progress-bar"
 
 export default function PersonalDetailsPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     dateOfBirth: "",
+    phoneNumber: "",
     address: "",
     city: "",
     state: "",
-    zipCode: "",
-    country: "",
+    postalCode: "",
+    country: "Nigeria",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
   }
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault()
+  const validate = () => {
     const newErrors: Record<string, string> = {}
 
-    Object.entries(formData).forEach(([key, value]) => {
-      if (!value) {
-        newErrors[key] = "This field is required"
-      }
-    })
+    if (!formData.firstName.trim()) newErrors.firstName = "First name is required"
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required"
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required"
+    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required"
+    if (!formData.address.trim()) newErrors.address = "Address is required"
+    if (!formData.city.trim()) newErrors.city = "City is required"
+    if (!formData.state.trim()) newErrors.state = "State is required"
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-    } else {
-      // Store data and proceed to document upload
-      console.log("Personal details:", formData)
-      window.location.href = "/auth/onboard/document"
+    // Age validation (must be 18+)
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      if (age < 18) newErrors.dateOfBirth = "You must be at least 18 years old"
     }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    setLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      setLoading(false)
+      router.push("/auth/onboard/document")
+    }, 1000)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-12">
-      <motion.div initial="hidden" animate="visible" variants={formVariants} className="w-full max-w-2xl">
-        <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-8">
-          <KycProgressBar currentStep={1} totalSteps={4} />
+    <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        <KYCProgressBar currentStep={1} totalSteps={4} />
 
-          <h1 className="text-2xl font-bold text-[#F0F0F0] mb-2">Personal Information</h1>
-          <p className="text-[#B0B0B8] mb-8">Tell us about yourself so we can verify your identity.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#1E1E2B]/80 backdrop-blur-xl border border-[#641AE4]/30 rounded-2xl p-8 mt-8"
+        >
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-[#F0F0F0] mb-2">Personal Information</h1>
+            <p className="text-[#B0B0B8]">Please provide your personal details exactly as they appear on your ID</p>
+          </div>
 
-          <form onSubmit={handleNext} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name Fields */}
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">First Name</label>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  First Name <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.firstName ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
                   placeholder="John"
-                  className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
                 />
-                {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName}</p>}
+                {errors.firstName && (
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-red-400 text-sm mt-1"
+                  >
+                    {errors.firstName}
+                  </motion.p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Last Name</label>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  Last Name <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.lastName ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
                   placeholder="Doe"
-                  className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
                 />
-                {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName}</p>}
+                {errors.lastName && (
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-red-400 text-sm mt-1"
+                  >
+                    {errors.lastName}
+                  </motion.p>
+                )}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Date of Birth</label>
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none"
-              />
-              {errors.dateOfBirth && <p className="text-red-400 text-xs mt-1">{errors.dateOfBirth}</p>}
+            {/* Date of Birth & Phone */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  Date of Birth <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.dateOfBirth ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none`}
+                />
+                {errors.dateOfBirth && (
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-red-400 text-sm mt-1"
+                  >
+                    {errors.dateOfBirth}
+                  </motion.p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  Phone Number <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.phoneNumber ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
+                  placeholder="+234 800 000 0000"
+                />
+                {errors.phoneNumber && (
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-red-400 text-sm mt-1"
+                  >
+                    {errors.phoneNumber}
+                  </motion.p>
+                )}
+              </div>
             </div>
 
+            {/* Address */}
             <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Street Address</label>
+              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                Street Address <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="123 Main St"
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
+                className={`w-full bg-[#2D2D3D] border-b-2 ${
+                  errors.address ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
+                placeholder="123 Main Street"
               />
-              {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address}</p>}
+              {errors.address && (
+                <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-red-400 text-sm mt-1">
+                  {errors.address}
+                </motion.p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* City, State, Postal */}
+            <div className="grid md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">City</label>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  City <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  placeholder="San Francisco"
-                  className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.city ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
+                  placeholder="Lagos"
                 />
-                {errors.city && <p className="text-red-400 text-xs mt-1">{errors.city}</p>}
+                {errors.city && (
+                  <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-red-400 text-sm mt-1">
+                    {errors.city}
+                  </motion.p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">State</label>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  State <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-                  placeholder="CA"
-                  className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
+                  className={`w-full bg-[#2D2D3D] border-b-2 ${
+                    errors.state ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
+                  placeholder="Lagos"
                 />
-                {errors.state && <p className="text-red-400 text-xs mt-1">{errors.state}</p>}
+                {errors.state && (
+                  <motion.p initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-red-400 text-sm mt-1">
+                    {errors.state}
+                  </motion.p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">ZIP Code</label>
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Postal Code</label>
                 <input
                   type="text"
-                  name="zipCode"
-                  value={formData.zipCode}
+                  name="postalCode"
+                  value={formData.postalCode}
                   onChange={handleChange}
-                  placeholder="94105"
-                  className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
+                  className="w-full bg-[#2D2D3D] border-b-2 border-b-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
+                  placeholder="100001"
                 />
-                {errors.zipCode && <p className="text-red-400 text-xs mt-1">{errors.zipCode}</p>}
               </div>
             </div>
 
+            {/* Country */}
             <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Country</label>
+              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                Country <span className="text-red-400">*</span>
+              </label>
               <select
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none"
+                className="w-full bg-[#2D2D3D] border-b-2 border-b-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none"
               >
-                <option value="">Select your country</option>
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="UK">United Kingdom</option>
-                <option value="AU">Australia</option>
+                <option value="Nigeria">Nigeria</option>
+                <option value="Ghana">Ghana</option>
+                <option value="Kenya">Kenya</option>
+                <option value="South Africa">South Africa</option>
               </select>
-              {errors.country && <p className="text-red-400 text-xs mt-1">{errors.country}</p>}
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Link href="/auth/onboard/kyc-start" className="flex-1">
-                <button
-                  type="button"
-                  className="w-full py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:bg-[#2D2D3D] transition-all"
-                >
-                  Back
-                </button>
-              </Link>
-              <button
-                type="submit"
-                className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all"
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6">
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.back()}
+                className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
               >
-                Continue
-              </button>
+                Back
+              </motion.button>
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-70"
+              >
+                {loading ? "Saving..." : "Continue to Document Upload"}
+              </motion.button>
             </div>
           </form>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }

@@ -32,66 +32,98 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1E1E2B] flex items-center justify-center p-4">
-      <motion.div initial="hidden" animate="visible" variants={containerVariants} className="w-full max-w-md">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#641AE4]/10 via-transparent to-[#9A24D2]/10 blur-3xl" />
-
-        <motion.div
-          variants={formVariants}
-          className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-8"
-        >
-          <AuthHeader />
-
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold text-[#F0F0F0] mb-2">Reset Your Password</h2>
-              <p className="text-[#B0B0B8] text-sm">
-                Enter your email and we'll send you a link to reset your password.
-              </p>
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="w-full">
+      <motion.div variants={formVariants} className="space-y-8">
+        {!submitted ? (
+          <>
+            {/* Header */}
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-[#F0F0F0]">Reset your password</h1>
+              <p className="text-[#B0B0B8]">Enter your email and we'll send you a reset link</p>
             </div>
 
-            {!submitted ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
-                  />
-                </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  required
+                  className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+                />
+              </div>
 
-                <motion.button
-                  onClick={handleSubmit}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/40 transition-all"
-                >
-                  {loading ? "Sending..." : "Send Reset Link"}
-                </motion.button>
-              </>
-            ) : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
-                <div className="inline-block p-4 bg-[#C8F55A]/10 rounded-full">
-                  <div className="text-[#C8F55A] text-3xl">✓</div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">Check Your Email</h3>
-                  <p className="text-[#B0B0B8] text-sm">
-                    We've sent a password reset link to <span className="text-[#F0F0F0] font-medium">{email}</span>
-                  </p>
-                </div>
+              <motion.button
+                type="submit"
+                disabled={loading}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70"
+              >
+                {loading ? "Sending reset link..." : "Send reset link"}
+              </motion.button>
+            </form>
+
+            {/* Back to login */}
+            <div className="text-center">
+              <a
+                href="/auth/login"
+                className="inline-flex items-center gap-2 text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors"
+              >
+                <span>←</span> Back to sign in
+              </a>
+            </div>
+          </>
+        ) : (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+            {/* Success state */}
+            <div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C8F55A]/20"
+              >
+                <div className="text-[#C8F55A] text-3xl">✓</div>
               </motion.div>
-            )}
 
-            <a href="/auth/login" className="block text-center text-sm text-[#641AE4] hover:underline">
-              Back to Sign In
-            </a>
-          </div>
-        </motion.div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-[#F0F0F0]">Check your email</h2>
+                <p className="text-[#B0B0B8]">
+                  We've sent a password reset link to
+                  <br />
+                  <span className="text-[#F0F0F0] font-medium">{email}</span>
+                </p>
+              </div>
+
+              <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-4">
+                <p className="text-sm text-[#B0B0B8]">
+                  Didn't receive the email? Check your spam folder or{" "}
+                  <button onClick={() => setSubmitted(false)} className="text-[#641AE4] hover:underline">
+                    try again
+                  </button>
+                </p>
+              </div>
+            </div>
+
+            {/* Back to login */}
+            <div className="text-center pt-4">
+              <a
+                href="/auth/login"
+                className="inline-flex items-center justify-center w-full py-3.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+              >
+                Back to sign in
+              </a>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
-    </div>
+    </motion.div>
   )
 }

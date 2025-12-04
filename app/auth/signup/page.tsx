@@ -32,119 +32,145 @@ export default function SignupPage() {
     setTimeout(() => {
       if (!fullName || !email || !password || !confirmPassword) {
         setError("Please fill in all fields to create your account.")
+        setLoading(false)
       } else if (!email.includes("@")) {
         setError("Please enter a valid email address.")
+        setLoading(false)
       } else if (password !== confirmPassword) {
         setError("Passwords do not match. Please try again.")
+        setLoading(false)
       } else if (password.length < 8) {
         setError("Password must be at least 8 characters long.")
+        setLoading(false)
       } else {
         console.log("Signup attempt:", { fullName, email, password })
         // In a real app, redirect to KYC onboarding
         window.location.href = "/auth/onboard/kyc-start"
-        setLoading(false)
       }
-      setLoading(false)
     }, 1000)
   }
 
   return (
-    <div className="min-h-screen bg-[#1E1E2B] flex items-center justify-center p-4">
-      <motion.div initial="hidden" animate="visible" variants={containerVariants} className="w-full max-w-md">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#641AE4]/10 via-transparent to-[#9A24D2]/10 blur-3xl" />
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="w-full">
+      <motion.div variants={formVariants} className="space-y-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-[#F0F0F0]">Create your account</h1>
+          <p className="text-[#B0B0B8]">Get started with professional OTC trading</p>
+        </div>
 
-        <motion.div
-          variants={formVariants}
-          className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-8"
-        >
-          <AuthHeader />
-
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Get Started with GemEx</h2>
-              <p className="text-[#B0B0B8] text-sm">Create your account to begin trading</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
-              />
-              <p className="text-[#B0B0B8] text-xs mt-1">At least 8 characters</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none"
-              />
-            </div>
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-red-500/20 border border-red-500/50 text-red-200 text-sm px-4 py-3 rounded font-medium"
-              >
-                {error}
-              </motion.div>
-            )}
-
-            <motion.button
-              onClick={handleSubmit}
-              disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? "Creating Account..." : "Create Account"}
-            </motion.button>
-
-            <div className="p-3 bg-[#C8F55A]/10 border border-[#C8F55A]/20 rounded-lg">
-              <p className="text-[#C8F55A] text-xs font-medium">
-                By creating an account, you agree to our Terms of Service and Privacy Policy
-              </p>
-            </div>
-
-            <div className="flex gap-2 text-sm text-[#B0B0B8] justify-center">
-              <span>Already have an account?</span>
-              <a href="/auth/login" className="text-[#C8F55A] hover:underline font-medium">
-                Sign In
-              </a>
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="John Doe"
+              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+            />
           </div>
-        </motion.div>
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+              Email Address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your.email@example.com"
+              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a strong password"
+              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+            />
+            <p className="text-[#B0B0B8] text-xs mt-2">Must be at least 8 characters</p>
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter your password"
+              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+            />
+          </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg"
+            >
+              {error}
+            </motion.div>
+          )}
+
+          <motion.button
+            type="submit"
+            disabled={loading}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </motion.button>
+
+          {/* Terms */}
+          <p className="text-xs text-[#B0B0B8] text-center">
+            By creating an account, you agree to our{" "}
+            <a href="#" className="text-[#641AE4] hover:underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="text-[#641AE4] hover:underline">
+              Privacy Policy
+            </a>
+          </p>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#2D2D3D]"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-[#1E1E2B] text-[#B0B0B8]">Already have an account?</span>
+          </div>
+        </div>
+
+        {/* Sign in link */}
+        <div className="text-center">
+          <a
+            href="/auth/login"
+            className="inline-flex items-center justify-center w-full py-3.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+          >
+            Sign in instead
+          </a>
+        </div>
       </motion.div>
-    </div>
+    </motion.div>
   )
 }

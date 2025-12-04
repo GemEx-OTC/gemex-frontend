@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { GemExLogo } from "./gemex-logo"
+import Image from "next/image"
 import { LogOut, User } from "lucide-react"
 
 interface SidebarProps {
@@ -58,9 +58,16 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-[#2D2D3D] flex items-center gap-3">
-            <GemExLogo size={40} />
-            <span className="text-lg font-bold text-[#F0F0F0]">GemEx</span>
+          <div className="p-6 border-b border-[#2D2D3D] flex items-center justify-center">
+            <div className="relative w-full h-10">
+              <Image
+                src="/images/mainlogo_type.svg"
+                alt="GemEx"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
 
           {/* Navigation */}

@@ -11,7 +11,7 @@ export default function TradeRequestPage() {
   const [tradeData, setTradeData] = useState({
     cryptoAsset: "USDT" as keyof typeof CRYPTO_ASSETS,
     cryptoNetwork: "TRC20" as keyof typeof CRYPTO_NETWORKS,
-    cryptoAmount: "",
+    cryptoAmount: "50000",
   })
 
   // Mock system rates (indicative only - from Admin's PricingConfig)
@@ -172,6 +172,7 @@ export default function TradeRequestPage() {
                   value={tradeData.cryptoAmount}
                   onChange={(e) => setTradeData({ ...tradeData, cryptoAmount: e.target.value })}
                   placeholder="0.00"
+                  min={50000}
                   className="w-full bg-transparent text-5xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
                 />
                 <div className="mt-4 pt-4 border-t border-[#2D2D3D]">

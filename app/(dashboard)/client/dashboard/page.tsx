@@ -6,7 +6,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { MetricCard } from "@/components/metric-card"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import Link from "next/link"
-import { AlertCircle, CheckCircle, Clock } from "lucide-react"
+import { AlertCircle, Clock } from "lucide-react"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,10 +26,10 @@ const itemVariants = {
 
 export default function ClientDashboardPage() {
   const [metrics] = useState({
-    fiatBalance: 2500000,
     monthlyVolume: 45230.5,
     pendingTrades: 3,
     completedTrades: 28,
+    totalReceived: 12500000, // Total Naira received
   })
 
   // Mock user status - in production, fetch from API
@@ -140,14 +140,15 @@ export default function ClientDashboardPage() {
       {/* Key Metrics */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard
-          label="Fiat Balance"
-          value={`₦${metrics.fiatBalance.toLocaleString()}`}
+          label="Total Received"
+          value={`₦${metrics.totalReceived.toLocaleString()}`}
+          change="All time"
           accent="lime"
           isHighlight
         />
         <MetricCard
           label="Monthly Volume"
-          value={`$${metrics.monthlyVolume.toLocaleString()}`}
+          value={`₦${metrics.monthlyVolume.toLocaleString()}`}
           change="↑ 12% from last month"
           accent="violet"
         />

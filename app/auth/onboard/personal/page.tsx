@@ -64,7 +64,7 @@ export default function PersonalDetailsPage() {
   return (
     <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <KycProgressBar currentStep={1} totalSteps={4} />
+        <KycProgressBar currentStep={1} totalSteps={3} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -228,24 +228,24 @@ export default function PersonalDetailsPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6">
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => router.back()}
-                className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all order-2 sm:order-1"
-              >
-                Back
-              </motion.button>
+            <div className="flex flex-col gap-4 pt-6">
               <motion.button
                 type="submit"
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="sm:flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-70 order-1 sm:order-2"
+                className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-70"
               >
                 {loading ? "Saving..." : "Continue to Document Upload"}
+              </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.back()}
+                className="w-full px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
+              >
+                Back
               </motion.button>
             </div>
           </form>

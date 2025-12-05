@@ -108,7 +108,7 @@ export default function KYCStartPage() {
                 <span className="text-[#C8F55A]">✓</span> Personal information (Name, Date of Birth, Address)
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-[#C8F55A]">✓</span> Wallet address for withdrawals (optional, can add later)
+                <span className="text-[#C8F55A]">✓</span> A few minutes of your time
               </li>
             </ul>
           </motion.div>
@@ -118,13 +118,13 @@ export default function KYCStartPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col gap-4 justify-center"
           >
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/auth/onboard/personal")}
-              className="px-8 py-4 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
+              className="w-full px-8 py-4 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
             >
               Start Verification
             </motion.button>
@@ -132,7 +132,7 @@ export default function KYCStartPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/client/dashboard")}
-              className="px-8 py-4 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
+              className="w-full px-8 py-4 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
             >
               I'll Do This Later
             </motion.button>

@@ -73,9 +73,9 @@ export default function WalletVerificationPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#641AE4] to-[#9A24D2] mb-4">
               <Wallet className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-[#F0F0F0] mb-2">Withdrawal Wallet Setup</h1>
+            <h1 className="text-2xl font-bold text-[#F0F0F0] mb-2">Wallet Setup</h1>
             <p className="text-[#B0B0B8]">
-              Add a wallet address for crypto withdrawals. This is optional and can be added later.
+              Add a wallet address for receiving funds. This is optional and can be added later from settings.
             </p>
           </div>
 
@@ -153,31 +153,29 @@ export default function WalletVerificationPage() {
             <div className="bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-lg p-4">
               <p className="text-sm text-[#C8F55A] font-medium mb-2">✓ Why add a wallet now?</p>
               <ul className="text-sm text-[#F0F0F0] space-y-1 ml-4">
-                <li>• Faster withdrawals when you're ready to cash out</li>
-                <li>• One less step when making your first trade</li>
+                <li>• Faster transactions when you're ready to trade</li>
+                <li>• One less step when making your first transaction</li>
                 <li>• Enhanced security with pre-verified addresses</li>
               </ul>
             </div>
 
             <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-4">
               <p className="text-sm text-[#F0F0F0]">
-                <strong>Security Note:</strong> Make sure you control this wallet address. We'll send a small test
-                transaction to verify ownership before processing large withdrawals.
+                <strong>Security Note:</strong> Make sure you control this wallet address. We'll verify ownership before processing transactions.
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4">
             <motion.button
-              type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => router.back()}
+              onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
+              className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50"
             >
-              Back
+              {loading ? "Verifying..." : "Continue"}
             </motion.button>
 
             <motion.button
@@ -185,19 +183,20 @@ export default function WalletVerificationPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSkip}
               disabled={loading}
-              className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
+              className="w-full px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
             >
               Skip for Now
             </motion.button>
 
             <motion.button
+              type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleSubmit}
+              onClick={() => router.back()}
               disabled={loading}
-              className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50"
+              className="w-full px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
             >
-              {loading ? "Verifying..." : "Continue"}
+              Back
             </motion.button>
           </div>
 

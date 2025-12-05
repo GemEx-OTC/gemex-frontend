@@ -62,7 +62,7 @@ export default function DocumentUploadPage() {
       setUploadSuccess(true)
       // Flash effect then navigate
       setTimeout(() => {
-        router.push("/auth/onboard/wallet")
+        router.push("/auth/onboard/pending")
       }, 1500)
     }, 2000)
   }
@@ -72,7 +72,7 @@ export default function DocumentUploadPage() {
   return (
     <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <KycProgressBar currentStep={2} totalSteps={4} />
+        <KycProgressBar currentStep={2} totalSteps={3} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -267,25 +267,25 @@ export default function DocumentUploadPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSubmit}
+              disabled={!frontFile || (needsBackSide && !backFile) || uploading}
+              className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? "Uploading..." : "Submit for Verification"}
+            </motion.button>
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.back()}
               disabled={uploading}
-              className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
+              className="w-full px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all disabled:opacity-50"
             >
               Back
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSubmit}
-              disabled={!frontFile || (needsBackSide && !backFile) || uploading}
-              className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {uploading ? "Uploading..." : "Continue to Wallet Setup"}
             </motion.button>
           </div>
         </motion.div>

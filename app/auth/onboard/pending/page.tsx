@@ -19,7 +19,6 @@ export default function PendingVerificationPage() {
   const steps = [
     { icon: CheckCircle, label: "Personal Details", status: "complete" },
     { icon: CheckCircle, label: "Document Upload", status: "complete" },
-    { icon: CheckCircle, label: "Wallet Setup", status: "complete" },
     { icon: Clock, label: "Identity Verification", status: "pending" },
   ]
 
@@ -160,13 +159,13 @@ export default function PendingVerificationPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col gap-4"
           >
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/client/dashboard")}
-              className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
+              className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
             >
               Go to Dashboard
             </motion.button>
@@ -174,7 +173,7 @@ export default function PendingVerificationPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/")}
-              className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
+              className="w-full py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
             >
               Return Home
             </motion.button>

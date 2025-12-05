@@ -3,13 +3,11 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { KYCProgressBar } from "@/components/kyc-progress-bar"
+import { KycProgressBar } from "@/components/kyc-progress-bar"
 
 export default function PersonalDetailsPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     dateOfBirth: "",
     phoneNumber: "",
     address: "",
@@ -33,8 +31,6 @@ export default function PersonalDetailsPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required"
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required"
     if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required"
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required"
     if (!formData.address.trim()) newErrors.address = "Address is required"
@@ -68,7 +64,7 @@ export default function PersonalDetailsPage() {
   return (
     <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <KYCProgressBar currentStep={1} totalSteps={4} />
+        <KycProgressBar currentStep={1} totalSteps={4} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -82,59 +78,6 @@ export default function PersonalDetailsPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Fields */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
-                  First Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className={`w-full bg-[#2D2D3D] border-b-2 ${
-                    errors.firstName ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
-                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
-                  placeholder="John"
-                />
-                {errors.firstName && (
-                  <motion.p
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-red-400 text-sm mt-1"
-                  >
-                    {errors.firstName}
-                  </motion.p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
-                  Last Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className={`w-full bg-[#2D2D3D] border-b-2 ${
-                    errors.lastName ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
-                  } text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3 rounded transition-all focus:outline-none`}
-                  placeholder="Doe"
-                />
-                {errors.lastName && (
-                  <motion.p
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-red-400 text-sm mt-1"
-                  >
-                    {errors.lastName}
-                  </motion.p>
-                )}
-              </div>
-            </div>
-
             {/* Date of Birth & Phone */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -285,13 +228,13 @@ export default function PersonalDetailsPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => router.back()}
-                className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all"
+                className="px-6 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all order-2 sm:order-1"
               >
                 Back
               </motion.button>
@@ -300,7 +243,7 @@ export default function PersonalDetailsPage() {
                 disabled={loading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-70"
+                className="sm:flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-70 order-1 sm:order-2"
               >
                 {loading ? "Saving..." : "Continue to Document Upload"}
               </motion.button>

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { KYCProgressBar } from "@/components/kyc-progress-bar"
+import { KycProgressBar } from "@/components/kyc-progress-bar"
 import { Upload, FileCheck, X } from "lucide-react"
 
 export default function DocumentUploadPage() {
@@ -72,7 +72,7 @@ export default function DocumentUploadPage() {
   return (
     <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <KYCProgressBar currentStep={2} totalSteps={4} />
+        <KycProgressBar currentStep={2} totalSteps={4} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -44,8 +44,8 @@ export default function SignupPage() {
         setLoading(false)
       } else {
         console.log("Signup attempt:", { fullName, email, password })
-        // In a real app, redirect to KYC onboarding
-        window.location.href = "/auth/onboard/kyc-start"
+        // Redirect to onboarding flow
+        window.location.href = "/auth/onboard/personal"
       }
     }, 1000)
   }

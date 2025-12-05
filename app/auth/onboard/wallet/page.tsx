@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { KYCProgressBar } from "@/components/kyc-progress-bar"
+import { KycProgressBar } from "@/components/kyc-progress-bar"
 import { Wallet, Copy, Check } from "lucide-react"
 
 export default function WalletVerificationPage() {
@@ -61,7 +61,7 @@ export default function WalletVerificationPage() {
   return (
     <div className="min-h-screen bg-[#1E1E2B] py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <KYCProgressBar currentStep={3} totalSteps={4} />
+        <KycProgressBar currentStep={3} totalSteps={4} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

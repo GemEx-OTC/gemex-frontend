@@ -8,6 +8,8 @@ interface DataTableProps {
   columns: {
     key: string
     label: string
+    width?: string
+    className?: string
     render?: (value: any, row: Record<string, any>) => React.ReactNode
   }[]
   data: Record<string, any>[]
@@ -31,12 +33,16 @@ export function DataTable({ columns, data, onRowClick }: DataTableProps) {
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full">
+    <div className="w-full">
+      <table className="w-full table-fixed">
         <thead>
           <tr className="border-b border-[#2D2D3D]">
             {columns.map((col) => (
-              <th key={col.key} className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8] bg-[#1E1E2B]/40">
+              <th 
+                key={col.key} 
+                className={`px-4 lg:px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8] bg-[#1E1E2B]/40 ${col.className || ''}`}
+                style={{ width: col.width }}
+              >
                 {col.label}
               </th>
             ))}
@@ -51,7 +57,11 @@ export function DataTable({ columns, data, onRowClick }: DataTableProps) {
               className="border-b border-[#2D2D3D] hover:bg-[#2D2D3D]/50 transition-colors cursor-pointer"
             >
               {columns.map((col) => (
-                <td key={`${idx}-${col.key}`} className="px-6 py-4 text-sm text-[#F0F0F0]">
+                <td 
+                  key={`${idx}-${col.key}`} 
+                  className={`px-4 lg:px-6 py-4 text-sm text-[#F0F0F0] ${col.className || ''}`}
+                  style={{ width: col.width }}
+                >
                   {col.render ? col.render(row[col.key], row) : row[col.key]}
                 </td>
               ))}

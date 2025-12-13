@@ -8,6 +8,25 @@ import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import Link from "next/link"
 import { AlertCircle, Clock } from "lucide-react"
 
+interface ExchangeRates {
+  nairaToUSDT: number
+  btcToNaira: number
+  lastUpdated: string
+}
+
+interface DashboardMetrics {
+  pendingTrades: number
+  completedTrades: number
+  totalReceivedNaira: number
+  totalReceivedUSDT: number
+}
+
+interface UserStatus {
+  kycStatus: keyof typeof KYC_STATUS
+  bankVerified: boolean
+  hasActiveQuote: boolean
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -25,16 +44,30 @@ const itemVariants = {
 }
 
 export default function ClientDashboardPage() {
-  const [metrics] = useState({
-    monthlyVolume: 45230.5,
+  const [metrics] = useState<DashboardMetrics>({
     pendingTrades: 3,
     completedTrades: 28,
     totalReceivedNaira: 12500000, // Total Naira received
     totalReceivedUSDT: 8000, // Equivalent USDT
   })
 
+  // Exchange rates - in production, fetch from API
+  const [exchangeRates] = useState<ExchangeRates>({
+    nairaToUSDT: 1565, // 1 USDT = 1565 NGN
+    btcToNaira: 43500000, // 1 BTC = 43,500,000 NGN
+    lastUpdated: new Date().toISOString(),
+  })
+
+  // Helper function to format large numbers
+  const formatLargeNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`
+    }
+    return num.toLocaleString()
+  }
+
   // Mock user status - in production, fetch from API
-  const [userStatus] = useState({
+  const [userStatus] = useState<UserStatus>({
     kycStatus: "Verified" as keyof typeof KYC_STATUS,
     bankVerified: true,
     hasActiveQuote: false,
@@ -76,8 +109,8 @@ export default function ClientDashboardPage() {
         title="Welcome Back"
         subtitle="Here's your trading overview for today"
         action={{
-          label: "Request Bulk Quote",
-          onClick: () => (window.location.href = "/client/trade"),
+          label: "Deposit",
+          onClick: () => (window.location.href = "/client/wallet"),
         }}
       />
 
@@ -140,20 +173,34 @@ export default function ClientDashboardPage() {
 
       {/* Key Metrics */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Total Payout Card */}
         <div className="md:col-span-2 lg:col-span-1">
           <div className="p-6 rounded-xl bg-gradient-to-br from-[#C8F55A]/20 to-[#C8F55A]/5 border-2 border-[#C8F55A]/40">
-            <p className="text-sm text-[#B0B0B8] mb-2">Total Received</p>
+            <p className="text-sm text-[#B0B0B8] mb-2">Total Payout</p>
             <p className="text-3xl font-bold text-[#F0F0F0] mb-1">₦{metrics.totalReceivedNaira.toLocaleString()}</p>
             <p className="text-sm text-[#C8F55A]">≈ {metrics.totalReceivedUSDT.toLocaleString()} USDT</p>
             <p className="text-xs text-[#B0B0B8] mt-2">All time</p>
           </div>
         </div>
-        <MetricCard
-          label="Monthly Volume"
-          value={`₦${metrics.monthlyVolume.toLocaleString()}`}
-          change="↑ 12% from last month"
-          accent="violet"
-        />
+
+        {/* Exchange Rates Card */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border-2 border-[#641AE4]/40">
+          <p className="text-sm text-[#B0B0B8] mb-3">Live Rates</p>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#F0F0F0]">NGN/USDT</span>
+              <span className="text-lg font-bold text-[#641AE4]">₦{exchangeRates.nairaToUSDT.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#F0F0F0]">BTC/NGN</span>
+              <span className="text-lg font-bold text-[#641AE4]">₦{formatLargeNumber(exchangeRates.btcToNaira)}</span>
+            </div>
+          </div>
+          <p className="text-xs text-[#B0B0B8] mt-3">
+            Updated {new Date(exchangeRates.lastUpdated).toLocaleTimeString()}
+          </p>
+        </div>
+
         <MetricCard label="Pending Trades" value={metrics.pendingTrades.toString()} accent="purple" />
         <MetricCard
           label="Completed Trades"

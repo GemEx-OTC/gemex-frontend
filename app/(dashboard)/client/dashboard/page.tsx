@@ -236,7 +236,7 @@ export default function ClientDashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl">₦</span>
-              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Rate per Dollar</p>
+              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">BTC Rate</p>
             </div>
             <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
           </div>

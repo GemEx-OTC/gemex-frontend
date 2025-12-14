@@ -39,7 +39,7 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
     <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1E1E2B]/95 backdrop-blur-xl border-t border-[#2D2D3D] safe-area-inset-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border safe-area-inset-bottom"
     >
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
@@ -51,7 +51,7 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-                  isActive ? "text-[#C8F55A]" : "text-[#B0B0B8]"
+                  isActive ? "text-secondary" : "text-muted-foreground"
                 }`}
               >
                 <div className="relative">
@@ -59,7 +59,7 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                   {isActive && (
                     <motion.div
                       layoutId="mobileActiveIndicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#C8F55A]"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-secondary"
                     />
                   )}
                 </div>

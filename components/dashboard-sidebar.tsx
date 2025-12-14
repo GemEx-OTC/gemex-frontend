@@ -54,11 +54,11 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
       {/* Sidebar - Hidden on mobile, visible on desktop */}
       <motion.aside
         initial={{ x: 0 }}
-        className="hidden md:block w-64 bg-[#1E1E2B] border-r border-[#2D2D3D] h-screen"
+        className="hidden md:block w-64 bg-sidebar border-r border-sidebar-border h-screen"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-[#2D2D3D] flex items-center justify-center">
+          <div className="p-6 border-b border-sidebar-border flex items-center justify-center">
             <div className="relative w-full h-10">
               <Image
                 src="/images/mainlogo_type.svg"
@@ -81,8 +81,8 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
                     whileTap={{ scale: 0.98 }}
                     className={`relative px-4 py-3 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-3 ${
                       isActive
-                        ? "bg-[#641AE4]/20 text-[#C8F55A]"
-                        : "text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]"
+                        ? "bg-primary/10 text-secondary border border-primary/20"
+                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     }`}
                   >
                     <span className="text-xl">{item.icon}</span>
@@ -90,7 +90,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
                     {isActive && (
                       <motion.div
                         layoutId="activeIndicator"
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-[#C8F55A] rounded-r"
+                        className="absolute left-0 top-0 bottom-0 w-1 bg-secondary rounded-r"
                       />
                     )}
                   </motion.div>
@@ -100,15 +100,15 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-[#2D2D3D] space-y-3">
+          <div className="p-4 border-t border-sidebar-border space-y-3">
             {/* User Info */}
-            <div className="flex items-center gap-3 px-3 py-2 bg-[#2D2D3D]/50 rounded-lg">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#641AE4] to-[#9A24D2] flex items-center justify-center">
+            <div className="flex items-center gap-3 px-3 py-2 bg-sidebar-accent rounded-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#F0F0F0] truncate capitalize">{role} User</p>
-                <p className="text-xs text-[#B0B0B8] truncate">{role}@gemex.demo</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">{role} User</p>
+                <p className="text-xs text-muted-foreground truncate">{role}@gemex.demo</p>
               </div>
             </div>
 
@@ -117,14 +117,14 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-[#F0F0F0] bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-destructive-foreground bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-all focus:outline-none focus:ring-2 focus:ring-destructive/50"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </motion.button>
 
             {/* Version */}
-            <div className="text-xs text-[#B0B0B8] text-center">
+            <div className="text-xs text-muted-foreground text-center">
               <p>GemEx OTC v1.0.0</p>
             </div>
           </div>

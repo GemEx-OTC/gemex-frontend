@@ -86,17 +86,17 @@ export default function HistoryPage() {
     {
       key: "date",
       label: "Date",
-      width: "100px",
-      className: "min-w-[100px]",
-      render: (value: string) => <span className="text-[#B0B0B8]">{formatDate(value)}</span>,
+      width: "120px",
+      className: "min-w-[120px]",
+      render: (value: string) => <span className="text-slate-300 font-medium">{formatDate(value)}</span>,
     },
     {
       key: "id",
       label: "Trade ID",
-      width: "120px",
-      className: "min-w-[120px]",
+      width: "130px",
+      className: "min-w-[130px]",
       render: (value: string) => (
-        <span className="font-mono text-[#C8F55A] text-xs block truncate" title={value}>
+        <span className="font-mono text-lime-400 text-sm md:text-base font-bold block truncate" title={value}>
           {value}
         </span>
       ),
@@ -104,21 +104,21 @@ export default function HistoryPage() {
     {
       key: "cryptoAsset",
       label: "Asset",
-      width: "100px",
-      className: "min-w-[100px]",
+      width: "140px",
+      className: "min-w-[140px]",
       render: (value: string, row: any) => (
-        <div>
-          <div className="font-semibold text-[#F0F0F0]">{value}</div>
-          <div className="text-xs text-[#B0B0B8]">{row.cryptoAmount}</div>
+        <div className="font-semibold text-slate-100">
+          <span className="text-base md:text-lg">{row.cryptoAmount}</span>
+          <span className="ml-2 text-emerald-400 font-bold">{value}</span>
         </div>
       ),
     },
     {
       key: "nairaAmount",
       label: "Naira Amount",
-      width: "140px",
-      className: "min-w-[140px]",
-      render: (value: string) => <span className="font-bold text-[#C8F55A]">{value}</span>,
+      width: "160px",
+      className: "min-w-[160px]",
+      render: (value: string) => <span className="font-bold text-green-400 text-base md:text-lg">{value}</span>,
     },
     {
       key: "status",
@@ -137,9 +137,9 @@ export default function HistoryPage() {
     {
       key: "rate",
       label: "Rate",
-      width: "100px",
-      className: "min-w-[100px]",
-      render: (value: string) => <span className="text-[#641AE4] font-medium">{value}</span>,
+      width: "120px",
+      className: "min-w-[120px]",
+      render: (value: string) => <span className="text-emerald-400 dark:text-emerald-300 font-bold text-base md:text-lg">{value}</span>,
     },
   ]
 
@@ -161,8 +161,8 @@ export default function HistoryPage() {
             onClick={() => setFilter(tab.value)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filter === tab.value ? "bg-[#641AE4] text-white" : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0]"
+            className={`px-4 py-2.5 rounded-lg font-semibold text-sm md:text-base transition-all ${
+              filter === tab.value ? "bg-primary text-white shadow-lg" : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
             }`}
           >
             {tab.label}
@@ -170,7 +170,7 @@ export default function HistoryPage() {
         ))}
       </div>
 
-      <div className="bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
         {filteredTrades.length > 0 ? (
           <div className="overflow-x-auto">
             <DataTable key={filter} columns={columns} data={filteredTrades} />
@@ -178,7 +178,7 @@ export default function HistoryPage() {
         ) : (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">📭</div>
-            <p className="text-[#B0B0B8]">No trades found in this category</p>
+            <p className="text-muted-foreground text-base font-medium">No trades found in this category</p>
           </div>
         )}
       </div>

@@ -45,10 +45,10 @@ const itemVariants = {
 
 export default function ClientDashboardPage() {
   const [metrics] = useState<DashboardMetrics>({
-    pendingTrades: 3,
+    pendingTrades: 2,
     completedTrades: 28,
-    totalReceivedNaira: 12500000, // Total Naira received
-    totalReceivedUSDT: 8000, // Equivalent USDT
+    totalReceivedNaira: 45750000, // Total Naira received (₦45.75M)
+    totalReceivedUSDT: 29250, // Total crypto deposits in USD equivalent
   })
 
   // Exchange rates - in production, fetch from API
@@ -123,17 +123,17 @@ export default function ClientDashboardPage() {
             exit={{ opacity: 0, y: -20 }}
             className="mb-6"
           >
-            <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-6">
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-6">
               <div className="flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-[#641AE4] flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">Complete Your Verification</h3>
-                  <p className="text-[#B0B0B8] mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Complete Your Verification</h3>
+                  <p className="text-muted-foreground mb-4">
                     Your KYC verification is pending. Complete it to start trading with higher limits.
                   </p>
                   <Link
                     href="/auth/onboard/kyc-start"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-[#641AE4] hover:bg-[#9A24D2] transition-colors"
+                    className="gemex-button-primary"
                   >
                     Complete Verification
                   </Link>
@@ -150,17 +150,17 @@ export default function ClientDashboardPage() {
             exit={{ opacity: 0, y: -20 }}
             className="mb-6"
           >
-            <div className="bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-xl p-6">
+            <div className="bg-secondary/10 border border-secondary/30 rounded-xl p-6">
               <div className="flex items-start gap-4">
-                <Clock className="w-6 h-6 text-[#C8F55A] flex-shrink-0 mt-0.5" />
+                <Clock className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">Add Your Bank Account</h3>
-                  <p className="text-[#B0B0B8] mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Add Your Bank Account</h3>
+                  <p className="text-muted-foreground mb-4">
                     Link your Nigerian bank account to receive Naira payouts instantly.
                   </p>
                   <Link
                     href="/client/settings"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-opacity"
+                    className="gemex-button-secondary"
                   >
                     Add Bank Account
                   </Link>
@@ -171,50 +171,100 @@ export default function ClientDashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Key Metrics */}
+      {/* Key Financial Metrics */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Payout Card */}
+        {/* Total Payouts - Primary metric */}
         <div className="md:col-span-2 lg:col-span-1">
-          <div className="p-6 rounded-xl bg-gradient-to-br from-[#C8F55A]/20 to-[#C8F55A]/5 border-2 border-[#C8F55A]/40">
-            <p className="text-sm text-[#B0B0B8] mb-2">Total Payout</p>
-            <p className="text-3xl font-bold text-[#F0F0F0] mb-1">₦{metrics.totalReceivedNaira.toLocaleString()}</p>
-            <p className="text-sm text-[#C8F55A]">≈ {metrics.totalReceivedUSDT.toLocaleString()} USDT</p>
-            <p className="text-xs text-[#B0B0B8] mt-2">All time</p>
+          <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Payouts</p>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-1">₦{metrics.totalReceivedNaira.toLocaleString()}</p>
+            <p className="text-sm text-green-600 dark:text-green-400">All time earnings</p>
           </div>
         </div>
 
-        {/* Exchange Rates Card */}
-        <div className="p-6 rounded-xl bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border-2 border-[#641AE4]/40">
-          <p className="text-sm text-[#B0B0B8] mb-3">Live Rates</p>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#F0F0F0]">NGN/USDT</span>
-              <span className="text-lg font-bold text-[#641AE4]">₦{exchangeRates.nairaToUSDT.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#F0F0F0]">BTC/NGN</span>
-              <span className="text-lg font-bold text-[#641AE4]">₦{formatLargeNumber(exchangeRates.btcToNaira)}</span>
-            </div>
+        {/* Total Deposits */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-2 border-blue-500/40">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Deposits</p>
           </div>
-          <p className="text-xs text-[#B0B0B8] mt-3">
-            Updated {new Date(exchangeRates.lastUpdated).toLocaleTimeString()}
-          </p>
+          <p className="text-2xl font-bold text-foreground mb-1">${metrics.totalReceivedUSDT.toLocaleString()}</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400">Crypto equivalent</p>
         </div>
 
-        <MetricCard label="Pending Trades" value={metrics.pendingTrades.toString()} accent="purple" />
-        <MetricCard
-          label="Completed Trades"
-          value={metrics.completedTrades.toString()}
-          change="This month"
-          accent="violet"
-        />
+        {/* Pending Payouts */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/40">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Payouts</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{(2175000 + 782500).toLocaleString()}</p>
+          <p className="text-sm text-amber-600 dark:text-amber-400">{metrics.pendingTrades} transactions</p>
+        </div>
+
+        {/* USDT/USDC Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
+          <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
+        </div>
       </motion.div>
+
+      {/* BTC Exchange Rates Section */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {/* BTC/USD Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₿</span>
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">BTC/USD Rate</p>
+            </div>
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">$90,200</p>
+          <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
+        </div>
+
+        {/* BTC Rate per Dollar in Naira */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-2 border-teal-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₦</span>
+              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Rate per Dollar</p>
+            </div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦1,470</p>
+          <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
+        </div>
+
+        {/* BTC/NGN Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border-2 border-indigo-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₿₦</span>
+              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">BTC/NGN Rate</p>
+            </div>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦132,500</p>
+          <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
+        </div>
+      </motion.div>
+
+
 
       {/* Main CTA Section */}
       <motion.div variants={itemVariants} className="mb-8">
         <Link href="/client/trade">
-          <div className="relative bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border border-[#641AE4]/40 rounded-xl p-12 text-center cursor-pointer hover:border-[#641AE4]/60 transition-all group">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#641AE4]/0 via-[#C8F55A]/5 to-[#641AE4]/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+          <div className="relative bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/40 rounded-xl p-12 text-center cursor-pointer hover:border-primary/60 transition-all group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-secondary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
 
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
@@ -224,13 +274,13 @@ export default function ClientDashboardPage() {
               💱
             </motion.div>
 
-            <h2 className="text-2xl font-bold text-[#F0F0F0] mb-2 relative z-10">Ready for Bulk Trade?</h2>
-            <p className="text-[#B0B0B8] mb-6 relative z-10">Request quotes for large crypto-to-Naira conversions</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">Ready for Bulk Trade?</h2>
+            <p className="text-muted-foreground mb-6 relative z-10">Request quotes for large crypto-to-Naira conversions</p>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative z-10 px-8 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
+              className="relative z-10 gemex-button-secondary px-8 py-3"
             >
               Request Bulk Quote
             </motion.button>
@@ -241,8 +291,8 @@ export default function ClientDashboardPage() {
       {/* Recent Transactions */}
       <motion.div variants={itemVariants} className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[#F0F0F0]">Recent Transactions</h2>
-          <Link href="/client/history" className="text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors">
+          <h2 className="text-xl font-bold text-foreground">Recent Transactions</h2>
+          <Link href="/client/history" className="text-sm text-primary hover:text-primary/80 transition-colors">
             View All →
           </Link>
         </div>
@@ -256,32 +306,32 @@ export default function ClientDashboardPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-lg p-4 hover:border-[#641AE4]/40 transition-all"
+                className="bg-card border border-border rounded-lg p-4 hover:border-primary/40 transition-all"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-[#641AE4] to-[#9A24D2] flex items-center justify-center font-bold text-white">
+                    <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white">
                       {tx.cryptoAsset === "BTC" ? "₿" : tx.cryptoAsset === "USDT" ? "₮" : "$"}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-[#F0F0F0] truncate">
+                      <p className="font-semibold text-foreground truncate">
                         {tx.cryptoAmount} {tx.cryptoAsset}
                       </p>
-                      <p className="text-sm text-[#B0B0B8] truncate">{tx.id}</p>
+                      <p className="text-sm text-muted-foreground truncate">{tx.id}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-[#C8F55A] text-sm sm:text-base whitespace-nowrap">
+                    <p className="font-bold text-secondary text-sm sm:text-base whitespace-nowrap">
                       ₦{tx.nairaAmount.toLocaleString()}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs text-[#B0B0B8]">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{new Date(tx.createdAt).toLocaleString()}</span>
                   </div>
-                  <span className={`inline-flex items-center justify-center text-xs px-2 py-1 rounded-full ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto`}>
+                  <span className={`inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto shadow-sm`}>
                     {statusInfo.label}
                   </span>
                 </div>
@@ -297,11 +347,11 @@ export default function ClientDashboardPage() {
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-lg bg-[#1E1E2B]/60 border border-[#2D2D3D] hover:border-[#641AE4]/40 transition-all cursor-pointer"
+            className="p-6 rounded-lg bg-card border border-border hover:border-primary/40 transition-all cursor-pointer"
           >
             <div className="text-3xl mb-3">📜</div>
-            <h3 className="font-semibold text-[#F0F0F0] mb-1">Trade History</h3>
-            <p className="text-sm text-[#B0B0B8]">View all your past trades and transactions</p>
+            <h3 className="font-semibold text-foreground mb-1">Trade History</h3>
+            <p className="text-sm text-muted-foreground">View all your past trades and transactions</p>
           </motion.div>
         </Link>
 
@@ -309,11 +359,11 @@ export default function ClientDashboardPage() {
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-lg bg-[#1E1E2B]/60 border border-[#2D2D3D] hover:border-[#641AE4]/40 transition-all cursor-pointer"
+            className="p-6 rounded-lg bg-card border border-border hover:border-primary/40 transition-all cursor-pointer"
           >
             <div className="text-3xl mb-3">💰</div>
-            <h3 className="font-semibold text-[#F0F0F0] mb-1">Deposit Address</h3>
-            <p className="text-sm text-[#B0B0B8]">Get your unique crypto deposit address</p>
+            <h3 className="font-semibold text-foreground mb-1">Deposit Address</h3>
+            <p className="text-sm text-muted-foreground">Get your unique crypto deposit address</p>
           </motion.div>
         </Link>
 
@@ -321,11 +371,11 @@ export default function ClientDashboardPage() {
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-lg bg-[#1E1E2B]/60 border border-[#2D2D3D] hover:border-[#641AE4]/40 transition-all cursor-pointer"
+            className="p-6 rounded-lg bg-card border border-border hover:border-primary/40 transition-all cursor-pointer"
           >
             <div className="text-3xl mb-3">🏦</div>
-            <h3 className="font-semibold text-[#F0F0F0] mb-1">Bank Account</h3>
-            <p className="text-sm text-[#B0B0B8]">Manage your Naira payout account</p>
+            <h3 className="font-semibold text-foreground mb-1">Bank Account</h3>
+            <p className="text-sm text-muted-foreground">Manage your Naira payout account</p>
           </motion.div>
         </Link>
       </motion.div>

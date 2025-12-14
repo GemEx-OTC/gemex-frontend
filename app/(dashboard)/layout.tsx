@@ -24,7 +24,7 @@ export default function DashboardLayout({
   const role = getRole() as "client" | "dealer" | "admin"
 
   return (
-    <div className="flex h-screen bg-[#1E1E2B] text-[#F0F0F0]">
+    <div className="flex h-screen bg-background text-foreground">
       <DashboardSidebar role={role} currentPath={pathname} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Main content area */}

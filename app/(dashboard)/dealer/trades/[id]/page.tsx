@@ -88,7 +88,7 @@ export default function TradeDetailPage() {
 
               <div>
                 <label className="text-sm text-[#B0B0B8] mb-1 block">Status</label>
-                <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-[#641AE4]/20 text-[#641AE4]">
+                <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-amber-600/90 text-amber-100 dark:bg-amber-700/90 dark:text-amber-200">
                   Pending Approval
                 </span>
               </div>

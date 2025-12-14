@@ -36,11 +36,11 @@ export function DataTable({ columns, data, onRowClick }: DataTableProps) {
     <div className="w-full">
       <table className="w-full table-fixed">
         <thead>
-          <tr className="border-b border-[#2D2D3D]">
+          <tr className="border-b border-border">
             {columns.map((col) => (
               <th 
                 key={col.key} 
-                className={`px-4 lg:px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8] bg-[#1E1E2B]/40 ${col.className || ''}`}
+                className={`px-4 lg:px-6 py-4 text-left text-sm md:text-base font-bold text-foreground/80 bg-muted/30 ${col.className || ''}`}
                 style={{ width: col.width }}
               >
                 {col.label}
@@ -54,12 +54,12 @@ export function DataTable({ columns, data, onRowClick }: DataTableProps) {
               key={idx}
               variants={rowVariants}
               onClick={() => onRowClick?.(row)}
-              className="border-b border-[#2D2D3D] hover:bg-[#2D2D3D]/50 transition-colors cursor-pointer"
+              className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
             >
               {columns.map((col) => (
                 <td 
                   key={`${idx}-${col.key}`} 
-                  className={`px-4 lg:px-6 py-4 text-sm text-[#F0F0F0] ${col.className || ''}`}
+                  className={`px-4 lg:px-6 py-5 text-sm md:text-base font-medium text-foreground ${col.className || ''}`}
                   style={{ width: col.width }}
                 >
                   {col.render ? col.render(row[col.key], row) : row[col.key]}

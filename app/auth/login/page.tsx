@@ -76,14 +76,14 @@ export default function LoginPage() {
       <motion.div variants={formVariants} className="space-y-8">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-[#F0F0F0]">Welcome back</h1>
-          <p className="text-[#B0B0B8]">Sign in to access your trading dashboard</p>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back</h1>
+          <p className="text-muted-foreground">Sign in to access your trading dashboard</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#F0F0F0] mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
               Email Address
             </label>
             <input
@@ -92,16 +92,16 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+              className="gemex-input px-4 py-3.5"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label htmlFor="password" className="block text-sm font-medium text-[#F0F0F0]">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground">
                 Password
               </label>
-              <a href="/auth/forgot-password" className="text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors">
+              <a href="/auth/forgot-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 Forgot password?
               </a>
             </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+              className="gemex-input px-4 py-3.5"
             />
           </div>
 
@@ -130,7 +130,7 @@ export default function LoginPage() {
             disabled={loading}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-lg font-semibold text-primary-foreground bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </motion.button>
@@ -139,10 +139,10 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#2D2D3D]"></div>
+            <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-[#1E1E2B] text-[#B0B0B8]">New to GemEx?</span>
+            <span className="px-4 bg-background text-muted-foreground">New to GemEx?</span>
           </div>
         </div>
 
@@ -150,7 +150,7 @@ export default function LoginPage() {
         <div className="text-center">
           <a
             href="/auth/signup"
-            className="inline-flex items-center justify-center w-full py-3.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+            className="gemex-button-outline w-full py-3.5"
           >
             Create an account
           </a>
@@ -162,7 +162,7 @@ export default function LoginPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-            className="text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors font-medium"
+            className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
           >
             {showDemoAccounts ? "Hide demo accounts" : "🎭 Show demo accounts"}
           </motion.button>

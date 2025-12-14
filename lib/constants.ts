@@ -16,38 +16,38 @@ export const CRYPTO_NETWORKS = {
 export const TRANSACTION_STATUS = {
   QuotePending: {
     label: "Quote Pending",
-    color: "text-[#641AE4]",
-    bg: "bg-[#641AE4]/20",
+    color: "text-blue-100 dark:text-blue-200",
+    bg: "bg-blue-600/90 dark:bg-blue-700/90",
     description: "Waiting for dealer quote",
   },
   AwaitingDeposit: {
     label: "Awaiting Deposit",
-    color: "text-[#9A24D2]",
-    bg: "bg-[#9A24D2]/20",
+    color: "text-amber-100 dark:text-amber-200",
+    bg: "bg-amber-600/90 dark:bg-amber-700/90",
     description: "Waiting for crypto deposit",
   },
   CryptoConfirmed: {
     label: "Crypto Confirmed",
-    color: "text-[#C8F55A]",
-    bg: "bg-[#C8F55A]/20",
+    color: "text-green-100 dark:text-green-200",
+    bg: "bg-green-600/90 dark:bg-green-700/90",
     description: "Deposit confirmed on blockchain",
   },
   PayoutPending: {
     label: "Payout Pending",
-    color: "text-[#641AE4]",
-    bg: "bg-[#641AE4]/20",
+    color: "text-purple-100 dark:text-purple-200",
+    bg: "bg-purple-600/90 dark:bg-purple-700/90",
     description: "Processing Naira payout",
   },
   Settled: {
     label: "Settled",
-    color: "text-[#C8F55A]",
-    bg: "bg-[#C8F55A]/20",
+    color: "text-emerald-100 dark:text-emerald-200",
+    bg: "bg-emerald-600/90 dark:bg-emerald-700/90",
     description: "Transaction completed",
   },
   Failed: {
     label: "Failed",
-    color: "text-red-400",
-    bg: "bg-red-500/20",
+    color: "text-red-100 dark:text-red-200",
+    bg: "bg-red-600/90 dark:bg-red-700/90",
     description: "Transaction failed",
   },
 } as const
@@ -55,23 +55,23 @@ export const TRANSACTION_STATUS = {
 export const QUOTE_STATUS = {
   Active: {
     label: "Active",
-    color: "text-[#C8F55A]",
-    bg: "bg-[#C8F55A]/20",
+    color: "text-green-100 dark:text-green-200",
+    bg: "bg-green-600/90 dark:bg-green-700/90",
   },
   Used: {
     label: "Used",
-    color: "text-[#B0B0B8]",
-    bg: "bg-[#2D2D3D]",
+    color: "text-slate-100 dark:text-slate-200",
+    bg: "bg-slate-600/90 dark:bg-slate-700/90",
   },
   Expired: {
     label: "Expired",
-    color: "text-red-400",
-    bg: "bg-red-500/20",
+    color: "text-red-100 dark:text-red-200",
+    bg: "bg-red-600/90 dark:bg-red-700/90",
   },
   Canceled: {
     label: "Canceled",
-    color: "text-[#B0B0B8]",
-    bg: "bg-[#2D2D3D]",
+    color: "text-slate-100 dark:text-slate-200",
+    bg: "bg-slate-600/90 dark:bg-slate-700/90",
   },
 } as const
 
@@ -105,23 +105,23 @@ export const NOTIFICATION_TYPES = {
 export const KYC_STATUS = {
   Pending: {
     label: "Pending Verification",
-    color: "text-[#641AE4]",
-    bg: "bg-[#641AE4]/20",
+    color: "text-amber-100 dark:text-amber-200",
+    bg: "bg-amber-600/90 dark:bg-amber-700/90",
   },
   Verified: {
     label: "Verified",
-    color: "text-[#C8F55A]",
-    bg: "bg-[#C8F55A]/20",
+    color: "text-green-100 dark:text-green-200",
+    bg: "bg-green-600/90 dark:bg-green-700/90",
   },
   Rejected: {
     label: "Rejected",
-    color: "text-red-400",
-    bg: "bg-red-500/20",
+    color: "text-red-100 dark:text-red-200",
+    bg: "bg-red-600/90 dark:bg-red-700/90",
   },
   Suspended: {
     label: "Suspended",
-    color: "text-red-400",
-    bg: "bg-red-500/20",
+    color: "text-red-100 dark:text-red-200",
+    bg: "bg-red-600/90 dark:bg-red-700/90",
   },
 } as const
 

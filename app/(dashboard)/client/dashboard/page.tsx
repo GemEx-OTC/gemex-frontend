@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MetricCard } from "@/components/metric-card"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
+import { KycVerificationModal } from "@/components/kyc-verification-modal"
 import Link from "next/link"
-import { AlertCircle, Clock } from "lucide-react"
+import { AlertCircle, Clock, Shield } from "lucide-react"
 
 interface ExchangeRates {
   nairaToUSDT: number
@@ -67,11 +68,19 @@ export default function ClientDashboardPage() {
   }
 
   // Mock user status - in production, fetch from API
-  const [userStatus] = useState<UserStatus>({
-    kycStatus: "Verified" as keyof typeof KYC_STATUS,
+  const [userStatus, setUserStatus] = useState<UserStatus>({
+    kycStatus: "Pending" as keyof typeof KYC_STATUS,
     bankVerified: true,
     hasActiveQuote: false,
   })
+
+  // KYC Modal state
+  const [showKycModal, setShowKycModal] = useState(false)
+
+  const handleKycComplete = () => {
+    setUserStatus(prev => ({ ...prev, kycStatus: "Verified" as keyof typeof KYC_STATUS }))
+    setShowKycModal(false)
+  }
 
   const [recentTransactions] = useState([
     {
@@ -125,18 +134,18 @@ export default function ClientDashboardPage() {
           >
             <div className="bg-primary/10 border border-primary/30 rounded-xl p-6">
               <div className="flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-foreground mb-2">Complete Your Verification</h3>
                   <p className="text-muted-foreground mb-4">
-                    Your KYC verification is pending. Complete it to start trading with higher limits.
+                    Verify your identity to unlock full trading features and higher limits.
                   </p>
-                  <Link
-                    href="/auth/onboard/kyc-start"
+                  <button
+                    onClick={() => setShowKycModal(true)}
                     className="gemex-button-primary"
                   >
-                    Complete Verification
-                  </Link>
+                    Verify Now
+                  </button>
                 </div>
               </div>
             </div>
@@ -379,6 +388,13 @@ export default function ClientDashboardPage() {
           </motion.div>
         </Link>
       </motion.div>
+
+      {/* KYC Verification Modal */}
+      <KycVerificationModal
+        isOpen={showKycModal}
+        onClose={() => setShowKycModal(false)}
+        onComplete={handleKycComplete}
+      />
     </motion.div>
   )
 }

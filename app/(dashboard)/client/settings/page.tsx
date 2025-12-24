@@ -370,11 +370,6 @@ export default function SettingsPage() {
                       label: "Trade Status Alerts",
                       desc: "Notifications when your trade status changes",
                     },
-                    {
-                      key: "priceAlerts",
-                      label: "Price Movement Alerts",
-                      desc: "Get notified about significant crypto price changes",
-                    },
                   ].map((item) => (
                     <motion.div
                       key={item.key}

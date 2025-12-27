@@ -59,7 +59,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-sidebar-border flex items-center justify-center">
-            <div className="relative w-full h-10">
+            <div className="relative w-full h-14">
               <Image
                 src="/images/mainlogo_type.svg"
                 alt="GemEx"

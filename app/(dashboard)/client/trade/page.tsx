@@ -172,7 +172,7 @@ export default function TradeRequestPage() {
               </div>
 
               {/* System Rate Display */}
-              <div className="bg-gradient-to-br from-[#641AE4]/10 to-[#9A24D2]/5 border border-[#641AE4]/30 rounded-xl p-4 md:p-5">
+              {/* <div className="bg-gradient-to-br from-[#641AE4]/10 to-[#9A24D2]/5 border border-[#641AE4]/30 rounded-xl p-4 md:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-[#641AE4]" />
@@ -185,7 +185,7 @@ export default function TradeRequestPage() {
                 <p className="text-xs text-[#B0B0B8] mt-3">
                   * This is an estimate. Dealer will provide the final firm rate for your bulk trade.
                 </p>
-              </div>
+              </div> */}
 
               <motion.button
                 onClick={() => setStep("amount")}

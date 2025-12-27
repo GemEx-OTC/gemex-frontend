@@ -84,7 +84,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Right side - Auth form */}
-        <div className="w-full lg:w-1/2 xl:w-3/5 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full lg:w-1/2 xl:w-3/5 flex items-center justify-center p-4 sm:p-6 lg:p-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -101,7 +101,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
             </div>
 
-            {children}
+            {/* Form Card */}
+            <div className="bg-[#2D2D3D]/40 backdrop-blur-sm border border-[#2D2D3D] rounded-2xl p-6 sm:p-8">
+              {children}
+            </div>
           </motion.div>
         </div>
       </div>

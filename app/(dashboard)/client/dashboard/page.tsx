@@ -181,7 +181,7 @@ export default function ClientDashboardPage() {
       </AnimatePresence>
 
       {/* Key Financial Metrics */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* Total Payouts - Primary metric */}
         <div className="md:col-span-2 lg:col-span-1">
           <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
@@ -213,6 +213,10 @@ export default function ClientDashboardPage() {
           <p className="text-2xl font-bold text-foreground mb-1">₦{(2175000 + 782500).toLocaleString()}</p>
           <p className="text-sm text-amber-600 dark:text-amber-400">{metrics.pendingTrades} transactions</p>
         </div>
+      </motion.div>
+
+      {/* BTC Exchange Rates Section */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
 
         {/* USDT/USDC Rate */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
@@ -223,10 +227,6 @@ export default function ClientDashboardPage() {
           <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
           <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
         </div>
-      </motion.div>
-
-      {/* BTC Exchange Rates Section */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* BTC/USD Rate */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
           <div className="flex items-center justify-between mb-3">

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import Link from "next/link"
 
@@ -28,7 +28,7 @@ interface ExchangeRates {
 }
 
 export default function AdminDashboardPage() {
-  const [systemMetrics] = useState({
+  const [systemMetrics, setSystemMetrics] = useState({
     totalUsers: 2847,
     activeToday: 341,
     verifiedUsers: 2650,
@@ -40,6 +40,19 @@ export default function AdminDashboardPage() {
     btcToNaira: 43500000,
     lastUpdated: new Date().toISOString(),
   })
+
+  // Simulate real-time data updates with poll refresh effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSystemMetrics((prev) => ({
+        totalUsers: prev.totalUsers + Math.floor(Math.random() * 5),
+        activeToday: Math.max(100, prev.activeToday + Math.floor(Math.random() * 20) - 10),
+        verifiedUsers: prev.verifiedUsers + Math.floor(Math.random() * 3),
+        pendingKyc: Math.max(50, prev.pendingKyc + Math.floor(Math.random() * 10) - 5),
+      }))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const [recentActivity] = useState([
     { action: "User Verified", detail: "john.doe@email.com", time: "1 min ago", type: "success" },
@@ -59,45 +72,97 @@ export default function AdminDashboardPage() {
         }}
       />
 
-      {/* System Metrics - Colorful Gradient Cards */}
+      {/* System Metrics - Colorful Gradient Cards with Poll Refresh */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Users - Primary metric */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-2 border-blue-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{systemMetrics.totalUsers.toLocaleString()}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={systemMetrics.totalUsers}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-foreground mb-1"
+            >
+              {systemMetrics.totalUsers.toLocaleString()}
+            </motion.p>
+          </AnimatePresence>
           <p className="text-sm text-blue-600 dark:text-blue-400">Registered accounts</p>
         </div>
 
         {/* Active Today */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <p className="text-sm font-medium text-green-600 dark:text-green-400">Active Today</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">Active Today</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{systemMetrics.activeToday.toLocaleString()}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={systemMetrics.activeToday}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-foreground mb-1"
+            >
+              {systemMetrics.activeToday.toLocaleString()}
+            </motion.p>
+          </AnimatePresence>
           <p className="text-sm text-green-600 dark:text-green-400">Online now</p>
         </div>
 
         {/* Verified Users */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Verified Users</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Verified Users</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{systemMetrics.verifiedUsers.toLocaleString()}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={systemMetrics.verifiedUsers}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-foreground mb-1"
+            >
+              {systemMetrics.verifiedUsers.toLocaleString()}
+            </motion.p>
+          </AnimatePresence>
           <p className="text-sm text-purple-600 dark:text-purple-400">✓ KYC Compliant</p>
         </div>
 
         {/* Pending KYC */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending KYC</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending KYC</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{systemMetrics.pendingKyc}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={systemMetrics.pendingKyc}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-3xl font-bold text-foreground mb-1"
+            >
+              {systemMetrics.pendingKyc}
+            </motion.p>
+          </AnimatePresence>
           <p className="text-sm text-amber-600 dark:text-amber-400">⏳ Review needed</p>
         </div>
       </motion.div>

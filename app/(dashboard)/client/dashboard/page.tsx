@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { MetricCard } from "@/components/metric-card"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import { KycVerificationModal } from "@/components/kyc-verification-modal"
 import Link from "next/link"
-import { AlertCircle, Clock, Shield } from "lucide-react"
+import { Clock, Shield } from "lucide-react"
 
 interface ExchangeRates {
   nairaToUSDT: number
@@ -20,6 +19,7 @@ interface DashboardMetrics {
   completedTrades: number
   totalReceivedNaira: number
   totalReceivedUSDT: number
+  pendingPayoutAmount: number
 }
 
 interface UserStatus {
@@ -45,40 +45,44 @@ const itemVariants = {
 }
 
 export default function ClientDashboardPage() {
-  const [metrics] = useState<DashboardMetrics>({
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
     pendingTrades: 2,
     completedTrades: 28,
-    totalReceivedNaira: 45750000, // Total Naira received (₦45.75M)
-    totalReceivedUSDT: 29250, // Total crypto deposits in USD equivalent
+    totalReceivedNaira: 45750000,
+    totalReceivedUSDT: 29250,
+    pendingPayoutAmount: 2957500,
   })
 
-  // Exchange rates - in production, fetch from API
   const [exchangeRates] = useState<ExchangeRates>({
-    nairaToUSDT: 1565, // 1 USDT = 1565 NGN
-    btcToNaira: 43500000, // 1 BTC = 43,500,000 NGN
+    nairaToUSDT: 1565,
+    btcToNaira: 43500000,
     lastUpdated: new Date().toISOString(),
   })
 
-  // Helper function to format large numbers
-  const formatLargeNumber = (num: number): string => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`
-    }
-    return num.toLocaleString()
-  }
+  // Simulate real-time data updates with poll refresh effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics((prev) => ({
+        ...prev,
+        totalReceivedNaira: prev.totalReceivedNaira + Math.floor(Math.random() * 100000) - 25000,
+        totalReceivedUSDT: prev.totalReceivedUSDT + Math.floor(Math.random() * 100) - 25,
+        pendingPayoutAmount: Math.max(0, prev.pendingPayoutAmount + Math.floor(Math.random() * 50000) - 25000),
+        pendingTrades: Math.max(0, prev.pendingTrades + Math.floor(Math.random() * 3) - 1),
+      }))
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
-  // Mock user status - in production, fetch from API
   const [userStatus, setUserStatus] = useState<UserStatus>({
     kycStatus: "Pending" as keyof typeof KYC_STATUS,
     bankVerified: true,
     hasActiveQuote: false,
   })
 
-  // KYC Modal state
   const [showKycModal, setShowKycModal] = useState(false)
 
   const handleKycComplete = () => {
-    setUserStatus(prev => ({ ...prev, kycStatus: "Verified" as keyof typeof KYC_STATUS }))
+    setUserStatus((prev) => ({ ...prev, kycStatus: "Verified" as keyof typeof KYC_STATUS }))
     setShowKycModal(false)
   }
 
@@ -140,10 +144,7 @@ export default function ClientDashboardPage() {
                   <p className="text-muted-foreground mb-4">
                     Verify your identity to unlock full trading features and higher limits.
                   </p>
-                  <button
-                    onClick={() => setShowKycModal(true)}
-                    className="gemex-button-primary"
-                  >
+                  <button onClick={() => setShowKycModal(true)} className="gemex-button-primary">
                     Verify Now
                   </button>
                 </div>
@@ -167,10 +168,7 @@ export default function ClientDashboardPage() {
                   <p className="text-muted-foreground mb-4">
                     Link your Nigerian bank account to receive Naira payouts instantly.
                   </p>
-                  <Link
-                    href="/client/settings"
-                    className="gemex-button-secondary"
-                  >
+                  <Link href="/client/settings" className="gemex-button-secondary">
                     Add Bank Account
                   </Link>
                 </div>
@@ -180,44 +178,91 @@ export default function ClientDashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Key Financial Metrics */}
+      {/* Key Financial Metrics with Poll Refresh */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* Total Payouts - Primary metric */}
         <div className="md:col-span-2 lg:col-span-1">
           <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Payouts</p>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Payouts</p>
+              </div>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">₦{metrics.totalReceivedNaira.toLocaleString()}</p>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={metrics.totalReceivedNaira}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-3xl font-bold text-foreground mb-1"
+              >
+                ₦{metrics.totalReceivedNaira.toLocaleString()}
+              </motion.p>
+            </AnimatePresence>
             <p className="text-sm text-green-600 dark:text-green-400">All time earnings</p>
           </div>
         </div>
 
         {/* Total Deposits */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-2 border-blue-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Deposits</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Deposits</p>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">${metrics.totalReceivedUSDT.toLocaleString()}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={metrics.totalReceivedUSDT}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-2xl font-bold text-foreground mb-1"
+            >
+              ${metrics.totalReceivedUSDT.toLocaleString()}
+            </motion.p>
+          </AnimatePresence>
           <p className="text-sm text-blue-600 dark:text-blue-400">Crypto equivalent</p>
         </div>
 
         {/* Pending Payouts */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Payouts</p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Payouts</p>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{(2175000 + 782500).toLocaleString()}</p>
-          <p className="text-sm text-amber-600 dark:text-amber-400">{metrics.pendingTrades} transactions</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={metrics.pendingPayoutAmount}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-2xl font-bold text-foreground mb-1"
+            >
+              ₦{metrics.pendingPayoutAmount.toLocaleString()}
+            </motion.p>
+          </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={metrics.pendingTrades}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm text-amber-600 dark:text-amber-400"
+            >
+              {metrics.pendingTrades} transactions
+            </motion.p>
+          </AnimatePresence>
         </div>
       </motion.div>
 
       {/* BTC Exchange Rates Section */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        {/* USDT/USDC Rate */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
@@ -226,7 +271,7 @@ export default function ClientDashboardPage() {
           <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
           <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
         </div>
-        {/* BTC/USD Rate */}
+
         <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -239,7 +284,6 @@ export default function ClientDashboardPage() {
           <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
         </div>
 
-        {/* BTC Rate per Dollar in Naira */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-2 border-teal-500/40">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -252,7 +296,6 @@ export default function ClientDashboardPage() {
           <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
         </div>
 
-        {/* BTC/NGN Rate */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border-2 border-indigo-500/40">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -265,8 +308,6 @@ export default function ClientDashboardPage() {
           <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
         </div>
       </motion.div>
-
-
 
       {/* Main CTA Section */}
       <motion.div variants={itemVariants} className="mb-8">
@@ -283,7 +324,9 @@ export default function ClientDashboardPage() {
             </motion.div>
 
             <h2 className="text-2xl font-bold text-foreground mb-2 relative z-10">Ready for Bulk Trade?</h2>
-            <p className="text-muted-foreground mb-6 relative z-10">Request quotes for large crypto-to-Naira conversions</p>
+            <p className="text-muted-foreground mb-6 relative z-10">
+              Request quotes for large crypto-to-Naira conversions
+            </p>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -339,7 +382,9 @@ export default function ClientDashboardPage() {
                     <Clock className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{new Date(tx.createdAt).toLocaleString()}</span>
                   </div>
-                  <span className={`inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto shadow-sm`}>
+                  <span
+                    className={`inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto shadow-sm`}
+                  >
                     {statusInfo.label}
                   </span>
                 </div>
@@ -350,7 +395,7 @@ export default function ClientDashboardPage() {
       </motion.div>
 
       {/* Quick Actions */}
-<motion.div variants={itemVariants} className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div variants={itemVariants} className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link href="/client/history">
           <motion.div
             whileHover={{ scale: 1.02, y: -4 }}
@@ -389,11 +434,7 @@ export default function ClientDashboardPage() {
       </motion.div>
 
       {/* KYC Verification Modal */}
-      <KycVerificationModal
-        isOpen={showKycModal}
-        onClose={() => setShowKycModal(false)}
-        onComplete={handleKycComplete}
-      />
+      <KycVerificationModal isOpen={showKycModal} onClose={() => setShowKycModal(false)} onComplete={handleKycComplete} />
     </motion.div>
   )
 }

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Wallet, Settings, LayoutDashboard, Users } from "lucide-react"
+import { Home, FileText, Wallet, Settings, LayoutDashboard, Users, Bell } from "lucide-react"
 
 interface MobileBottomNavProps {
   role: "client" | "dealer" | "admin"
@@ -13,21 +13,22 @@ const roleNavItems = {
   client: [
     { name: "Dashboard", href: "/client/dashboard", icon: Home },
     { name: "Trade", href: "/client/trade", icon: LayoutDashboard },
-    { name: "History", href: "/client/history", icon: FileText },
+    { name: "Alerts", href: "/client/notifications", icon: Bell },
     { name: "Wallet", href: "/client/wallet", icon: Wallet },
     { name: "Settings", href: "/client/settings", icon: Settings },
   ],
   dealer: [
     { name: "Dashboard", href: "/dealer/dashboard", icon: Home },
     { name: "Quotes", href: "/dealer/quotes", icon: FileText },
+    { name: "Alerts", href: "/dealer/notifications", icon: Bell },
     { name: "Trades", href: "/dealer/trades", icon: LayoutDashboard },
     { name: "Settings", href: "/dealer/settings", icon: Settings },
   ],
   admin: [
     { name: "Dashboard", href: "/admin/dashboard", icon: Home },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Alerts", href: "/admin/notifications", icon: Bell },
     { name: "Settings", href: "/admin/settings", icon: Settings },
-    { name: "Audit", href: "/admin/audit", icon: FileText },
   ],
 }
 

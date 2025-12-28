@@ -21,12 +21,26 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 }
 
+
+interface ExchangeRates {
+  nairaToUSDT: number
+  btcToNaira: number
+  lastUpdated: string
+}
+
 export default function DealerDashboardPage() {
   const [metrics, setMetrics] = useState({
     totalLocked: 2450000,
     awaitingPayouts: 180500,
     payoutBalance: 1200000,
     pendingCount: 12,
+  })
+
+  // Exchange rates - in production, fetch from API
+  const [exchangeRates] = useState<ExchangeRates>({
+    nairaToUSDT: 1565, // 1 USDT = 1565 NGN
+    btcToNaira: 43500000, // 1 BTC = 43,500,000 NGN
+    lastUpdated: new Date().toISOString(),
   })
 
   // Simulate real-time data updates with pulse effect
@@ -156,6 +170,57 @@ export default function DealerDashboardPage() {
         </div>
       </motion.div>
 
+      {/* BTC Exchange Rates Section */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* USDT/USDC Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
+          <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
+        </div>
+        {/* BTC/USD Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₿</span>
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">BTC/USD Rate</p>
+            </div>
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">$90,200</p>
+          <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
+        </div>
+
+        {/* BTC Rate per Dollar in Naira */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-2 border-teal-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₦</span>
+              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">BTC Rate</p>
+            </div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦1,470</p>
+          <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
+        </div>
+
+        {/* BTC/NGN Rate */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border-2 border-indigo-500/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">₿₦</span>
+              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">BTC/NGN Rate</p>
+            </div>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+          </div>
+          <p className="text-2xl font-bold text-foreground mb-1">₦132,500</p>
+          <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
+        </div>
+      </motion.div>
+
       {/* Active Quotes Queue */}
       <motion.div variants={itemVariants} className="mb-8">
         <div className="relative bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6">
@@ -180,9 +245,8 @@ export default function DealerDashboardPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      quote.status === "Pending" ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-[#641AE4]/20 text-[#641AE4]"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${quote.status === "Pending" ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-[#641AE4]/20 text-[#641AE4]"
+                      }`}
                   >
                     {quote.status}
                   </span>

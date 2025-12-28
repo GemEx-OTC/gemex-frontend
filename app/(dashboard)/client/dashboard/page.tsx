@@ -217,7 +217,6 @@ export default function ClientDashboardPage() {
 
       {/* BTC Exchange Rates Section */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-
         {/* USDT/USDC Rate */}
         <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
           <div className="flex items-center gap-2 mb-2">

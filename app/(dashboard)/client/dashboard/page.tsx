@@ -1,32 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import { KycVerificationModal } from "@/components/kyc-verification-modal"
+import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
-import { Clock, Shield } from "lucide-react"
-
-interface ExchangeRates {
-  nairaToUSDT: number
-  btcToNaira: number
-  lastUpdated: string
-}
-
-interface DashboardMetrics {
-  pendingTrades: number
-  completedTrades: number
-  totalReceivedNaira: number
-  totalReceivedUSDT: number
-  pendingPayoutAmount: number
-}
-
-interface UserStatus {
-  kycStatus: keyof typeof KYC_STATUS
-  bankVerified: boolean
-  hasActiveQuote: boolean
-}
+import { Clock, Shield, AlertCircle } from "lucide-react"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -45,81 +26,44 @@ const itemVariants = {
 }
 
 export default function ClientDashboardPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    pendingTrades: 2,
-    completedTrades: 28,
-    totalReceivedNaira: 45750000,
-    totalReceivedUSDT: 29250,
-    pendingPayoutAmount: 2957500,
-  })
-
-  const [exchangeRates] = useState<ExchangeRates>({
-    nairaToUSDT: 1565,
-    btcToNaira: 43500000,
-    lastUpdated: new Date().toISOString(),
-  })
-
-  // Simulate real-time data updates with poll refresh effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics((prev) => ({
-        ...prev,
-        totalReceivedNaira: prev.totalReceivedNaira + Math.floor(Math.random() * 100000) - 25000,
-        totalReceivedUSDT: prev.totalReceivedUSDT + Math.floor(Math.random() * 100) - 25,
-        pendingPayoutAmount: Math.max(0, prev.pendingPayoutAmount + Math.floor(Math.random() * 50000) - 25000),
-        pendingTrades: Math.max(0, prev.pendingTrades + Math.floor(Math.random() * 3) - 1),
-      }))
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const [userStatus, setUserStatus] = useState<UserStatus>({
-    kycStatus: "Pending" as keyof typeof KYC_STATUS,
-    bankVerified: true,
-    hasActiveQuote: false,
-  })
-
+  const { data: dashboard, isLoading, error } = useClientDashboard()
   const [showKycModal, setShowKycModal] = useState(false)
 
-  const handleKycComplete = () => {
-    setUserStatus((prev) => ({ ...prev, kycStatus: "Verified" as keyof typeof KYC_STATUS }))
-    setShowKycModal(false)
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
-  const [recentTransactions] = useState([
-    {
-      id: "TXN001",
-      type: "CRYPTO_TO_NAIRA",
-      cryptoAsset: "USDT",
-      cryptoAmount: 1000,
-      nairaAmount: 1565000,
-      status: "Settled" as keyof typeof TRANSACTION_STATUS,
-      createdAt: "2024-12-04T10:30:00Z",
-    },
-    {
-      id: "TXN002",
-      type: "CRYPTO_TO_NAIRA",
-      cryptoAsset: "BTC",
-      cryptoAmount: 0.05,
-      nairaAmount: 2175000,
-      status: "PayoutPending" as keyof typeof TRANSACTION_STATUS,
-      createdAt: "2024-12-04T14:15:00Z",
-    },
-    {
-      id: "TXN003",
-      type: "CRYPTO_TO_NAIRA",
-      cryptoAsset: "USDT",
-      cryptoAmount: 500,
-      nairaAmount: 782500,
-      status: "AwaitingDeposit" as keyof typeof TRANSACTION_STATUS,
-      createdAt: "2024-12-04T16:45:00Z",
-    },
-  ])
+  // Error state
+  if (error || !dashboard) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-12 h-12 text-destructive" />
+          <h2 className="text-xl font-semibold">Failed to load dashboard</h2>
+          <p className="text-muted-foreground">Please try refreshing the page</p>
+        </div>
+      </div>
+    )
+  }
+
+  const { user, metrics, exchangeRates, recentTransactions } = dashboard
+
+  const handleKycComplete = () => {
+    setShowKycModal(false)
+  }
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <DashboardHeader
-        title="Welcome Back"
+        title={`Welcome Back, ${user.fullName.split(' ')[0]}`}
         subtitle="Here's your trading overview for today"
         action={{
           label: "Deposit",
@@ -129,7 +73,7 @@ export default function ClientDashboardPage() {
 
       {/* Account Status Alerts */}
       <AnimatePresence>
-        {userStatus.kycStatus !== "Verified" && (
+        {user.kycStatus !== "Verified" && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -153,7 +97,7 @@ export default function ClientDashboardPage() {
           </motion.div>
         )}
 
-        {!userStatus.bankVerified && userStatus.kycStatus === "Verified" && (
+        {!user.bankVerified && user.kycStatus === "Verified" && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,30 +122,23 @@ export default function ClientDashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Key Financial Metrics with Poll Refresh */}
+      {/* Key Financial Metrics */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {/* Total Payouts - Primary metric */}
+        {/* Total Payouts */}
         <div className="md:col-span-2 lg:col-span-1">
           <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Payouts</p>
               </div>
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={metrics.totalReceivedNaira}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                ₦{metrics.totalReceivedNaira.toLocaleString()}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-green-600 dark:text-green-400">All time earnings</p>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              ₦{metrics.totalPayouts.toLocaleString()}
+            </p>
+            <p className="text-sm text-green-600 dark:text-green-400">
+              {metrics.completedTrades} completed trades
+            </p>
           </div>
         </div>
 
@@ -213,18 +150,9 @@ export default function ClientDashboardPage() {
               <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Deposits</p>
             </div>
           </div>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={metrics.totalReceivedUSDT}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="text-2xl font-bold text-foreground mb-1"
-            >
-              ${metrics.totalReceivedUSDT.toLocaleString()}
-            </motion.p>
-          </AnimatePresence>
+          <p className="text-2xl font-bold text-foreground mb-1">
+            ${metrics.totalDeposits.toLocaleString()}
+          </p>
           <p className="text-sm text-blue-600 dark:text-blue-400">Crypto equivalent</p>
         </div>
 
@@ -232,43 +160,27 @@ export default function ClientDashboardPage() {
         <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/40">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <div className={`w-2 h-2 bg-amber-500 rounded-full ${metrics.pendingTrades > 0 ? 'animate-pulse' : ''}`}></div>
               <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Payouts</p>
             </div>
           </div>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={metrics.pendingPayoutAmount}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="text-2xl font-bold text-foreground mb-1"
-            >
-              ₦{metrics.pendingPayoutAmount.toLocaleString()}
-            </motion.p>
-          </AnimatePresence>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={metrics.pendingTrades}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-sm text-amber-600 dark:text-amber-400"
-            >
-              {metrics.pendingTrades} transactions
-            </motion.p>
-          </AnimatePresence>
+          <p className="text-2xl font-bold text-foreground mb-1">
+            ₦{metrics.pendingPayoutAmount.toLocaleString()}
+          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            {metrics.pendingTrades} transaction{metrics.pendingTrades !== 1 ? 's' : ''}
+          </p>
         </div>
       </motion.div>
 
-      {/* BTC Exchange Rates Section */}
+      {/* Exchange Rates Section */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
             <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USDT_NGN.toLocaleString()}</p>
           <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
         </div>
 
@@ -280,7 +192,7 @@ export default function ClientDashboardPage() {
             </div>
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">$90,200</p>
+          <p className="text-2xl font-bold text-foreground mb-1">${exchangeRates.BTC_USD.toLocaleString()}</p>
           <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
         </div>
 
@@ -288,11 +200,11 @@ export default function ClientDashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl">₦</span>
-              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">BTC Rate</p>
+              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">USD/NGN Rate</p>
             </div>
             <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦1,470</p>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USD_NGN.toLocaleString()}</p>
           <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
         </div>
 
@@ -304,7 +216,7 @@ export default function ClientDashboardPage() {
             </div>
             <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦132,500</p>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{(exchangeRates.BTC_NGN / 1000000).toFixed(1)}M</p>
           <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
         </div>
       </motion.div>
@@ -348,50 +260,60 @@ export default function ClientDashboardPage() {
           </Link>
         </div>
 
-        <div className="space-y-3">
-          {recentTransactions.map((tx, idx) => {
-            const statusInfo = TRANSACTION_STATUS[tx.status]
-            return (
-              <motion.div
-                key={tx.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-card border border-border rounded-lg p-4 hover:border-primary/40 transition-all"
-              >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white">
-                      {tx.cryptoAsset === "BTC" ? "₿" : tx.cryptoAsset === "USDT" ? "₮" : "$"}
+        {recentTransactions.length === 0 ? (
+          <div className="bg-card border border-border rounded-lg p-8 text-center">
+            <p className="text-muted-foreground">No transactions yet. Start trading to see your history here.</p>
+            <Link href="/client/trade" className="inline-block mt-4 gemex-button-primary">
+              Start Trading
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentTransactions.slice(0, 5).map((tx, idx) => {
+              const statusKey = tx.status as keyof typeof TRANSACTION_STATUS
+              const statusInfo = TRANSACTION_STATUS[statusKey] || { label: tx.status, bg: 'bg-gray-500/20', color: 'text-gray-400' }
+              return (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-card border border-border rounded-lg p-4 hover:border-primary/40 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white">
+                        {tx.cryptoAsset === "BTC" ? "₿" : tx.cryptoAsset === "USDT" ? "₮" : "$"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground truncate">
+                          {tx.cryptoAmount} {tx.cryptoAsset}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">{tx.id}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground truncate">
-                        {tx.cryptoAmount} {tx.cryptoAsset}
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-secondary text-sm sm:text-base whitespace-nowrap">
+                        ₦{tx.nairaAmount.toLocaleString()}
                       </p>
-                      <p className="text-sm text-muted-foreground truncate">{tx.id}</p>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-secondary text-sm sm:text-base whitespace-nowrap">
-                      ₦{tx.nairaAmount.toLocaleString()}
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{new Date(tx.createdAt).toLocaleString()}</span>
+                    </div>
+                    <span
+                      className={`inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto shadow-sm`}
+                    >
+                      {statusInfo.label}
+                    </span>
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{new Date(tx.createdAt).toLocaleString()}</span>
-                  </div>
-                  <span
-                    className={`inline-flex items-center justify-center text-xs px-3 py-1.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.color} whitespace-nowrap self-start sm:self-auto shadow-sm`}
-                  >
-                    {statusInfo.label}
-                  </span>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </motion.div>
 
       {/* Quick Actions */}

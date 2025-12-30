@@ -10,25 +10,28 @@ export default function AdminSettingsPage() {
   const router = useRouter()
   const [exchangeRates, setExchangeRates] = useState({
     btcNgn: "43500000",
-    ethNgn: "2850000",
     usdtNgn: "1565",
+    usdcNgn: "1563",
   })
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [twoFactorCode, setTwoFactorCode] = useState("")
   const [processing, setProcessing] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [twoFactorError, setTwoFactorError] = useState("")
 
   const handleSaveRates = () => {
     setShowConfirmModal(true)
     setTwoFactorCode("")
+    setTwoFactorError("")
   }
 
   const handleConfirmSave = () => {
     if (twoFactorCode !== "123456") {
-      alert("Invalid 2FA code")
+      setTwoFactorError("Invalid 2FA code. Please try again.")
       return
     }
 
+    setTwoFactorError("")
     setProcessing(true)
     setTimeout(() => {
       setProcessing(false)
@@ -47,35 +50,10 @@ export default function AdminSettingsPage() {
       {/* Exchange Rates */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 10 }} className="max-w-2xl">
         <div className="p-8 bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border border-[#641AE4]/40 rounded-xl mb-6">
-          <h2 className="text-xl font-bold text-[#F0F0F0] mb-6">Exchange Rates</h2>
+          <h2 className="text-xl font-bold text-[#F0F0F0] mb-2">Global Exchange Rates</h2>
+          <p className="text-sm text-[#B0B0B8] mb-6">These rates are used for auto-payout calculations on settled trades</p>
 
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">BTC to NGN Rate</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={exchangeRates.btcNgn}
-                  onChange={(e) => setExchangeRates({ ...exchangeRates, btcNgn: e.target.value })}
-                  className="flex-1 bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none font-mono"
-                />
-                <span className="text-[#B0B0B8]">NGN</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">ETH to NGN Rate</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={exchangeRates.ethNgn}
-                  onChange={(e) => setExchangeRates({ ...exchangeRates, ethNgn: e.target.value })}
-                  className="flex-1 bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none font-mono"
-                />
-                <span className="text-[#B0B0B8]">NGN</span>
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-[#F0F0F0] mb-2">USDT to NGN Rate</label>
               <div className="flex items-center gap-2">
@@ -83,6 +61,32 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={exchangeRates.usdtNgn}
                   onChange={(e) => setExchangeRates({ ...exchangeRates, usdtNgn: e.target.value })}
+                  className="flex-1 bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none font-mono"
+                />
+                <span className="text-[#B0B0B8]">NGN</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">USDC to NGN Rate</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={exchangeRates.usdcNgn}
+                  onChange={(e) => setExchangeRates({ ...exchangeRates, usdcNgn: e.target.value })}
+                  className="flex-1 bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none font-mono"
+                />
+                <span className="text-[#B0B0B8]">NGN</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#F0F0F0] mb-2">BTC to NGN Rate</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={exchangeRates.btcNgn}
+                  onChange={(e) => setExchangeRates({ ...exchangeRates, btcNgn: e.target.value })}
                   className="flex-1 bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none font-mono"
                 />
                 <span className="text-[#B0B0B8]">NGN</span>
@@ -133,7 +137,7 @@ export default function AdminSettingsPage() {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#641AE4]/20 mb-4">
                     <Shield className="w-8 h-8 text-[#641AE4]" />
                   </div>
-                  <h3 className="text-2xl font-bold text-[#F0F0F0] mb-2">Confirm Rate Change</h3>
+                  <h3 className="text-2xl font-bold text-[#F0F0F0] mb-2">Confirm Global Rate Change</h3>
                   <p className="text-[#B0B0B8]">This action requires 2FA authentication</p>
                 </div>
 
@@ -144,7 +148,7 @@ export default function AdminSettingsPage() {
                     <div>
                       <p className="text-sm text-red-400 font-medium mb-1">Critical Action</p>
                       <p className="text-xs text-[#B0B0B8]">
-                        Rate changes affect all new quotes immediately. Ensure accuracy before confirming.
+                        Global rates affect auto-payout calculations for all settled trades. Ensure accuracy before confirming.
                       </p>
                     </div>
                   </div>
@@ -153,16 +157,16 @@ export default function AdminSettingsPage() {
                 {/* Rate Summary */}
                 <div className="bg-[#2D2D3D]/50 rounded-lg p-4 mb-6 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#B0B0B8]">BTC/NGN:</span>
-                    <span className="text-[#C8F55A] font-mono">₦{Number(exchangeRates.btcNgn).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[#B0B0B8]">ETH/NGN:</span>
-                    <span className="text-[#C8F55A] font-mono">₦{Number(exchangeRates.ethNgn).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
                     <span className="text-[#B0B0B8]">USDT/NGN:</span>
                     <span className="text-[#C8F55A] font-mono">₦{Number(exchangeRates.usdtNgn).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#B0B0B8]">USDC/NGN:</span>
+                    <span className="text-[#C8F55A] font-mono">₦{Number(exchangeRates.usdcNgn).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#B0B0B8]">BTC/NGN:</span>
+                    <span className="text-[#C8F55A] font-mono">₦{Number(exchangeRates.btcNgn).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -172,12 +176,27 @@ export default function AdminSettingsPage() {
                   <input
                     type="text"
                     value={twoFactorCode}
-                    onChange={(e) => setTwoFactorCode(e.target.value)}
+                    onChange={(e) => {
+                      setTwoFactorCode(e.target.value)
+                      setTwoFactorError("")
+                    }}
                     placeholder="Enter 6-digit code"
                     maxLength={6}
-                    className="w-full bg-[#2D2D3D] border-b-2 border-b-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] text-center text-2xl font-mono tracking-widest px-4 py-3 rounded transition-all focus:outline-none"
+                    className={`w-full bg-[#2D2D3D] border-b-2 ${
+                      twoFactorError ? "border-b-red-500" : "border-b-transparent focus:border-b-[#C8F55A]"
+                    } text-[#F0F0F0] text-center text-2xl font-mono tracking-widest px-4 py-3 rounded transition-all focus:outline-none`}
                   />
-                  <p className="text-xs text-[#B0B0B8] mt-2 text-center">Demo code: 123456</p>
+                  {twoFactorError ? (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs text-red-400 mt-2 text-center"
+                    >
+                      {twoFactorError}
+                    </motion.p>
+                  ) : (
+                    <p className="text-xs text-[#B0B0B8] mt-2 text-center">Demo code: 123456</p>
+                  )}
                 </div>
 
                 {/* Actions */}

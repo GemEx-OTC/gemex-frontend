@@ -5,8 +5,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import { DemoAccountsCard } from "@/components/demo-accounts-card"
-import { validateDemoAccount } from "@/lib/demo-accounts"
 import { useLogin } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 
@@ -23,44 +21,35 @@ const formVariants = {
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [showDemoAccounts, setShowDemoAccounts] = useState(false)
   
   const router = useRouter()
   const loginMutation = useLogin()
 
-  const handleLogin = async (loginEmail: string, loginPassword: string) => {
-    if (!loginEmail || !loginPassword) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email || !password) {
       toast.error("Please fill in all fields to continue.")
       return
     }
 
-    // Check if it's a demo account first
-    const demoAccount = validateDemoAccount(loginEmail, loginPassword)
-    if (demoAccount) {
-      toast.success(`Welcome! Logging in as ${demoAccount.role}...`)
-      window.location.href = demoAccount.redirectTo
-      return
-    }
-
     // Validate email format
-    if (!loginEmail.includes("@")) {
+    if (!email.includes("@")) {
       toast.error("Please enter a valid email address.")
       return
     }
 
     // Call the API
     loginMutation.mutate(
-      { email: loginEmail, password: loginPassword },
+      { email, password },
       {
         onSuccess: () => {
           toast.success("Login successful!")
         },
         onError: (err: ApiError) => {
-          console.log('Login error:', JSON.stringify(err, null, 2))
-          
           if (err.code === 'EMAIL_NOT_VERIFIED') {
             toast.info("Please verify your email to continue.")
-            const verifyEmail = err.data?.email || loginEmail
+            const verifyEmail = err.data?.email || email
             router.push(`/auth/verify-email?email=${encodeURIComponent(verifyEmail)}`)
           } else if (err.code === 'MUST_CHANGE_PASSWORD') {
             toast.info("Please set a new password to continue.")
@@ -76,20 +65,6 @@ export default function LoginPage() {
         },
       }
     )
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    handleLogin(email, password)
-  }
-
-  const handleSelectDemoAccount = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-    setShowDemoAccounts(false)
-    setTimeout(() => {
-      handleLogin(demoEmail, demoPassword)
-    }, 300)
   }
 
   return (
@@ -165,29 +140,6 @@ export default function LoginPage() {
             Create an account
           </a>
         </div>
-
-        {/* Demo Accounts Toggle */}
-        <div className="text-center">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-            className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-          >
-            {showDemoAccounts ? "Hide demo accounts" : "🎭 Show demo accounts"}
-          </motion.button>
-        </div>
-
-        {/* Demo Accounts Card */}
-        {showDemoAccounts && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <DemoAccountsCard onSelectAccount={handleSelectDemoAccount} />
-          </motion.div>
-        )}
       </motion.div>
     </motion.div>
   )

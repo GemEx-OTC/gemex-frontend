@@ -9,7 +9,7 @@ import { Wallet, Copy, Check } from "lucide-react"
 export default function WalletVerificationPage() {
   const router = useRouter()
   const [walletAddress, setWalletAddress] = useState("")
-  const [walletType, setWalletType] = useState<"TRC20" | "BSC" | "ERC20" | "BTC">("TRC20")
+  const [walletType, setWalletType] = useState<"TRC20" | "BSC" | "BTC">("TRC20")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -20,8 +20,8 @@ export default function WalletVerificationPage() {
     }
 
     // Basic validation based on network type
-    if ((walletType === "ERC20" || walletType === "BSC") && !walletAddress.startsWith("0x")) {
-      setError("ERC20/BSC addresses must start with 0x")
+    if (walletType === "BSC" && !walletAddress.startsWith("0x")) {
+      setError("BSC addresses must start with 0x")
       return false
     }
 
@@ -86,7 +86,6 @@ export default function WalletVerificationPage() {
               {[
                 { value: "TRC20", label: "Tron (TRC20)", desc: "USDT", color: "from-[#FF0013]/20" },
                 { value: "BSC", label: "BNB Chain", desc: "USDT, USDC", color: "from-[#F3BA2F]/20" },
-                { value: "ERC20", label: "Ethereum", desc: "USDT, USDC", color: "from-[#627EEA]/20" },
                 { value: "BTC", label: "Bitcoin", desc: "BTC", color: "from-[#F7931A]/20" },
               ].map((type) => (
                 <motion.button

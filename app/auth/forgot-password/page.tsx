@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { AuthHeader } from "@/components/auth-header"
+import { useForgotPassword } from "@/lib/hooks/use-auth"
+import type { ApiError } from "@/lib/api/types"
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -19,16 +19,26 @@ const formVariants = {
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  
+  const forgotPasswordMutation = useForgotPassword()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setError("")
 
-    setTimeout(() => {
-      setSubmitted(true)
-      setLoading(false)
-    }, 1000)
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email address.")
+      return
+    }
+
+    forgotPasswordMutation.mutate(
+      { email },
+      {
+        onSuccess: () => setSubmitted(true),
+        onError: (err: ApiError) => setError(err.message || "Failed to send reset link."),
+      }
+    )
   }
 
   return (
@@ -36,13 +46,11 @@ export default function ForgotPasswordPage() {
       <motion.div variants={formVariants} className="space-y-8">
         {!submitted ? (
           <>
-            {/* Header */}
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-[#F0F0F0]">Reset your password</h1>
               <p className="text-[#B0B0B8]">Enter your email and we'll send you a reset link</p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-[#F0F0F0] mb-2">
@@ -55,34 +63,40 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
                   required
-                  className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20"
+                  disabled={forgotPasswordMutation.isPending}
+                  className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50"
                 />
               </div>
 
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg"
+                >
+                  {error}
+                </motion.div>
+              )}
+
               <motion.button
                 type="submit"
-                disabled={loading}
+                disabled={forgotPasswordMutation.isPending}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70"
               >
-                {loading ? "Sending reset link..." : "Send reset link"}
+                {forgotPasswordMutation.isPending ? "Sending reset link..." : "Send reset link"}
               </motion.button>
             </form>
 
-            {/* Back to login */}
             <div className="text-center">
-              <a
-                href="/auth/login"
-                className="inline-flex items-center gap-2 text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors"
-              >
+              <a href="/auth/login" className="inline-flex items-center gap-2 text-sm text-[#641AE4] hover:text-[#9A24D2] transition-colors">
                 <span>←</span> Back to sign in
               </a>
             </div>
           </>
         ) : (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-            {/* Success state */}
             <div className="text-center space-y-4">
               <motion.div
                 initial={{ scale: 0 }}
@@ -96,8 +110,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-[#F0F0F0]">Check your email</h2>
                 <p className="text-[#B0B0B8]">
-                  We've sent a password reset link to
-                  <br />
+                  We've sent a password reset link to<br />
                   <span className="text-[#F0F0F0] font-medium">{email}</span>
                 </p>
               </div>
@@ -112,12 +125,8 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
-            {/* Back to login */}
             <div className="text-center pt-4">
-              <a
-                href="/auth/login"
-                className="inline-flex items-center justify-center w-full py-3.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
-              >
+              <a href="/auth/login" className="inline-flex items-center justify-center w-full py-3.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all">
                 Back to sign in
               </a>
             </div>

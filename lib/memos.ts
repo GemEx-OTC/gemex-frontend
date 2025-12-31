@@ -1,43 +1,19 @@
 // Memo types and utilities for dealer-admin communication
+// Re-export API types for convenience
+export type { 
+  MemoStatus, 
+  MemoPriority, 
+  MemoCategory,
+  Memo,
+  MemoReply,
+  MemoUser,
+  MemoStats,
+  MemoFilters,
+  CreateMemoInput,
+  Assignee,
+} from './api/memos';
 
-export type MemoStatus = "open" | "in_progress" | "resolved" | "closed"
-export type MemoPriority = "low" | "medium" | "high" | "urgent"
-export type MemoCategory = "trade_issue" | "rate_request" | "client_concern" | "system_issue" | "general" | "escalation"
-
-export interface Memo {
-  id: string
-  subject: string
-  message: string
-  category: MemoCategory
-  priority: MemoPriority
-  status: MemoStatus
-  createdBy: {
-    id: string
-    name: string
-    role: "dealer" | "admin"
-  }
-  assignedTo?: {
-    id: string
-    name: string
-    role: "dealer" | "admin"
-  }
-  referenceType?: "trade" | "quote" | "user"
-  referenceId?: string
-  replies: MemoReply[]
-  createdAt: string
-  updatedAt: string
-}
-
-export interface MemoReply {
-  id: string
-  message: string
-  createdBy: {
-    id: string
-    name: string
-    role: "dealer" | "admin"
-  }
-  createdAt: string
-}
+import type { MemoStatus, MemoPriority, MemoCategory } from './api/memos';
 
 export const MEMO_STATUS_CONFIG: Record<MemoStatus, { label: string; color: string; bg: string }> = {
   open: {
@@ -108,4 +84,9 @@ export function formatMemoDate(dateString: string): string {
   if (hours < 24) return `${hours}h ago`
   if (days < 7) return `${days}d ago`
   return date.toLocaleDateString()
+}
+
+// Helper to get memo ID (handles both _id and memoId)
+export function getMemoDisplayId(memo: { memoId?: string; _id?: string }): string {
+  return memo.memoId || memo._id || '';
 }

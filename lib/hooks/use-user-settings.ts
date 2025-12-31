@@ -1,0 +1,177 @@
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as userSettingsApi from '@/lib/api/user-settings';
+import type {
+  UpdateProfileInput,
+  ChangePasswordInput,
+  NotificationPreferences,
+  UpdateBankAccountInput,
+  VerifyBankAccountInput,
+  UpdateDealerRatesInput,
+  UpdateExchangeRatesInput,
+} from '@/lib/api/user-settings';
+
+// Query keys
+export const userSettingsKeys = {
+  all: ['user-settings'] as const,
+  profile: () => [...userSettingsKeys.all, 'profile'] as const,
+  notifications: () => [...userSettingsKeys.all, 'notifications'] as const,
+  bankAccount: () => [...userSettingsKeys.all, 'bank-account'] as const,
+  dealerRates: () => [...userSettingsKeys.all, 'dealer-rates'] as const,
+  exchangeRates: () => [...userSettingsKeys.all, 'exchange-rates'] as const,
+};
+
+// ============ PROFILE HOOKS ============
+
+export const useProfile = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.profile(),
+    queryFn: userSettingsApi.getProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateProfileInput) => userSettingsApi.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: (data: ChangePasswordInput) => userSettingsApi.changePassword(data),
+  });
+};
+
+// ============ NOTIFICATION HOOKS ============
+
+export const useNotificationPreferences = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.notifications(),
+    queryFn: userSettingsApi.getNotificationPreferences,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdateNotificationPreferences = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: NotificationPreferences) => userSettingsApi.updateNotificationPreferences(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.notifications() });
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+// ============ SECURITY HOOKS ============
+
+export const useToggleTwoFactor = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (enabled: boolean) => userSettingsApi.toggleTwoFactor(enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+// ============ BANK ACCOUNT HOOKS ============
+
+export const useBankAccount = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.bankAccount(),
+    queryFn: userSettingsApi.getBankAccount,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdateBankAccount = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateBankAccountInput) => userSettingsApi.updateBankAccount(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.bankAccount() });
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+export const useVerifyBankAccount = () => {
+  return useMutation({
+    mutationFn: (data: VerifyBankAccountInput) => userSettingsApi.verifyBankAccount(data),
+  });
+};
+
+// ============ DEALER HOOKS ============
+
+export const useDealerRates = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.dealerRates(),
+    queryFn: userSettingsApi.getDealerRates,
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
+export const useUpdateDealerRates = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateDealerRatesInput) => userSettingsApi.updateDealerRates(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.dealerRates() });
+    },
+  });
+};
+
+// ============ ADMIN HOOKS ============
+
+export const useGlobalExchangeRates = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.exchangeRates(),
+    queryFn: userSettingsApi.getGlobalExchangeRates,
+    staleTime: 60 * 1000, // 1 minute
+  });
+};
+
+export const useUpdateGlobalExchangeRates = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: UpdateExchangeRatesInput) => userSettingsApi.updateGlobalExchangeRates(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.exchangeRates() });
+    },
+  });
+};
+
+// ============ OTP HOOKS ============
+
+export const useSendOtp = () => {
+  return useMutation({
+    mutationFn: (data: userSettingsApi.SendOtpInput) => userSettingsApi.sendOtp(data),
+  });
+};
+
+export const useVerifyOtp = () => {
+  return useMutation({
+    mutationFn: (data: userSettingsApi.VerifyOtpInput) => userSettingsApi.verifyOtp(data),
+  });
+};
+
+// ============ PASSWORD VERIFICATION HOOK ============
+
+export const useVerifyPassword = () => {
+  return useMutation({
+    mutationFn: (data: userSettingsApi.VerifyPasswordInput) => userSettingsApi.verifyUserPassword(data),
+  });
+};

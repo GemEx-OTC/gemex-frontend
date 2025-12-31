@@ -69,8 +69,76 @@ export interface ClientDashboardData {
   unreadNotifications: number;
 }
 
+// Dealer Dashboard Types
+export interface DealerUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+}
+
+export interface DealerMetrics {
+  totalLocked: number;
+  awaitingPayouts: number;
+  payoutBalance: number;
+  pendingPayoutCount: number;
+  totalTrades: number;
+  settledTrades: number;
+  totalVolume: number;
+  pendingTrades: number;
+}
+
+export interface DealerQuote {
+  id: string;
+  quoteId: string;
+  customer: string;
+  customerEmail: string;
+  cryptoAsset: string;
+  cryptoAmount: number;
+  estimatedNaira: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface DealerTrade {
+  id: string;
+  customer: string;
+  customerEmail: string;
+  type: string;
+  cryptoAsset: string;
+  cryptoNetwork: string;
+  cryptoAmount: number;
+  nairaAmount: number;
+  rate: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface DealerDashboardData {
+  user: DealerUser;
+  metrics: DealerMetrics;
+  exchangeRates: ExchangeRates;
+  pendingQuotes: number;
+  recentQuotes: DealerQuote[];
+  recentTrades: DealerTrade[];
+  unreadNotifications: number;
+}
+
 // Get client dashboard data
 export const getClientDashboard = async (): Promise<ClientDashboardData> => {
   const response = await apiClient.get<ApiResponse<ClientDashboardData>>('/dashboard/client');
+  return response.data.data;
+};
+
+// Get dealer dashboard data
+export const getDealerDashboard = async (): Promise<DealerDashboardData> => {
+  const response = await apiClient.get<ApiResponse<DealerDashboardData>>('/dashboard/dealer');
+  return response.data.data;
+};
+
+// Get exchange rates (public endpoint)
+export const getExchangeRates = async (): Promise<ExchangeRates> => {
+  const response = await apiClient.get<ApiResponse<ExchangeRates>>('/settings/exchange-rates');
   return response.data.data;
 };

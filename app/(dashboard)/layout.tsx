@@ -7,6 +7,7 @@ import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { MobileTopNav } from "@/components/mobile-top-nav"
 import { ProtectedRoute } from "@/components/auth/protected-route"
+import { useNotifications } from "@/lib/hooks/useNotifications"
 
 export default function DashboardLayout({
   children,
@@ -14,6 +15,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  
+  // Fetch unread count for the notification bell
+  const { unreadCount } = useNotifications({
+    autoFetch: true,
+    pollInterval: 30000, // Poll every 30 seconds
+    filters: { limit: 1 }, // We only need the count
+  })
 
   // Determine user role from path
   const getRole = () => {
@@ -39,7 +47,7 @@ export default function DashboardLayout({
         <DashboardSidebar role={role} currentPath={pathname} />
         
         {/* Mobile Top Navigation */}
-        <MobileTopNav role={role} />
+        <MobileTopNav role={role} unreadCount={unreadCount} />
         
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Main content area - add top padding for mobile header */}

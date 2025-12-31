@@ -26,18 +26,19 @@ const roleMenus = {
     { name: "Dashboard", href: "/dealer/dashboard", icon: "📊" },
     { name: "Quote Queue", href: "/dealer/quotes", icon: "📋" },
     { name: "Trades", href: "/dealer/trades", icon: "💼" },
-    { name: "Notifications", href: "/dealer/notifications", icon: "🔔" },
+    { name: "Wallet", href: "/dealer/wallet", icon: "💰" },
     { name: "Reports", href: "/dealer/reports", icon: "📈" },
+    { name: "Notifications", href: "/dealer/notifications", icon: "🔔" },
     { name: "Settings", href: "/dealer/settings", icon: "⚙️" },
   ],
   admin: [
     { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
     { name: "Users", href: "/admin/users", icon: "👥" },
     { name: "Dealers", href: "/admin/dealers", icon: "🤝" },
-    { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
-    { name: "Settings", href: "/admin/settings", icon: "⚙️" },
     { name: "Audit Logs", href: "/admin/audit", icon: "📝" },
     { name: "Reports", href: "/admin/reports", icon: "📈" },
+    { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
+    { name: "Settings", href: "/admin/settings", icon: "⚙️" },
   ],
 }
 

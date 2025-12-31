@@ -1,34 +1,15 @@
 // Notification types and utilities for GemEx OTC Platform
+// Re-export API types for convenience
+export type { 
+  NotificationType, 
+  NotificationPriority, 
+  Notification,
+  NotificationFilters,
+  NotificationsResponse,
+  NotificationStats,
+} from './api/notifications';
 
-export type NotificationType =
-  | 'QuoteGenerated'
-  | 'QuoteAccepted'
-  | 'QuoteRejected'
-  | 'QuoteExpired'
-  | 'DepositConfirmed'
-  | 'PayoutSuccess'
-  | 'PayoutFailed'
-  | 'AccountStatusChange'
-  | 'KycStatusChange'
-  | 'AdminAction'
-  | 'RateUpdated'
-  | 'TradeCreated'
-
-export interface Notification {
-  id: string
-  userId: string
-  type: NotificationType
-  title: string
-  message: string
-  channels: {
-    inApp: { sent: boolean; readAt?: string }
-    email: { sent: boolean; sentAt?: string }
-    sms: { sent: boolean; sentAt?: string }
-  }
-  referenceType?: string
-  referenceId?: string
-  createdAt: string
-}
+import type { NotificationType, Notification } from './api/notifications';
 
 export const NOTIFICATION_CONFIG: Record<NotificationType, {
   icon: string
@@ -108,6 +89,32 @@ export const NOTIFICATION_CONFIG: Record<NotificationType, {
     bg: 'bg-teal-500/10 border-teal-500/20',
     category: 'Transactions',
   },
+  SystemAlert: {
+    icon: '🔔',
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10 border-yellow-500/20',
+    category: 'System',
+  },
+  SecurityAlert: {
+    icon: '🔒',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10 border-red-500/20',
+    category: 'Security',
+  },
+  WelcomeMessage: {
+    icon: '👋',
+    color: 'text-primary',
+    bg: 'bg-primary/10 border-primary/20',
+    category: 'Account',
+  },
+}
+
+// Priority colors
+export const PRIORITY_CONFIG: Record<string, { color: string; bg: string }> = {
+  low: { color: 'text-gray-400', bg: 'bg-gray-500/10' },
+  normal: { color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  high: { color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  urgent: { color: 'text-red-400', bg: 'bg-red-500/10' },
 }
 
 // Role-specific notification types
@@ -122,6 +129,7 @@ export const ROLE_NOTIFICATIONS = {
     'PayoutFailed',
     'KycStatusChange',
     'AccountStatusChange',
+    'WelcomeMessage',
   ] as NotificationType[],
   dealer: [
     'QuoteGenerated',
@@ -132,6 +140,7 @@ export const ROLE_NOTIFICATIONS = {
     'PayoutSuccess',
     'PayoutFailed',
     'RateUpdated',
+    'SystemAlert',
   ] as NotificationType[],
   admin: [
     'QuoteGenerated',
@@ -144,6 +153,8 @@ export const ROLE_NOTIFICATIONS = {
     'AccountStatusChange',
     'AdminAction',
     'RateUpdated',
+    'SystemAlert',
+    'SecurityAlert',
   ] as NotificationType[],
 }
 
@@ -161,4 +172,14 @@ export function formatTimeAgo(dateString: string): string {
   if (hours < 24) return `${hours}h ago`
   if (days < 7) return `${days}d ago`
   return date.toLocaleDateString()
+}
+
+// Helper to check if notification is unread
+export function isUnread(notification: Notification): boolean {
+  return !notification.channels.inApp.readAt
+}
+
+// Helper to get notification ID (handles both _id and id)
+export function getNotificationId(notification: Notification): string {
+  return notification._id || (notification as any).id
 }

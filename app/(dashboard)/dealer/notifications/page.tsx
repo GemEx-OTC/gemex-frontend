@@ -4,122 +4,97 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { NotificationItem } from "@/components/notification-item"
-import { Notification } from "@/lib/notifications"
-import { Bell, CheckCheck, Filter, Inbox, TrendingUp } from "lucide-react"
+import { useNotifications } from "@/lib/hooks/useNotifications"
+import { isUnread, getNotificationId } from "@/lib/notifications"
+import type { Notification, NotificationType } from "@/lib/api/notifications"
+import { Bell, CheckCheck, Inbox, TrendingUp, Loader2, RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-// Mock notifications for dealer
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    userId: "dealer1",
-    type: "QuoteGenerated",
-    title: "New Quote Request",
-    message: "Client John D. requested a quote for 15,000 USDT. Review and respond within 5 minutes.",
-    channels: { inApp: { sent: true }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: false } },
-    referenceType: "Quote",
-    referenceId: "quote123",
-    createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-  },
-  {
-    id: "2",
-    userId: "dealer1",
-    type: "TradeCreated",
-    title: "Trade Initiated",
-    message: "Trade #TRD-2024-001 created. Client accepted quote for 8,500 USDT at ₦1,568/USD.",
-    channels: { inApp: { sent: true }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: false } },
-    referenceType: "Trade",
-    referenceId: "trade456",
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-  },
-  {
-    id: "3",
-    userId: "dealer1",
-    type: "DepositConfirmed",
-    title: "Crypto Deposit Received",
-    message: "5,000 USDT confirmed for Trade #TRD-2024-002. Initiate Naira payout to client.",
-    channels: { inApp: { sent: true }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: true, sentAt: new Date().toISOString() } },
-    referenceType: "Trade",
-    referenceId: "trade789",
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: "4",
-    userId: "dealer1",
-    type: "RateUpdated",
-    title: "Exchange Rate Updated",
-    message: "Admin updated USDT/NGN rate to ₦1,572. New rate effective immediately.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: false }, sms: { sent: false } },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-  {
-    id: "5",
-    userId: "dealer1",
-    type: "PayoutSuccess",
-    title: "Payout Completed",
-    message: "Successfully sent ₦7,825,000 to client for Trade #TRD-2024-003.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: false } },
-    referenceType: "Trade",
-    referenceId: "trade101",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-  },
-  {
-    id: "6",
-    userId: "dealer1",
-    type: "QuoteRejected",
-    title: "Quote Declined",
-    message: "Client declined quote for 20,000 USDT. Reason: Rate too low.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: false }, sms: { sent: false } },
-    referenceType: "Quote",
-    referenceId: "quote555",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-]
 
 type FilterType = "all" | "unread" | "quotes" | "trades" | "rates"
 
+const QUOTE_TYPES: NotificationType[] = ['QuoteGenerated', 'QuoteAccepted', 'QuoteRejected', 'QuoteExpired']
+const TRADE_TYPES: NotificationType[] = ['TradeCreated', 'DepositConfirmed', 'PayoutSuccess', 'PayoutFailed']
+const RATE_TYPES: NotificationType[] = ['RateUpdated']
+
 export default function DealerNotificationsPage() {
   const router = useRouter()
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const [filter, setFilter] = useState<FilterType>("all")
-
-  const unreadCount = notifications.filter(n => !n.channels.inApp.readAt).length
-  const urgentCount = notifications.filter(n => !n.channels.inApp.readAt && ["QuoteGenerated", "DepositConfirmed"].includes(n.type)).length
-
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === "unread") return !n.channels.inApp.readAt
-    if (filter === "quotes") return ["QuoteGenerated", "QuoteAccepted", "QuoteRejected", "QuoteExpired"].includes(n.type)
-    if (filter === "trades") return ["TradeCreated", "DepositConfirmed", "PayoutSuccess", "PayoutFailed"].includes(n.type)
-    if (filter === "rates") return n.type === "RateUpdated"
-    return true
+  
+  const {
+    notifications,
+    unreadCount,
+    pagination,
+    loading,
+    error,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    setPage,
+  } = useNotifications({
+    autoFetch: true,
+    pollInterval: 15000, // Poll every 15 seconds for dealers (more urgent)
+    filters: { limit: 20 },
   })
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === id
-          ? { ...n, channels: { ...n.channels, inApp: { ...n.channels.inApp, readAt: new Date().toISOString() } } }
-          : n
-      )
-    )
+  // Count urgent notifications (quotes and deposits awaiting action)
+  const urgentCount = notifications.filter(n => 
+    isUnread(n) && ['QuoteGenerated', 'DepositConfirmed'].includes(n.type)
+  ).length
+
+  // Apply client-side filtering
+  const getFilteredNotifications = () => {
+    switch (filter) {
+      case "unread":
+        return notifications.filter(n => isUnread(n))
+      case "quotes":
+        return notifications.filter(n => QUOTE_TYPES.includes(n.type))
+      case "trades":
+        return notifications.filter(n => TRADE_TYPES.includes(n.type))
+      case "rates":
+        return notifications.filter(n => RATE_TYPES.includes(n.type))
+      default:
+        return notifications
+    }
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({
-        ...n,
-        channels: { ...n.channels, inApp: { ...n.channels.inApp, readAt: n.channels.inApp.readAt || new Date().toISOString() } }
-      }))
-    )
+  const filteredNotifications = getFilteredNotifications()
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id)
+    } catch (err) {
+      console.error('Failed to mark as read:', err)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead()
+    } catch (err) {
+      console.error('Failed to mark all as read:', err)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteNotification(id)
+    } catch (err) {
+      console.error('Failed to delete notification:', err)
+    }
   }
 
   const handleNavigate = (notification: Notification) => {
-    handleMarkAsRead(notification.id)
+    handleMarkAsRead(getNotificationId(notification))
     if (notification.referenceType === "Quote") {
       router.push("/dealer/quotes")
     } else if (notification.referenceType === "Trade") {
       router.push("/dealer/trades")
     }
+  }
+
+  const handleRefresh = () => {
+    fetchNotifications({ page: 1 })
   }
 
   const filters: { key: FilterType; label: string }[] = [
@@ -167,7 +142,7 @@ export default function DealerNotificationsPage() {
             <Bell className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">Total</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{notifications.length}</p>
+          <p className="text-2xl font-bold text-foreground">{pagination.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-2 mb-1">
@@ -181,19 +156,21 @@ export default function DealerNotificationsPage() {
             <CheckCheck className="w-4 h-4 text-green-400" />
             <span className="text-sm text-muted-foreground">Processed</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{notifications.length - unreadCount}</p>
+          <p className="text-2xl font-bold text-foreground">{pagination.total - unreadCount}</p>
         </div>
         <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-cyan-400" />
             <span className="text-sm text-muted-foreground">Rate Updates</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{notifications.filter(n => n.type === "RateUpdated").length}</p>
+          <p className="text-2xl font-bold text-foreground">
+            {notifications.filter(n => n.type === "RateUpdated").length}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         {filters.map(f => (
           <button
             key={f.key}
@@ -207,7 +184,28 @@ export default function DealerNotificationsPage() {
             {f.label}
           </button>
         ))}
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="ml-auto p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && notifications.length === 0 && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Notifications List */}
       <div className="space-y-3">
@@ -215,7 +213,7 @@ export default function DealerNotificationsPage() {
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notification, index) => (
               <motion.div
-                key={notification.id}
+                key={getNotificationId(notification)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
@@ -225,10 +223,12 @@ export default function DealerNotificationsPage() {
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
                   onNavigate={handleNavigate}
+                  onDelete={handleDelete}
+                  showPriority
                 />
               </motion.div>
             ))
-          ) : (
+          ) : !loading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -245,6 +245,29 @@ export default function DealerNotificationsPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => setPage(pagination.page - 1)}
+            disabled={pagination.page === 1 || loading}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+          <button
+            onClick={() => setPage(pagination.page + 1)}
+            disabled={pagination.page === pagination.pages || loading}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </motion.div>
   )
 }

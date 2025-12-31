@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import Link from "next/link"
+import { useDealerDashboard } from "@/lib/hooks/use-dashboard"
+import { formatDistanceToNow } from "date-fns"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,43 +22,79 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 }
 
-interface ExchangeRates {
-  nairaToUSDT: number
-  btcToNaira: number
-  lastUpdated: string
+function formatCurrency(amount: number, currency: "NGN" | "USD" = "NGN"): string {
+  if (currency === "NGN") {
+    if (amount >= 1000000) {
+      return `₦${(amount / 1000000).toFixed(1)}M`
+    }
+    return `₦${amount.toLocaleString()}`
+  }
+  return `$${amount.toLocaleString()}`
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "Pending":
+    case "Quoted":
+      return "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+    case "Approved":
+    case "Settled":
+    case "CryptoConfirmed":
+      return "bg-green-500/20 text-green-400 border border-green-500/30"
+    case "Rejected":
+    case "Cancelled":
+    case "Expired":
+      return "bg-red-500/20 text-red-400 border border-red-500/30"
+    case "AwaitingDeposit":
+    case "PayoutPending":
+      return "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+    default:
+      return "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+  }
 }
 
 export default function DealerDashboardPage() {
-  const [metrics, setMetrics] = useState({
-    totalLocked: 2450000,
-    awaitingPayouts: 180500,
-    payoutBalance: 1200000,
-    pendingCount: 12,
-  })
+  const { data, isLoading, error } = useDealerDashboard()
 
-  const [exchangeRates] = useState<ExchangeRates>({
-    nairaToUSDT: 1565,
-    btcToNaira: 43500000,
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <p className="text-red-500 mb-4">Failed to load dashboard data</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
+  const metrics = data?.metrics || {
+    totalLocked: 0,
+    awaitingPayouts: 0,
+    payoutBalance: 0,
+    pendingPayoutCount: 0,
+  }
+
+  const exchangeRates = data?.exchangeRates || {
+    USDT_NGN: 0,
+    USDC_NGN: 0,
+    BTC_USD: 0,
+    USD_NGN: 0,
+    BTC_NGN: 0,
     lastUpdated: new Date().toISOString(),
-  })
+  }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics((prev) => ({
-        totalLocked: prev.totalLocked + Math.floor(Math.random() * 10000) - 5000,
-        awaitingPayouts: prev.awaitingPayouts + Math.floor(Math.random() * 5000) - 2500,
-        payoutBalance: prev.payoutBalance + Math.floor(Math.random() * 50000) - 25000,
-        pendingCount: Math.max(0, prev.pendingCount + Math.floor(Math.random() * 3) - 1),
-      }))
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const [recentQuotes] = useState([
-    { id: "QT001", customer: "Client A", amount: "$25,000", status: "Pending", time: "2 min ago" },
-    { id: "QT002", customer: "Client B", amount: "5 BTC", status: "Approved", time: "15 min ago" },
-    { id: "QT003", customer: "Client C", amount: "$50,000", status: "Pending", time: "28 min ago" },
-  ])
+  const recentQuotes = data?.recentQuotes || []
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
@@ -88,10 +125,10 @@ export default function DealerDashboardPage() {
               exit={{ opacity: 0, y: -10 }}
               className="text-3xl font-bold text-foreground mb-1"
             >
-              ${metrics.totalLocked.toLocaleString()}
+              {formatCurrency(metrics.totalLocked)}
             </motion.p>
           </AnimatePresence>
-          <p className="text-sm text-green-600 dark:text-green-400">Live tracking</p>
+          <p className="text-sm text-green-600 dark:text-green-400">In active trades</p>
         </div>
 
         {/* Awaiting Payouts */}
@@ -110,7 +147,7 @@ export default function DealerDashboardPage() {
               exit={{ opacity: 0, y: -10 }}
               className="text-3xl font-bold text-foreground mb-1"
             >
-              ${metrics.awaitingPayouts.toLocaleString()}
+              {formatCurrency(metrics.awaitingPayouts)}
             </motion.p>
           </AnimatePresence>
           <p className="text-sm text-amber-600 dark:text-amber-400">Pending settlement</p>
@@ -121,7 +158,7 @@ export default function DealerDashboardPage() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Payout Balance</p>
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Volume</p>
             </div>
           </div>
           <AnimatePresence mode="wait">
@@ -132,10 +169,10 @@ export default function DealerDashboardPage() {
               exit={{ opacity: 0, y: -10 }}
               className="text-3xl font-bold text-foreground mb-1"
             >
-              ₦{(metrics.payoutBalance / 1000).toFixed(1)}M
+              {formatCurrency(metrics.payoutBalance)}
             </motion.p>
           </AnimatePresence>
-          <p className="text-sm text-blue-600 dark:text-blue-400">Available funds</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400">Settled trades</p>
         </div>
 
         {/* Pending Payouts Count */}
@@ -148,13 +185,13 @@ export default function DealerDashboardPage() {
           </div>
           <AnimatePresence mode="wait">
             <motion.p
-              key={metrics.pendingCount}
+              key={metrics.pendingPayoutCount}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className="text-3xl font-bold text-foreground mb-1"
             >
-              {metrics.pendingCount}
+              {metrics.pendingPayoutCount}
             </motion.p>
           </AnimatePresence>
           <p className="text-sm text-purple-600 dark:text-purple-400">Active now</p>
@@ -168,7 +205,7 @@ export default function DealerDashboardPage() {
             <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
             <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.nairaToUSDT.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USDT_NGN.toLocaleString()}</p>
           <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
         </div>
 
@@ -180,7 +217,7 @@ export default function DealerDashboardPage() {
             </div>
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">$90,200</p>
+          <p className="text-2xl font-bold text-foreground mb-1">${exchangeRates.BTC_USD.toLocaleString()}</p>
           <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
         </div>
 
@@ -188,11 +225,11 @@ export default function DealerDashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl">₦</span>
-              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">BTC Rate</p>
+              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">USD/NGN Rate</p>
             </div>
             <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦1,470</p>
+          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USD_NGN.toLocaleString()}</p>
           <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
         </div>
 
@@ -204,7 +241,7 @@ export default function DealerDashboardPage() {
             </div>
             <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
           </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦132,500</p>
+          <p className="text-2xl font-bold text-foreground mb-1">{formatCurrency(exchangeRates.BTC_NGN)}</p>
           <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
         </div>
       </motion.div>
@@ -217,46 +254,49 @@ export default function DealerDashboardPage() {
             View All →
           </Link>
         </div>
-        <div className="space-y-3">
-          {recentQuotes.map((quote, idx) => (
-            <motion.div
-              key={quote.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-primary/40 transition-all group cursor-pointer"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="font-mono text-secondary text-sm font-bold">{quote.id}</span>
-                  <span className="text-foreground font-medium">{quote.customer}</span>
+        {recentQuotes.length === 0 ? (
+          <div className="p-8 text-center bg-card border border-border rounded-xl">
+            <p className="text-muted-foreground">No recent quotes</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentQuotes.slice(0, 5).map((quote, idx) => (
+              <motion.div
+                key={quote.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-primary/40 transition-all group cursor-pointer"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="font-mono text-secondary text-sm font-bold">{quote.quoteId}</span>
+                    <span className="text-foreground font-medium">{quote.customer}</span>
+                  </div>
+                  <div className="text-muted-foreground text-sm">
+                    {quote.cryptoAmount} {quote.cryptoAsset} • ₦{quote.estimatedNaira.toLocaleString()} •{" "}
+                    {formatDistanceToNow(new Date(quote.createdAt), { addSuffix: true })}
+                  </div>
                 </div>
-                <div className="text-muted-foreground text-sm">
-                  {quote.amount} • {quote.time}
+                <div className="flex items-center gap-4">
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(quote.status)}`}>
+                    {quote.status}
+                  </span>
+                  {quote.status === "Pending" && (
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-all">
+                        Approve
+                      </button>
+                      <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-foreground border border-border hover:bg-muted transition-all">
+                        Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-                    quote.status === "Pending"
-                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                      : "bg-green-500/20 text-green-400 border border-green-500/30"
-                  }`}
-                >
-                  {quote.status}
-                </span>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-all">
-                    Approve
-                  </button>
-                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-foreground border border-border hover:bg-muted transition-all">
-                    Reject
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* Quick Actions */}
@@ -270,6 +310,9 @@ export default function DealerDashboardPage() {
             <div className="text-3xl mb-3">📋</div>
             <h3 className="font-semibold text-foreground mb-1">Quote Queue</h3>
             <p className="text-sm text-muted-foreground">Manage pending and approved trade requests</p>
+            {data?.pendingQuotes ? (
+              <p className="text-sm text-primary mt-2">{data.pendingQuotes} pending quotes</p>
+            ) : null}
           </motion.div>
         </Link>
 
@@ -282,6 +325,9 @@ export default function DealerDashboardPage() {
             <div className="text-3xl mb-3">💼</div>
             <h3 className="font-semibold text-foreground mb-1">Trade Processing</h3>
             <p className="text-sm text-muted-foreground">Review and approve trade settlements</p>
+            {metrics.pendingPayoutCount > 0 ? (
+              <p className="text-sm text-secondary mt-2">{metrics.pendingPayoutCount} pending payouts</p>
+            ) : null}
           </motion.div>
         </Link>
       </motion.div>

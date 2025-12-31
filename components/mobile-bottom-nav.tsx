@@ -3,32 +3,30 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Wallet, Settings, LayoutDashboard, Users, Bell } from "lucide-react"
+import { Home, FileText, Wallet, LayoutDashboard, Users, Briefcase } from "lucide-react"
 
 interface MobileBottomNavProps {
   role: "client" | "dealer" | "admin"
 }
 
+// Core navigation items only - max 5 items for mobile bottom nav
 const roleNavItems = {
   client: [
-    { name: "Dashboard", href: "/client/dashboard", icon: Home },
+    { name: "Home", href: "/client/dashboard", icon: Home },
     { name: "Quotes", href: "/client/quotes", icon: FileText },
     { name: "History", href: "/client/history", icon: LayoutDashboard },
-    { name: "Alerts", href: "/client/notifications", icon: Bell },
-    { name: "Settings", href: "/client/settings", icon: Settings },
+    { name: "Wallet", href: "/client/wallet", icon: Wallet },
   ],
   dealer: [
-    { name: "Dashboard", href: "/dealer/dashboard", icon: Home },
+    { name: "Home", href: "/dealer/dashboard", icon: Home },
     { name: "Quotes", href: "/dealer/quotes", icon: FileText },
-    { name: "Alerts", href: "/dealer/notifications", icon: Bell },
-    { name: "Trades", href: "/dealer/trades", icon: LayoutDashboard },
-    { name: "Settings", href: "/dealer/settings", icon: Settings },
+    { name: "Trades", href: "/dealer/trades", icon: Briefcase },
+    { name: "Wallet", href: "/dealer/wallet", icon: Wallet },
   ],
   admin: [
-    { name: "Dashboard", href: "/admin/dashboard", icon: Home },
+    { name: "Home", href: "/admin/dashboard", icon: Home },
     { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Alerts", href: "/admin/notifications", icon: Bell },
-    { name: "Settings", href: "/admin/settings", icon: Settings },
+    { name: "Dealers", href: "/admin/dealers", icon: Briefcase },
   ],
 }
 

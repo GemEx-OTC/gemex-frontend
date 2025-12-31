@@ -4,8 +4,9 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
-import { AlertCircle, Info, ArrowRight, Check } from "lucide-react"
+import { AlertCircle, Info, ArrowRight, Check, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { createQuote } from "@/lib/api/quotes"
 
 // Asset icons and brand colors
 const ASSET_CONFIG = {
@@ -41,6 +42,8 @@ const NETWORK_CONFIG = {
 
 export default function TradeRequestPage() {
   const [step, setStep] = useState<"select" | "amount" | "submitted">("select")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [tradeData, setTradeData] = useState({
     cryptoAsset: "USDT" as keyof typeof CRYPTO_ASSETS,
     cryptoNetwork: "TRC20" as keyof typeof CRYPTO_NETWORKS,
@@ -54,9 +57,22 @@ export default function TradeRequestPage() {
     USDC: 1565,
   }
 
-  const handleSubmitRequest = () => {
-    console.log("Quote request submitted:", tradeData)
-    setStep("submitted")
+  const handleSubmitRequest = async () => {
+    setSubmitting(true)
+    setError(null)
+    
+    try {
+      await createQuote({
+        cryptoAsset: tradeData.cryptoAsset,
+        cryptoNetwork: tradeData.cryptoNetwork,
+        cryptoAmount: Number.parseFloat(tradeData.cryptoAmount),
+      })
+      setStep("submitted")
+    } catch (err: any) {
+      setError(err.message || "Failed to submit quote request")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const systemRate = systemRates[tradeData.cryptoAsset]
@@ -329,25 +345,45 @@ export default function TradeRequestPage() {
                 </div>
               </div>
 
+              {/* Error */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-red-400">{error}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-3">
                 <motion.button
                   onClick={() => setStep("select")}
+                  disabled={submitting}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+                  className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all disabled:opacity-50"
                 >
                   Back
                 </motion.button>
                 <motion.button
                   onClick={handleSubmitRequest}
-                  disabled={!tradeData.cryptoAmount || Number.parseFloat(tradeData.cryptoAmount) < minAmount}
+                  disabled={!tradeData.cryptoAmount || Number.parseFloat(tradeData.cryptoAmount) < minAmount || submitting}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Request Quote
-                  <ArrowRight className="w-4 h-4" />
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Request Quote
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </motion.button>
               </div>
             </motion.div>

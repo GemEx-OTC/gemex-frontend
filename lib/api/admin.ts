@@ -310,3 +310,190 @@ export const getAuditLogs = async (query: AuditLogsQuery): Promise<AuditLogsResp
   const response = await apiClient.get<ApiResponse<AuditLogsResponse>>(`/admin/audit?${params.toString()}`);
   return response.data.data;
 };
+
+
+// Admin Quotes types
+export interface AdminQuote {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  dealerName: string | null;
+  dealerEmail: string | null;
+  cryptoAsset: string;
+  cryptoNetwork: string;
+  cryptoAmount: number;
+  systemRate: number;
+  estimatedNaira: number;
+  firmRate?: number;
+  firmNairaAmount?: number;
+  status: string;
+  quotedAt?: string;
+  expiresAt?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminQuotesResponse {
+  quotes: AdminQuote[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface AdminQuoteDetails extends AdminQuote {
+  client: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+  };
+  dealer: {
+    id: string;
+    fullName: string;
+    email: string;
+  } | null;
+  trade: {
+    id: string;
+    transactionId: string;
+    status: string;
+    depositAddress: string;
+    cryptoTxId?: string;
+    fiatTxRef?: string;
+    createdAt: string;
+  } | null;
+  auditLogs: {
+    id: string;
+    action: string;
+    details: string;
+    severity: 'info' | 'warning' | 'critical';
+    actor: string;
+    ipAddress?: string;
+    createdAt: string;
+  }[];
+}
+
+export interface AdminQuotesQuery {
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Get admin quotes
+export const getAdminQuotes = async (query: AdminQuotesQuery = {}): Promise<AdminQuotesResponse> => {
+  const params = new URLSearchParams();
+  if (query.status) params.append('status', query.status);
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  
+  const response = await apiClient.get<ApiResponse<AdminQuotesResponse>>(`/admin/quotes?${params.toString()}`);
+  return response.data.data;
+};
+
+// Get admin quote details
+export const getAdminQuoteDetails = async (id: string): Promise<AdminQuoteDetails> => {
+  const response = await apiClient.get<ApiResponse<AdminQuoteDetails>>(`/admin/quotes/${id}`);
+  return response.data.data;
+};
+
+// Admin Trades types
+export interface AdminTrade {
+  id: string;
+  transactionId: string;
+  clientName: string;
+  clientEmail: string;
+  dealerName: string;
+  dealerEmail: string;
+  cryptoAsset: string;
+  cryptoNetwork: string;
+  cryptoAmount: number;
+  rate: number;
+  nairaAmount: number;
+  depositAddress: string;
+  status: string;
+  cryptoTxId?: string;
+  fiatTxRef?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminTradesResponse {
+  trades: AdminTrade[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface AdminTradeDetails extends AdminTrade {
+  client: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+  };
+  dealer: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+  depositConfirmedAt?: string;
+  confirmations?: number;
+  payoutBankCode: string;
+  payoutAccountNumber: string;
+  payoutAccountName: string;
+  payoutInitiatedAt?: string;
+  payoutCompletedAt?: string;
+  failureReason?: string;
+  timestamps: {
+    quotePending: string;
+    awaitingDeposit?: string;
+    cryptoConfirmed?: string;
+    payoutPending?: string;
+    settled?: string;
+    failed?: string;
+  };
+  quote: {
+    id: string;
+    systemRate: number;
+    firmRate: number;
+    status: string;
+  } | null;
+  auditLogs: {
+    id: string;
+    action: string;
+    details: string;
+    severity: 'info' | 'warning' | 'critical';
+    actor: string;
+    ipAddress?: string;
+    createdAt: string;
+  }[];
+}
+
+export interface AdminTradesQuery {
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Get admin trades
+export const getAdminTrades = async (query: AdminTradesQuery = {}): Promise<AdminTradesResponse> => {
+  const params = new URLSearchParams();
+  if (query.status) params.append('status', query.status);
+  if (query.page) params.append('page', query.page.toString());
+  if (query.limit) params.append('limit', query.limit.toString());
+  
+  const response = await apiClient.get<ApiResponse<AdminTradesResponse>>(`/admin/trades?${params.toString()}`);
+  return response.data.data;
+};
+
+// Get admin trade details
+export const getAdminTradeDetails = async (id: string): Promise<AdminTradeDetails> => {
+  const response = await apiClient.get<ApiResponse<AdminTradeDetails>>(`/admin/trades/${id}`);
+  return response.data.data;
+};

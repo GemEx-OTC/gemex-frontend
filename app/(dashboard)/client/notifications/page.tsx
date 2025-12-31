@@ -1,113 +1,97 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { NotificationItem } from "@/components/notification-item"
-import { Notification, NOTIFICATION_CONFIG, ROLE_NOTIFICATIONS } from "@/lib/notifications"
-import { Bell, CheckCheck, Filter, Inbox } from "lucide-react"
+import { useNotifications } from "@/lib/hooks/useNotifications"
+import { ROLE_NOTIFICATIONS, isUnread, getNotificationId } from "@/lib/notifications"
+import type { Notification, NotificationType } from "@/lib/api/notifications"
+import { Bell, CheckCheck, Filter, Inbox, Loader2, RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-// Mock notifications for client
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    userId: "user1",
-    type: "QuoteGenerated",
-    title: "New Quote Available",
-    message: "Your quote request for 5,000 USDT has been processed. Rate: ₦1,565/USD. Valid for 15 minutes.",
-    channels: { inApp: { sent: true }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: false } },
-    referenceType: "Quote",
-    referenceId: "quote123",
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-  },
-  {
-    id: "2",
-    userId: "user1",
-    type: "DepositConfirmed",
-    title: "Deposit Confirmed",
-    message: "Your deposit of 2,500 USDT has been confirmed on the blockchain. Processing payout now.",
-    channels: { inApp: { sent: true }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: true, sentAt: new Date().toISOString() } },
-    referenceType: "Trade",
-    referenceId: "trade456",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "3",
-    userId: "user1",
-    type: "PayoutSuccess",
-    title: "Payout Successful",
-    message: "₦3,912,500 has been sent to your Access Bank account ending in 4521.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: true, sentAt: new Date().toISOString() } },
-    referenceType: "Trade",
-    referenceId: "trade789",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: "4",
-    userId: "user1",
-    type: "KycStatusChange",
-    title: "KYC Verification Complete",
-    message: "Your identity has been verified. You now have access to all trading features.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: true, sentAt: new Date().toISOString() }, sms: { sent: false } },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: "5",
-    userId: "user1",
-    type: "QuoteExpired",
-    title: "Quote Expired",
-    message: "Your quote for 10,000 USDT has expired. Request a new quote to continue.",
-    channels: { inApp: { sent: true, readAt: new Date().toISOString() }, email: { sent: false }, sms: { sent: false } },
-    referenceType: "Quote",
-    referenceId: "quote999",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-]
 
 type FilterType = "all" | "unread" | "quotes" | "transactions" | "account"
 
+const QUOTE_TYPES: NotificationType[] = ['QuoteGenerated', 'QuoteAccepted', 'QuoteRejected', 'QuoteExpired']
+const TRANSACTION_TYPES: NotificationType[] = ['DepositConfirmed', 'PayoutSuccess', 'PayoutFailed', 'TradeCreated']
+const ACCOUNT_TYPES: NotificationType[] = ['KycStatusChange', 'AccountStatusChange', 'WelcomeMessage']
+
 export default function ClientNotificationsPage() {
   const router = useRouter()
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const [filter, setFilter] = useState<FilterType>("all")
-
-  const unreadCount = notifications.filter(n => !n.channels.inApp.readAt).length
-
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === "unread") return !n.channels.inApp.readAt
-    if (filter === "quotes") return ["QuoteGenerated", "QuoteAccepted", "QuoteRejected", "QuoteExpired"].includes(n.type)
-    if (filter === "transactions") return ["DepositConfirmed", "PayoutSuccess", "PayoutFailed", "TradeCreated"].includes(n.type)
-    if (filter === "account") return ["KycStatusChange", "AccountStatusChange"].includes(n.type)
-    return true
+  
+  const {
+    notifications,
+    unreadCount,
+    pagination,
+    loading,
+    error,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    setPage,
+  } = useNotifications({
+    autoFetch: true,
+    pollInterval: 30000, // Poll every 30 seconds
+    filters: { limit: 20 },
   })
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === id
-          ? { ...n, channels: { ...n.channels, inApp: { ...n.channels.inApp, readAt: new Date().toISOString() } } }
-          : n
-      )
-    )
+  // Apply client-side filtering based on filter type
+  const getFilteredNotifications = () => {
+    switch (filter) {
+      case "unread":
+        return notifications.filter(n => isUnread(n))
+      case "quotes":
+        return notifications.filter(n => QUOTE_TYPES.includes(n.type))
+      case "transactions":
+        return notifications.filter(n => TRANSACTION_TYPES.includes(n.type))
+      case "account":
+        return notifications.filter(n => ACCOUNT_TYPES.includes(n.type))
+      default:
+        return notifications
+    }
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({
-        ...n,
-        channels: { ...n.channels, inApp: { ...n.channels.inApp, readAt: n.channels.inApp.readAt || new Date().toISOString() } }
-      }))
-    )
+  const filteredNotifications = getFilteredNotifications()
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id)
+    } catch (err) {
+      console.error('Failed to mark as read:', err)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead()
+    } catch (err) {
+      console.error('Failed to mark all as read:', err)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteNotification(id)
+    } catch (err) {
+      console.error('Failed to delete notification:', err)
+    }
   }
 
   const handleNavigate = (notification: Notification) => {
-    handleMarkAsRead(notification.id)
+    handleMarkAsRead(getNotificationId(notification))
     if (notification.referenceType === "Quote") {
       router.push("/client/trade")
     } else if (notification.referenceType === "Trade") {
       router.push("/client/history")
+    } else if (notification.referenceType === "User" || notification.referenceType === "KYC") {
+      router.push("/client/settings")
     }
+  }
+
+  const handleRefresh = () => {
+    fetchNotifications({ page: 1 })
   }
 
   const filters: { key: FilterType; label: string }[] = [
@@ -136,7 +120,7 @@ export default function ClientNotificationsPage() {
             <Bell className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">Total</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{notifications.length}</p>
+          <p className="text-2xl font-bold text-foreground">{pagination.total}</p>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
           <div className="flex items-center gap-2 mb-1">
@@ -150,7 +134,7 @@ export default function ClientNotificationsPage() {
             <CheckCheck className="w-4 h-4 text-green-400" />
             <span className="text-sm text-muted-foreground">Read</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{notifications.length - unreadCount}</p>
+          <p className="text-2xl font-bold text-foreground">{pagination.total - unreadCount}</p>
         </div>
         <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
           <div className="flex items-center gap-2 mb-1">
@@ -162,7 +146,7 @@ export default function ClientNotificationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         {filters.map(f => (
           <button
             key={f.key}
@@ -176,7 +160,28 @@ export default function ClientNotificationsPage() {
             {f.label}
           </button>
         ))}
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="ml-auto p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && notifications.length === 0 && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Notifications List */}
       <div className="space-y-3">
@@ -184,7 +189,7 @@ export default function ClientNotificationsPage() {
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notification, index) => (
               <motion.div
-                key={notification.id}
+                key={getNotificationId(notification)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
@@ -194,10 +199,11 @@ export default function ClientNotificationsPage() {
                   notification={notification}
                   onMarkAsRead={handleMarkAsRead}
                   onNavigate={handleNavigate}
+                  onDelete={handleDelete}
                 />
               </motion.div>
             ))
-          ) : (
+          ) : !loading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -214,6 +220,29 @@ export default function ClientNotificationsPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => setPage(pagination.page - 1)}
+            disabled={pagination.page === 1 || loading}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+          <button
+            onClick={() => setPage(pagination.page + 1)}
+            disabled={pagination.page === pagination.pages || loading}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </motion.div>
   )
 }

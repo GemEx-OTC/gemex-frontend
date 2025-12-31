@@ -4,8 +4,8 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { Menu, X, User, LogOut, Bell } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
+import { Menu, X, User, LogOut, Bell, Settings, FileText, BarChart3 } from "lucide-react"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { useAuth } from "@/lib/providers/auth-provider"
 
@@ -14,11 +14,33 @@ interface MobileTopNavProps {
   unreadCount?: number
 }
 
-export function MobileTopNav({ role, unreadCount = 3 }: MobileTopNavProps) {
+// Secondary menu items that appear in the dropdown
+const roleMenuItems = {
+  client: [
+    { name: "Notifications", href: "/client/notifications", icon: Bell },
+    { name: "Settings", href: "/client/settings", icon: Settings },
+  ],
+  dealer: [
+    { name: "Reports", href: "/dealer/reports", icon: BarChart3 },
+    { name: "Notifications", href: "/dealer/notifications", icon: Bell },
+    { name: "Settings", href: "/dealer/settings", icon: Settings },
+  ],
+  admin: [
+    { name: "Audit Logs", href: "/admin/audit", icon: FileText },
+    { name: "Reports", href: "/admin/reports", icon: BarChart3 },
+    { name: "Notifications", href: "/admin/notifications", icon: Bell },
+    { name: "Settings", href: "/admin/settings", icon: Settings },
+  ],
+}
+
+export function MobileTopNav({ role, unreadCount = 0 }: MobileTopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
   const { user } = useAuth()
   const logoutMutation = useLogout()
+
+  const menuItems = roleMenuItems[role]
 
   const handleLogout = () => {
     logoutMutation.mutate()
@@ -111,8 +133,32 @@ export function MobileTopNav({ role, unreadCount = 3 }: MobileTopNavProps) {
                 </div>
               </div>
 
-              {/* Logout */}
+              {/* Menu Items */}
               <div className="p-2">
+                {menuItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                  
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+                      <motion.div
+                        whileTap={{ scale: 0.98 }}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          isActive 
+                            ? "bg-primary/10 text-primary" 
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </motion.div>
+                    </Link>
+                  )
+                })}
+              </div>
+
+              {/* Logout */}
+              <div className="p-2 border-t border-border">
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleLogout}

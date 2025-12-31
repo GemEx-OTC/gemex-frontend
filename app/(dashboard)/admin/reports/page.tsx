@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { useMemos } from "@/lib/hooks/useMemos"
+import { useMemoSocket, useMemosSocket } from "@/lib/hooks/useSocket"
 import {
-  Memo,
   MemoCategory,
   MemoPriority,
   MemoStatus,
@@ -13,7 +14,8 @@ import {
   MEMO_CATEGORY_CONFIG,
   formatMemoDate,
 } from "@/lib/memos"
-import { Send, Plus, X, MessageSquare, Clock, Filter, UserCheck, CheckCircle } from "lucide-react"
+import type { Memo, CreateMemoInput } from "@/lib/api/memos"
+import { Send, X, MessageSquare, Clock, UserCheck, Loader2, Wifi, WifiOff } from "lucide-react"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -28,197 +30,157 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 }
 
-// Mock dealers for assignment
-const mockDealers = [
-  { id: "dealer1", name: "James O." },
-  { id: "dealer2", name: "Mike T." },
-  { id: "dealer3", name: "Linda K." },
-]
-
-// Mock memos data (from dealer perspective, admin sees all)
-const mockMemos: Memo[] = [
-  {
-    id: "MEMO001",
-    subject: "Rate adjustment request for high-volume client",
-    message: "Client Premium Corp has requested a better rate for their 50,000 USDT trade. They're a repeat customer with 15+ successful trades. Requesting approval for ₦1,570/USD.",
-    category: "rate_request",
-    priority: "high",
-    status: "open",
-    createdBy: { id: "dealer1", name: "James O.", role: "dealer" },
-    referenceType: "quote",
-    referenceId: "QT-2024-0150",
-    replies: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "MEMO002",
-    subject: "Payout delay - Bank maintenance",
-    message: "GTBank is experiencing maintenance issues. Multiple payouts are pending. Need guidance on how to communicate with affected clients.",
-    category: "system_issue",
-    priority: "urgent",
-    status: "in_progress",
-    createdBy: { id: "dealer1", name: "James O.", role: "dealer" },
-    assignedTo: { id: "admin1", name: "Sarah A.", role: "admin" },
-    replies: [
-      {
-        id: "R001",
-        message: "Thanks for flagging. I've contacted GTBank support. ETA for resolution is 2 hours. Please inform clients of the delay.",
-        createdBy: { id: "admin1", name: "Sarah A.", role: "admin" },
-        createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  },
-  {
-    id: "MEMO003",
-    subject: "Suspicious activity - Client verification needed",
-    message: "Client with email suspicious@example.com has made 3 failed deposit attempts with different wallet addresses. Requesting KYC review before processing further trades.",
-    category: "client_concern",
-    priority: "high",
-    status: "resolved",
-    createdBy: { id: "dealer2", name: "Mike T.", role: "dealer" },
-    assignedTo: { id: "admin1", name: "Sarah A.", role: "admin" },
-    referenceType: "user",
-    referenceId: "USR-2024-0892",
-    replies: [
-      {
-        id: "R002",
-        message: "Good catch. I've flagged the account and requested additional verification. Account is now on hold pending review.",
-        createdBy: { id: "admin1", name: "Sarah A.", role: "admin" },
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      },
-      {
-        id: "R003",
-        message: "KYC review complete. Account has been suspended due to identity mismatch. Thanks for the escalation.",
-        createdBy: { id: "admin1", name: "Sarah A.", role: "admin" },
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
-      },
-    ],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
-  },
-  {
-    id: "MEMO004",
-    subject: "New rate structure proposal",
-    message: "Based on market analysis, I suggest implementing tiered rates: Standard (₦1,565), Premium (₦1,570 for >$10k), VIP (₦1,575 for >$50k). This could improve client retention.",
-    category: "general",
-    priority: "medium",
-    status: "open",
-    createdBy: { id: "dealer3", name: "Linda K.", role: "dealer" },
-    replies: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-]
-
 type FilterStatus = "all" | MemoStatus
 
 export default function AdminReportsPage() {
-  const [memos, setMemos] = useState<Memo[]>(mockMemos)
-  const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
   const [showNewMemoModal, setShowNewMemoModal] = useState(false)
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
   const [replyText, setReplyText] = useState("")
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // New memo form state
-  const [newMemo, setNewMemo] = useState({
-    subject: "",
-    message: "",
-    category: "general" as MemoCategory,
-    priority: "medium" as MemoPriority,
-    assignTo: "",
+  const {
+    memos,
+    stats,
+    pagination,
+    loading,
+    error,
+    selectedMemo,
+    dealers,
+    fetchMemos,
+    createMemo,
+    addReply,
+    updateStatus,
+    assignMemo,
+    fetchDealers,
+    setSelectedMemo,
+    clearError,
+  } = useMemos({
+    autoFetch: true,
+    pollInterval: 30000,
   })
 
-  const filteredMemos = memos.filter((m) => filterStatus === "all" || m.status === filterStatus)
+  // Fetch dealers for assignment on mount
+  useEffect(() => {
+    fetchDealers()
+  }, [fetchDealers])
 
-  const stats = {
-    total: memos.length,
-    open: memos.filter((m) => m.status === "open").length,
-    inProgress: memos.filter((m) => m.status === "in_progress").length,
-    urgent: memos.filter((m) => m.priority === "urgent" && m.status !== "resolved" && m.status !== "closed").length,
-  }
+  // Socket for memo list updates
+  const { isConnected: listConnected } = useMemosSocket({
+    onNewMemo: (event) => {
+      fetchMemos({ status: filterStatus === "all" ? undefined : filterStatus })
+    },
+    onMemoUpdate: (memo) => {
+      fetchMemos({ status: filterStatus === "all" ? undefined : filterStatus })
+    },
+  })
 
-  const handleCreateMemo = () => {
+  // Socket for selected memo real-time updates
+  const { isConnected: chatConnected, typingUsers, sendTyping } = useMemoSocket({
+    memoId: selectedMemo?._id || null,
+    onNewReply: (event) => {
+      if (selectedMemo && event.memoId === selectedMemo._id) {
+        setSelectedMemo(event.memo)
+      }
+    },
+    onStatusUpdate: (event) => {
+      if (selectedMemo && event.memoId === selectedMemo._id) {
+        setSelectedMemo(event.memo)
+      }
+    },
+    onAssigned: (event) => {
+      if (selectedMemo && event.memoId === selectedMemo._id) {
+        setSelectedMemo(event.memo)
+      }
+    },
+  })
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (selectedMemo) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+  }, [selectedMemo?.replies.length])
+
+  // New memo form state
+  const [newMemo, setNewMemo] = useState<CreateMemoInput>({
+    subject: "",
+    message: "",
+    category: "general",
+    priority: "medium",
+    assignedTo: "",
+  })
+  const [creating, setCreating] = useState(false)
+
+  // Filter memos by status
+  const filteredMemos = filterStatus === "all" 
+    ? memos 
+    : memos.filter(m => m.status === filterStatus)
+
+  const handleCreateMemo = async () => {
     if (!newMemo.subject.trim() || !newMemo.message.trim()) return
 
-    const memo: Memo = {
-      id: `MEMO${String(memos.length + 1).padStart(3, "0")}`,
-      subject: newMemo.subject,
-      message: newMemo.message,
-      category: newMemo.category,
-      priority: newMemo.priority,
-      status: "open",
-      createdBy: { id: "admin1", name: "Sarah A.", role: "admin" },
-      assignedTo: newMemo.assignTo
-        ? { id: newMemo.assignTo, name: mockDealers.find((d) => d.id === newMemo.assignTo)?.name || "", role: "dealer" }
-        : undefined,
-      replies: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    setCreating(true)
+    try {
+      await createMemo({
+        ...newMemo,
+        assignedTo: newMemo.assignedTo || undefined,
+      })
+      setNewMemo({ subject: "", message: "", category: "general", priority: "medium", assignedTo: "" })
+      setShowNewMemoModal(false)
+    } catch (err) {
+      console.error('Failed to create memo:', err)
+    } finally {
+      setCreating(false)
     }
-
-    setMemos([memo, ...memos])
-    setNewMemo({ subject: "", message: "", category: "general", priority: "medium", assignTo: "" })
-    setShowNewMemoModal(false)
   }
 
-  const handleSendReply = () => {
+  const handleSendReply = async () => {
     if (!selectedMemo || !replyText.trim()) return
 
-    const reply = {
-      id: `R${Date.now()}`,
-      message: replyText,
-      createdBy: { id: "admin1", name: "Sarah A.", role: "admin" as const },
-      createdAt: new Date().toISOString(),
-    }
-
-    setMemos(
-      memos.map((m) =>
-        m.id === selectedMemo.id
-          ? { ...m, replies: [...m.replies, reply], updatedAt: new Date().toISOString() }
-          : m
-      )
-    )
-    setSelectedMemo({ ...selectedMemo, replies: [...selectedMemo.replies, reply] })
-    setReplyText("")
-  }
-
-  const handleUpdateStatus = (memoId: string, newStatus: MemoStatus) => {
-    setMemos(
-      memos.map((m) =>
-        m.id === memoId ? { ...m, status: newStatus, updatedAt: new Date().toISOString() } : m
-      )
-    )
-    if (selectedMemo?.id === memoId) {
-      setSelectedMemo({ ...selectedMemo, status: newStatus })
+    try {
+      await addReply(selectedMemo._id, replyText)
+      setReplyText("")
+      sendTyping(false)
+    } catch (err) {
+      console.error('Failed to send reply:', err)
     }
   }
 
-  const handleAssignMemo = (memoId: string, dealerId: string) => {
-    const dealer = mockDealers.find((d) => d.id === dealerId)
-    if (!dealer) return
-
-    setMemos(
-      memos.map((m) =>
-        m.id === memoId
-          ? {
-              ...m,
-              assignedTo: { id: dealer.id, name: dealer.name, role: "dealer" },
-              status: m.status === "open" ? "in_progress" : m.status,
-              updatedAt: new Date().toISOString(),
-            }
-          : m
-      )
-    )
-    if (selectedMemo?.id === memoId) {
-      setSelectedMemo({
-        ...selectedMemo,
-        assignedTo: { id: dealer.id, name: dealer.name, role: "dealer" },
-        status: selectedMemo.status === "open" ? "in_progress" : selectedMemo.status,
-      })
+  const handleReplyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReplyText(e.target.value)
+    
+    sendTyping(true)
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
     }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(false)
+    }, 2000)
+  }
+
+  const handleUpdateStatus = async (memoId: string, newStatus: MemoStatus) => {
+    try {
+      await updateStatus(memoId, newStatus)
+    } catch (err) {
+      console.error('Failed to update status:', err)
+    }
+  }
+
+  const handleAssignMemo = async (memoId: string, dealerId: string) => {
+    if (!dealerId) return
+    try {
+      await assignMemo(memoId, dealerId)
+    } catch (err) {
+      console.error('Failed to assign memo:', err)
+    }
+  }
+
+  const handleFilterChange = (status: FilterStatus) => {
+    setFilterStatus(status)
+    fetchMemos({ status: status === "all" ? undefined : status })
   }
 
   return (
@@ -231,6 +193,20 @@ export default function AdminReportsPage() {
           onClick: () => setShowNewMemoModal(true),
         }}
       />
+
+      {/* Error Alert */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between"
+        >
+          <span className="text-red-400">{error}</span>
+          <button onClick={clearError} className="text-red-400 hover:text-red-300">
+            <X className="w-4 h-4" />
+          </button>
+        </motion.div>
+      )}
 
       {/* Stats */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -253,11 +229,11 @@ export default function AdminReportsPage() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={itemVariants} className="flex flex-wrap gap-2 mb-6">
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 mb-6">
         {(["all", "open", "in_progress", "resolved", "closed"] as FilterStatus[]).map((status) => (
           <button
             key={status}
-            onClick={() => setFilterStatus(status)}
+            onClick={() => handleFilterChange(status)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               filterStatus === status
                 ? "bg-primary/20 text-secondary border border-primary/30"
@@ -267,7 +243,37 @@ export default function AdminReportsPage() {
             {status === "all" ? "All" : MEMO_STATUS_CONFIG[status as MemoStatus].label}
           </button>
         ))}
+        {/* Connection indicator */}
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {listConnected ? (
+            <>
+              <motion.div
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="w-2 h-2 rounded-full bg-green-500"
+              />
+              <Wifi className="w-3 h-3 text-green-500" />
+              <span>Live</span>
+            </>
+          ) : (
+            <>
+              <motion.div
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="w-2 h-2 rounded-full bg-amber-500"
+              />
+              <span>Polling</span>
+            </>
+          )}
+        </div>
       </motion.div>
+
+      {/* Loading State */}
+      {loading && memos.length === 0 && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Memos List */}
       <motion.div variants={itemVariants} className="space-y-3">
@@ -278,7 +284,7 @@ export default function AdminReportsPage() {
 
           return (
             <motion.div
-              key={memo.id}
+              key={memo._id}
               whileHover={{ scale: 1.01 }}
               onClick={() => setSelectedMemo(memo)}
               className={`p-4 rounded-xl bg-card border transition-all cursor-pointer ${
@@ -306,7 +312,7 @@ export default function AdminReportsPage() {
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-4">
-                  <span>From: {memo.createdBy.name}</span>
+                  <span>From: {memo.createdBy.fullName}</span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatMemoDate(memo.createdAt)}
@@ -319,7 +325,7 @@ export default function AdminReportsPage() {
                 {memo.assignedTo && (
                   <span className="text-secondary flex items-center gap-1">
                     <UserCheck className="w-3 h-3" />
-                    {memo.assignedTo.name}
+                    {memo.assignedTo.fullName}
                   </span>
                 )}
               </div>
@@ -327,7 +333,7 @@ export default function AdminReportsPage() {
           )
         })}
 
-        {filteredMemos.length === 0 && (
+        {!loading && filteredMemos.length === 0 && (
           <div className="text-center py-12">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No memos found</h3>
@@ -336,7 +342,16 @@ export default function AdminReportsPage() {
         )}
       </motion.div>
 
-      {/* Memo Detail Modal */}
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <span className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+        </div>
+      )}
+
+      {/* Memo Detail Modal with Real-time Chat */}
       <AnimatePresence>
         {selectedMemo && (
           <>
@@ -345,13 +360,13 @@ export default function AdminReportsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedMemo(null)}
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden flex flex-col"
+              className="fixed inset-x-2 top-2 bottom-20 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[85vh] md:bottom-auto z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="p-4 border-b border-border">
@@ -360,8 +375,13 @@ export default function AdminReportsPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xl">{MEMO_CATEGORY_CONFIG[selectedMemo.category].icon}</span>
                       <h2 className="text-lg font-semibold text-foreground">{selectedMemo.subject}</h2>
+                      {chatConnected ? (
+                        <Wifi className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <WifiOff className="w-4 h-4 text-muted-foreground" />
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">From: {selectedMemo.createdBy.name}</p>
+                    <p className="text-sm text-muted-foreground">From: {selectedMemo.createdBy.fullName}</p>
                   </div>
                   <button onClick={() => setSelectedMemo(null)} className="p-2 hover:bg-muted rounded-lg transition-colors">
                     <X className="w-5 h-5" />
@@ -374,7 +394,7 @@ export default function AdminReportsPage() {
                     <span className="text-sm text-muted-foreground">Status:</span>
                     <select
                       value={selectedMemo.status}
-                      onChange={(e) => handleUpdateStatus(selectedMemo.id, e.target.value as MemoStatus)}
+                      onChange={(e) => handleUpdateStatus(selectedMemo._id, e.target.value as MemoStatus)}
                       className="px-3 py-1 rounded-lg bg-muted border border-border text-sm focus:border-primary focus:outline-none"
                     >
                       {Object.entries(MEMO_STATUS_CONFIG).map(([key, config]) => (
@@ -387,12 +407,12 @@ export default function AdminReportsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Assign to:</span>
                     <select
-                      value={selectedMemo.assignedTo?.id || ""}
-                      onChange={(e) => handleAssignMemo(selectedMemo.id, e.target.value)}
+                      value={selectedMemo.assignedTo?._id || ""}
+                      onChange={(e) => handleAssignMemo(selectedMemo._id, e.target.value)}
                       className="px-3 py-1 rounded-lg bg-muted border border-border text-sm focus:border-primary focus:outline-none"
                     >
                       <option value="">Unassigned</option>
-                      {mockDealers.map((dealer) => (
+                      {dealers.map((dealer) => (
                         <option key={dealer.id} value={dealer.id}>
                           {dealer.name}
                         </option>
@@ -411,7 +431,7 @@ export default function AdminReportsPage() {
                 <div className="p-4 rounded-xl bg-muted border border-border">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-foreground">
-                      {selectedMemo.createdBy.name}
+                      {selectedMemo.createdBy.fullName}
                       <span className="text-xs text-muted-foreground ml-2">({selectedMemo.createdBy.role})</span>
                     </span>
                     <span className="text-xs text-muted-foreground">{formatMemoDate(selectedMemo.createdAt)}</span>
@@ -425,9 +445,12 @@ export default function AdminReportsPage() {
                 </div>
 
                 {/* Replies */}
-                {selectedMemo.replies.map((reply) => (
-                  <div
-                    key={reply.id}
+                {selectedMemo.replies.map((reply, index) => (
+                  <motion.div
+                    key={reply._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     className={`p-4 rounded-xl ${
                       reply.createdBy.role === "admin"
                         ? "bg-secondary/10 border border-secondary/20 ml-4"
@@ -436,14 +459,44 @@ export default function AdminReportsPage() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-foreground">
-                        {reply.createdBy.name}
+                        {reply.createdBy.fullName}
                         <span className="text-xs text-muted-foreground ml-2">({reply.createdBy.role})</span>
                       </span>
                       <span className="text-xs text-muted-foreground">{formatMemoDate(reply.createdAt)}</span>
                     </div>
                     <p className="text-muted-foreground">{reply.message}</p>
-                  </div>
+                  </motion.div>
                 ))}
+
+                {/* Typing indicator */}
+                {typingUsers.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground ml-4"
+                  >
+                    <div className="flex gap-1">
+                      <motion.span
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                        className="w-2 h-2 rounded-full bg-muted-foreground"
+                      />
+                      <motion.span
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                        className="w-2 h-2 rounded-full bg-muted-foreground"
+                      />
+                      <motion.span
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                        className="w-2 h-2 rounded-full bg-muted-foreground"
+                      />
+                    </div>
+                    <span>Someone is typing...</span>
+                  </motion.div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Reply input */}
@@ -453,7 +506,7 @@ export default function AdminReportsPage() {
                     <input
                       type="text"
                       value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
+                      onChange={handleReplyInputChange}
                       placeholder="Type your reply..."
                       className="flex-1 px-4 py-2 rounded-xl bg-muted border border-border focus:border-primary focus:outline-none transition-colors"
                       onKeyDown={(e) => e.key === "Enter" && handleSendReply()}
@@ -482,13 +535,13 @@ export default function AdminReportsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowNewMemoModal(false)}
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden"
+              className="fixed inset-x-2 top-2 bottom-20 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:bottom-auto z-50 bg-card border border-border rounded-xl shadow-xl overflow-hidden"
             >
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">New Memo to Dealers</h2>
@@ -543,12 +596,12 @@ export default function AdminReportsPage() {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Assign to Dealer (Optional)</label>
                   <select
-                    value={newMemo.assignTo}
-                    onChange={(e) => setNewMemo({ ...newMemo, assignTo: e.target.value })}
+                    value={newMemo.assignedTo || ""}
+                    onChange={(e) => setNewMemo({ ...newMemo, assignedTo: e.target.value })}
                     className="w-full px-4 py-2 rounded-xl bg-muted border border-border focus:border-primary focus:outline-none transition-colors"
                   >
-                    <option value="">All Dealers</option>
-                    {mockDealers.map((dealer) => (
+                    <option value="">All Dealers (Unassigned)</option>
+                    {dealers.map((dealer) => (
                       <option key={dealer.id} value={dealer.id}>
                         {dealer.name}
                       </option>
@@ -576,9 +629,10 @@ export default function AdminReportsPage() {
                   </button>
                   <button
                     onClick={handleCreateMemo}
-                    disabled={!newMemo.subject.trim() || !newMemo.message.trim()}
-                    className="flex-1 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                    disabled={!newMemo.subject.trim() || !newMemo.message.trim() || creating}
+                    className="flex-1 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                   >
+                    {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     Send Memo
                   </button>
                 </div>

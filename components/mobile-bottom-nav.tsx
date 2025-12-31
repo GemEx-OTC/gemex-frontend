@@ -12,9 +12,9 @@ interface MobileBottomNavProps {
 const roleNavItems = {
   client: [
     { name: "Dashboard", href: "/client/dashboard", icon: Home },
-    { name: "Trade", href: "/client/trade", icon: LayoutDashboard },
+    { name: "Quotes", href: "/client/quotes", icon: FileText },
+    { name: "History", href: "/client/history", icon: LayoutDashboard },
     { name: "Alerts", href: "/client/notifications", icon: Bell },
-    { name: "Wallet", href: "/client/wallet", icon: Wallet },
     { name: "Settings", href: "/client/settings", icon: Settings },
   ],
   dealer: [

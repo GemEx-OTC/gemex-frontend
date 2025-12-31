@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { LogOut, CheckCircle, AlertCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight } from "lucide-react"
+import { LogOut, CheckCircle, AlertCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap } from "lucide-react"
 import { NIGERIAN_BANKS } from "@/lib/constants"
 
 type TabType = "account" | "bank" | "notifications" | "security"
@@ -20,6 +20,9 @@ export default function SettingsPage() {
     tradeAlerts: true,
     priceAlerts: false,
   })
+
+  // Mock KYC status - in production this would come from user context/API
+  const [isKycVerified] = useState(true) // Change to false to test unverified state
 
   // Bank Account State
   const [bankDetails, setBankDetails] = useState({
@@ -343,6 +346,66 @@ export default function SettingsPage() {
                     <strong className="text-[#F0F0F0]">Security Note:</strong> Your bank account details are encrypted
                     and securely stored. We use bank verification APIs to ensure the account belongs to you.
                   </p>
+                </div>
+
+                {/* Auto Payout Status Section */}
+                <div className={`mt-6 p-5 border rounded-xl ${
+                  isKycVerified 
+                    ? "bg-[#C8F55A]/5 border-[#C8F55A]/30" 
+                    : "bg-[#1E1E2B]/80 border-[#2D2D3D]"
+                }`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      isKycVerified ? "bg-[#C8F55A]/20" : "bg-[#2D2D3D]"
+                    }`}>
+                      {isKycVerified ? (
+                        <Zap className="w-6 h-6 text-[#C8F55A]" />
+                      ) : (
+                        <Lock className="w-6 h-6 text-[#B0B0B8]" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-[#F0F0F0]">Auto Payout</h3>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isKycVerified 
+                            ? "bg-[#C8F55A]/20 text-[#C8F55A]" 
+                            : "bg-amber-500/20 text-amber-400"
+                        }`}>
+                          {isKycVerified ? "Active" : "Unavailable"}
+                        </span>
+                      </div>
+                      
+                      {isKycVerified ? (
+                        <>
+                          <p className="text-sm text-[#B0B0B8]">
+                            Your payouts are processed automatically to your linked bank account when trades are settled.
+                          </p>
+                          <div className="mt-3 flex items-center gap-2 text-sm">
+                            <CheckCircle className="w-4 h-4 text-[#C8F55A]" />
+                            <span className="text-[#C8F55A] font-medium">KYC Verified — Auto Payout enabled</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-[#B0B0B8]">
+                            Auto Payout is a privilege for verified accounts. Complete your KYC verification to unlock automatic payouts.
+                          </p>
+                          <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-3 flex items-center gap-2 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg"
+                          >
+                            <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                            <p className="text-xs text-amber-400">
+                              Complete KYC verification to unlock this feature
+                            </p>
+                          </motion.div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

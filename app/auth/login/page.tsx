@@ -1,11 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { DemoAccountsCard } from "@/components/demo-accounts-card"
 import { validateDemoAccount } from "@/lib/demo-accounts"
+import { useLogin } from "@/lib/hooks/use-auth"
+import type { ApiError } from "@/lib/api/types"
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -21,39 +23,60 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
   const [showDemoAccounts, setShowDemoAccounts] = useState(false)
+  
+  const router = useRouter()
+  const loginMutation = useLogin()
 
-  const handleLogin = (loginEmail: string, loginPassword: string) => {
+  const handleLogin = async (loginEmail: string, loginPassword: string) => {
     setError("")
-    setLoading(true)
 
-    setTimeout(() => {
-      if (!loginEmail || !loginPassword) {
-        setError("Please fill in all fields to continue.")
-        setLoading(false)
-        return
+    if (!loginEmail || !loginPassword) {
+      setError("Please fill in all fields to continue.")
+      return
+    }
+
+    // Check if it's a demo account first
+    const demoAccount = validateDemoAccount(loginEmail, loginPassword)
+    if (demoAccount) {
+      console.log("Demo account login:", demoAccount.role)
+      window.location.href = demoAccount.redirectTo
+      return
+    }
+
+    // Validate email format
+    if (!loginEmail.includes("@")) {
+      setError("Please enter a valid email address.")
+      return
+    }
+
+    // Call the API
+    loginMutation.mutate(
+      { email: loginEmail, password: loginPassword },
+      {
+        onError: (err: ApiError) => {
+          console.log('Login error:', JSON.stringify(err, null, 2))
+          
+          if (err.code === 'EMAIL_NOT_VERIFIED') {
+            // Redirect to verify email page - OTP was already sent by the backend
+            const verifyEmail = err.data?.email || loginEmail
+            router.push(`/auth/verify-email?email=${encodeURIComponent(verifyEmail)}`)
+          } else if (err.code === 'MUST_CHANGE_PASSWORD') {
+            // Redirect to set new password page with temp token
+            const tempToken = err.data?.accessToken
+            if (tempToken) {
+              console.log('Redirecting to set-password page')
+              window.location.href = `/auth/set-password?token=${encodeURIComponent(tempToken)}`
+            } else {
+              console.error('No access token in MUST_CHANGE_PASSWORD response')
+              setError("Password change required but session expired. Please try again.")
+            }
+          } else {
+            setError(err.message || "Invalid credentials. Please try again.")
+          }
+        },
       }
-
-      // Check if it's a demo account
-      const demoAccount = validateDemoAccount(loginEmail, loginPassword)
-      if (demoAccount) {
-        console.log("Demo account login:", demoAccount.role)
-        window.location.href = demoAccount.redirectTo
-        return
-      }
-
-      // Regular validation
-      if (!loginEmail.includes("@")) {
-        setError("Please enter a valid email address.")
-        setLoading(false)
-        return
-      }
-
-      // For non-demo accounts, show error
-      setError("Invalid credentials. Use a demo account or create a new account.")
-      setLoading(false)
-    }, 1000)
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +88,6 @@ export default function LoginPage() {
     setEmail(demoEmail)
     setPassword(demoPassword)
     setShowDemoAccounts(false)
-    // Auto-login after a brief delay
     setTimeout(() => {
       handleLogin(demoEmail, demoPassword)
     }, 300)
@@ -93,6 +115,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
               className="gemex-input px-4 py-3.5"
+              disabled={loginMutation.isPending}
             />
           </div>
 
@@ -112,6 +135,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               className="gemex-input px-4 py-3.5"
+              disabled={loginMutation.isPending}
             />
           </div>
 
@@ -127,12 +151,12 @@ export default function LoginPage() {
 
           <motion.button
             type="submit"
-            disabled={loading}
+            disabled={loginMutation.isPending}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className="w-full py-3.5 rounded-lg font-semibold text-primary-foreground bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loginMutation.isPending ? "Signing in..." : "Sign in"}
           </motion.button>
         </form>
 
@@ -148,10 +172,7 @@ export default function LoginPage() {
 
         {/* Sign up link */}
         <div className="text-center">
-          <a
-            href="/auth/signup"
-            className="gemex-button-outline w-full py-3.5"
-          >
+          <a href="/auth/signup" className="gemex-button-outline w-full py-3.5">
             Create an account
           </a>
         </div>

@@ -4,7 +4,40 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
-import { AlertCircle, Info, TrendingUp, ArrowRight, Check } from "lucide-react"
+import { AlertCircle, Info, ArrowRight, Check } from "lucide-react"
+import Image from "next/image"
+
+// Asset icons and brand colors
+const ASSET_CONFIG = {
+  USDT: {
+    icon: "/icons/usdt.svg",
+    brandColor: "#26A17B",
+  },
+  BTC: {
+    icon: "/icons/btc.svg",
+    brandColor: "#F7931A",
+  },
+  USDC: {
+    icon: "/icons/usdc.svg",
+    brandColor: "#2775CA",
+  },
+} as const
+
+// Network/chain logos
+const NETWORK_CONFIG = {
+  TRC20: {
+    icon: "/icons/chains/tron.svg",
+    brandColor: "#FF060E",
+  },
+  BSC: {
+    icon: "/icons/chains/bnb.svg",
+    brandColor: "#F3BA2F",
+  },
+  BTC: {
+    icon: "/icons/btc.svg",
+    brandColor: "#F7931A",
+  },
+} as const
 
 export default function TradeRequestPage() {
   const [step, setStep] = useState<"select" | "amount" | "submitted">("select")
@@ -14,7 +47,7 @@ export default function TradeRequestPage() {
     cryptoAmount: "50000",
   })
 
-  // Mock system rates (indicative only - from Admin's PricingConfig)
+  // Mock system rates
   const systemRates = {
     USDT: 1565,
     BTC: 43500000,
@@ -23,13 +56,14 @@ export default function TradeRequestPage() {
 
   const handleSubmitRequest = () => {
     console.log("Quote request submitted:", tradeData)
-    // In production: POST /api/v1/quotes
     setStep("submitted")
   }
 
   const systemRate = systemRates[tradeData.cryptoAsset]
   const estimatedNaira = Number.parseFloat(tradeData.cryptoAmount || "0") * systemRate
   const minAmount = tradeData.cryptoAsset === "BTC" ? 0.01 : 50000
+
+  const steps = ["select", "amount", "submitted"]
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -38,26 +72,26 @@ export default function TradeRequestPage() {
         subtitle="Get competitive rates for large crypto-to-Naira conversions"
       />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* Progress Indicator */}
-        <div className="mb-8 flex items-center justify-center gap-2">
-          {["select", "amount", "submitted"].map((s, idx) => (
+        <div className="mb-6 flex items-center justify-center gap-2">
+          {steps.map((s, idx) => (
             <div key={s} className="flex items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                   step === s
                     ? "bg-[#641AE4] text-white scale-110"
-                    : idx < ["select", "amount", "submitted"].indexOf(step)
+                    : idx < steps.indexOf(step)
                     ? "bg-[#C8F55A] text-[#1E1E2B]"
                     : "bg-[#2D2D3D] text-[#B0B0B8]"
                 }`}
               >
-                {idx < ["select", "amount", "submitted"].indexOf(step) ? <Check className="w-5 h-5" /> : idx + 1}
+                {idx < steps.indexOf(step) ? <Check className="w-4 h-4" /> : idx + 1}
               </div>
               {idx < 2 && (
                 <div
-                  className={`w-12 md:w-20 h-1 mx-2 rounded-full transition-all ${
-                    idx < ["select", "amount", "submitted"].indexOf(step) ? "bg-[#C8F55A]" : "bg-[#2D2D3D]"
+                  className={`w-10 md:w-16 h-0.5 mx-2 rounded-full transition-all ${
+                    idx < steps.indexOf(step) ? "bg-[#C8F55A]" : "bg-[#2D2D3D]"
                   }`}
                 />
               )}
@@ -65,34 +99,17 @@ export default function TradeRequestPage() {
           ))}
         </div>
 
-        {/* Info Banner */}
+        {/* Info Banner - Compact */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-4"
+          className="mb-5 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-3"
         >
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-[#641AE4] flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-[#B0B0B8]">
-              <p className="font-medium text-[#F0F0F0] mb-2">Bulk Trade Process:</p>
-              <div className="grid md:grid-cols-2 gap-2">
-                <div className="flex items-start gap-2">
-                  <span className="text-[#C8F55A]">1.</span>
-                  <span>Submit your bulk trade request</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[#C8F55A]">2.</span>
-                  <span>Dealer provides firm quote rate</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[#C8F55A]">3.</span>
-                  <span>Accept & send crypto to deposit address</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[#C8F55A]">4.</span>
-                  <span>Receive Naira to your bank account</span>
-                </div>
-              </div>
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-[#641AE4] flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-[#B0B0B8]">
+              <span className="font-medium text-[#F0F0F0]">Process: </span>
+              Submit request → Dealer quotes → Accept & send crypto → Receive Naira
             </div>
           </div>
         </motion.div>
@@ -104,97 +121,127 @@ export default function TradeRequestPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6 md:p-8 space-y-6"
+              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-5 md:p-6 space-y-5"
             >
               <div>
-                <h2 className="text-2xl font-bold text-[#F0F0F0] mb-2">Select Asset & Network</h2>
+                <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Select Asset & Network</h2>
                 <p className="text-sm text-[#B0B0B8]">Choose the cryptocurrency and network for your bulk trade</p>
               </div>
 
-              {/* Crypto Asset Selection */}
+              {/* Crypto Asset Selection - Compact */}
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-3">Cryptocurrency</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                  {Object.entries(CRYPTO_ASSETS).map(([key, asset]) => (
-                    <motion.button
-                      key={key}
-                      onClick={() => {
-                        setTradeData({ 
-                          ...tradeData, 
-                          cryptoAsset: key as keyof typeof CRYPTO_ASSETS,
-                          cryptoNetwork: key === "BTC" ? "BTC" : "TRC20"
-                        })
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-4 md:p-6 rounded-xl text-center font-medium transition-all ${
-                        tradeData.cryptoAsset === key
-                          ? "bg-gradient-to-br from-[#641AE4] to-[#9A24D2] text-white shadow-lg shadow-[#641AE4]/30"
-                          : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]/80 border border-[#2D2D3D]"
-                      }`}
-                    >
-                      <div className="text-4xl md:text-5xl mb-2">{asset.icon}</div>
-                      <div className="font-bold text-lg">{asset.symbol}</div>
-                      <div className="text-xs opacity-80 mt-1">{asset.name}</div>
-                    </motion.button>
-                  ))}
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Cryptocurrency</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(CRYPTO_ASSETS).map(([key, asset]) => {
+                    const config = ASSET_CONFIG[key as keyof typeof ASSET_CONFIG]
+                    const isSelected = tradeData.cryptoAsset === key
+                    return (
+                      <motion.button
+                        key={key}
+                        onClick={() => {
+                          setTradeData({ 
+                            ...tradeData, 
+                            cryptoAsset: key as keyof typeof CRYPTO_ASSETS,
+                            cryptoNetwork: key === "BTC" ? "BTC" : "TRC20"
+                          })
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`relative p-3 rounded-lg text-center font-medium transition-all ${
+                          isSelected
+                            ? "bg-gradient-to-br from-[#641AE4] to-[#9A24D2] text-white shadow-lg shadow-[#641AE4]/20"
+                            : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]/80 border border-[#2D2D3D]"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
+                          }`}>
+                            <Image
+                              src={config.icon}
+                              alt={`${asset.symbol} icon`}
+                              width={24}
+                              height={24}
+                              className="w-6 h-6"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm">{asset.symbol}</div>
+                            <div className="text-[10px] opacity-70">{asset.name}</div>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <motion.div
+                            layoutId="asset-check"
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8F55A] rounded-full flex items-center justify-center"
+                          >
+                            <Check className="w-3 h-3 text-[#1E1E2B]" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    )
+                  })}
                 </div>
               </div>
 
-              {/* Network Selection */}
+              {/* Network Selection - Compact */}
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-3">Network</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Network</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {Object.entries(CRYPTO_NETWORKS)
                     .filter(([key]) => {
                       if (tradeData.cryptoAsset === "BTC") return key === "BTC"
                       return key !== "BTC"
                     })
-                    .map(([key, network]) => (
-                      <motion.button
-                        key={key}
-                        onClick={() =>
-                          setTradeData({ ...tradeData, cryptoNetwork: key as keyof typeof CRYPTO_NETWORKS })
-                        }
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`p-4 rounded-xl text-left transition-all ${
-                          tradeData.cryptoNetwork === key
-                            ? "bg-[#641AE4] text-white shadow-lg"
-                            : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] border border-[#2D2D3D]"
-                        }`}
-                      >
-                        <div className="font-semibold text-base">{network.name}</div>
-                        <div className="text-xs opacity-80 mt-1">{network.chain}</div>
-                      </motion.button>
-                    ))}
+                    .map(([key, network]) => {
+                      const config = NETWORK_CONFIG[key as keyof typeof NETWORK_CONFIG]
+                      const isSelected = tradeData.cryptoNetwork === key
+                      return (
+                        <motion.button
+                          key={key}
+                          onClick={() =>
+                            setTradeData({ ...tradeData, cryptoNetwork: key as keyof typeof CRYPTO_NETWORKS })
+                          }
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`relative p-3 rounded-lg text-left transition-all flex items-center gap-2 ${
+                            isSelected
+                              ? "bg-[#641AE4] text-white shadow-md"
+                              : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] border border-[#2D2D3D]"
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
+                          }`}>
+                            <Image
+                              src={config.icon}
+                              alt={`${network.name} icon`}
+                              width={18}
+                              height={18}
+                              className="w-[18px] h-[18px]"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-xs truncate">{network.name}</div>
+                            <div className="text-[10px] opacity-70">{network.chain}</div>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                          )}
+                        </motion.button>
+                      )
+                    })}
                 </div>
               </div>
-
-              {/* System Rate Display */}
-              {/* <div className="bg-gradient-to-br from-[#641AE4]/10 to-[#9A24D2]/5 border border-[#641AE4]/30 rounded-xl p-4 md:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-[#641AE4]" />
-                    <span className="text-[#B0B0B8] text-sm md:text-base">Indicative System Rate</span>
-                  </div>
-                  <span className="text-[#F0F0F0] font-bold text-xl md:text-2xl">
-                    1 {tradeData.cryptoAsset} = ₦{systemRate.toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-xs text-[#B0B0B8] mt-3">
-                  * This is an estimate. Dealer will provide the final firm rate for your bulk trade.
-                </p>
-              </div> */}
 
               <motion.button
                 onClick={() => setStep("amount")}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2"
               >
-                Continue to Amount
-                <ArrowRight className="w-5 h-5" />
+                Continue
+                <ArrowRight className="w-4 h-4" />
               </motion.button>
             </motion.div>
           )}
@@ -205,17 +252,44 @@ export default function TradeRequestPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-6 md:p-8 space-y-6"
+              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-5 md:p-6 space-y-5"
             >
               <div>
-                <h2 className="text-2xl font-bold text-[#F0F0F0] mb-2">Enter Trade Amount</h2>
+                <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Enter Trade Amount</h2>
                 <p className="text-sm text-[#B0B0B8]">Specify how much {tradeData.cryptoAsset} you want to trade</p>
               </div>
 
+              {/* Selected Asset/Network Summary */}
+              <div className="flex items-center gap-3 p-3 bg-[#2D2D3D]/50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#1E1E2B] flex items-center justify-center">
+                    <Image
+                      src={ASSET_CONFIG[tradeData.cryptoAsset].icon}
+                      alt={tradeData.cryptoAsset}
+                      width={20}
+                      height={20}
+                    />
+                  </div>
+                  <span className="font-semibold text-[#F0F0F0]">{tradeData.cryptoAsset}</span>
+                </div>
+                <span className="text-[#B0B0B8]">on</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-[#1E1E2B] flex items-center justify-center">
+                    <Image
+                      src={NETWORK_CONFIG[tradeData.cryptoNetwork].icon}
+                      alt={tradeData.cryptoNetwork}
+                      width={14}
+                      height={14}
+                    />
+                  </div>
+                  <span className="text-sm text-[#B0B0B8]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}</span>
+                </div>
+              </div>
+
               {/* Amount Input */}
-              <div className="bg-gradient-to-br from-[#2D2D3D]/80 to-[#2D2D3D]/40 border-2 border-[#641AE4]/30 rounded-xl p-6 md:p-8">
-                <label className="block text-sm font-medium text-[#B0B0B8] mb-3">
-                  Amount to Send ({tradeData.cryptoAsset})
+              <div className="bg-gradient-to-br from-[#2D2D3D]/80 to-[#2D2D3D]/40 border border-[#641AE4]/20 rounded-xl p-5">
+                <label className="block text-sm font-medium text-[#B0B0B8] mb-2">
+                  Amount ({tradeData.cryptoAsset})
                 </label>
                 <div className="relative">
                   <input
@@ -224,64 +298,44 @@ export default function TradeRequestPage() {
                     value={tradeData.cryptoAmount}
                     onChange={(e) => setTradeData({ ...tradeData, cryptoAmount: e.target.value })}
                     placeholder="0.00"
-                    min={50000}
-                    className="w-full bg-transparent text-4xl md:text-5xl lg:text-6xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
+                    min={minAmount}
+                    className="w-full bg-transparent text-3xl md:text-4xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
                   />
                 </div>
-                <p className="text-xs text-[#B0B0B8] mt-2">
-                  Minimum: {minAmount.toLocaleString()} {tradeData.cryptoAsset}
+                <p className="text-xs text-[#B0B0B8] mt-1">
+                  Min: {minAmount.toLocaleString()} {tradeData.cryptoAsset}
                 </p>
                 
-                <div className="mt-6 pt-6 border-t border-[#2D2D3D]">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="text-[#B0B0B8] text-sm md:text-base">Estimated Naira (Indicative)</span>
-                    <span className="text-[#F0F0F0] font-bold text-2xl md:text-3xl">
-                      ₦{estimatedNaira.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                <div className="mt-4 pt-4 border-t border-[#2D2D3D]">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#B0B0B8] text-sm">Estimated Naira</span>
+                    <span className="text-[#F0F0F0] font-bold text-xl">
+                      ₦{estimatedNaira.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Trade Details */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-4 bg-[#2D2D3D]/30 rounded-lg">
-                  <span className="text-[#B0B0B8] text-sm">Asset</span>
-                  <span className="text-[#F0F0F0] font-medium">
-                    {CRYPTO_ASSETS[tradeData.cryptoAsset].name} ({tradeData.cryptoAsset})
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-[#2D2D3D]/30 rounded-lg">
-                  <span className="text-[#B0B0B8] text-sm">Network</span>
-                  <span className="text-[#F0F0F0] font-medium">
-                    {CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-[#2D2D3D]/30 rounded-lg">
-                  <span className="text-[#B0B0B8] text-sm">System Rate</span>
-                  <span className="text-[#F0F0F0] font-medium">₦{systemRate.toLocaleString()}</span>
+                  <p className="text-[10px] text-[#B0B0B8] mt-1">
+                    Rate: ₦{systemRate.toLocaleString()} per {tradeData.cryptoAsset} (indicative)
+                  </p>
                 </div>
               </div>
 
               {/* Warning */}
-              <div className="bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-[#C8F55A] flex-shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="text-[#C8F55A] font-medium mb-1">Important</p>
-                    <p className="text-[#B0B0B8]">
-                      The final rate will be set by our dealer based on current market conditions. You'll receive a notification when your firm quote is ready.
-                    </p>
-                  </div>
+              <div className="bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#C8F55A] flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#B0B0B8]">
+                    <span className="text-[#C8F55A] font-medium">Note:</span> Final rate set by dealer based on market conditions. You'll be notified when your firm quote is ready.
+                  </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-3">
                 <motion.button
                   onClick={() => setStep("select")}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  className="sm:flex-1 py-4 rounded-xl font-semibold text-[#F0F0F0] border-2 border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+                  className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
                 >
                   Back
                 </motion.button>
@@ -290,10 +344,10 @@ export default function TradeRequestPage() {
                   disabled={!tradeData.cryptoAmount || Number.parseFloat(tradeData.cryptoAmount) < minAmount}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  className="sm:flex-1 py-4 rounded-xl font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Request Bulk Quote
-                  <ArrowRight className="w-5 h-5" />
+                  Request Quote
+                  <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </div>
             </motion.div>
@@ -304,59 +358,75 @@ export default function TradeRequestPage() {
               key="submitted"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#C8F55A]/30 rounded-xl p-6 md:p-8 text-center space-y-6"
+              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#C8F55A]/30 rounded-xl p-5 md:p-6 text-center space-y-5"
             >
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C8F55A]/20 mb-4"
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C8F55A]/20"
               >
-                <div className="text-[#C8F55A] text-4xl">✓</div>
+                <Check className="w-8 h-8 text-[#C8F55A]" />
               </motion.div>
 
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-[#F0F0F0] mb-2">Quote Request Submitted!</h2>
-                <p className="text-[#B0B0B8]">
-                  Our dealer will review your bulk trade request and provide a competitive firm quote shortly.
+                <h2 className="text-xl md:text-2xl font-bold text-[#F0F0F0] mb-1">Quote Request Submitted!</h2>
+                <p className="text-sm text-[#B0B0B8]">
+                  Our dealer will review and provide a competitive firm quote shortly.
                 </p>
               </div>
 
-              <div className="bg-[#2D2D3D]/50 rounded-xl p-6 space-y-3 text-left">
+              <div className="bg-[#2D2D3D]/50 rounded-lg p-4 space-y-3 text-left">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#B0B0B8]">Amount</span>
-                  <span className="text-[#F0F0F0] font-bold text-lg">
-                    {tradeData.cryptoAmount} {tradeData.cryptoAsset}
-                  </span>
+                  <span className="text-sm text-[#B0B0B8]">Amount</span>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={ASSET_CONFIG[tradeData.cryptoAsset].icon}
+                      alt={tradeData.cryptoAsset}
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-[#F0F0F0] font-bold">
+                      {tradeData.cryptoAmount} {tradeData.cryptoAsset}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#B0B0B8]">Network</span>
-                  <span className="text-[#F0F0F0] font-medium">
-                    {CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}
-                  </span>
+                  <span className="text-sm text-[#B0B0B8]">Network</span>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={NETWORK_CONFIG[tradeData.cryptoNetwork].icon}
+                      alt={tradeData.cryptoNetwork}
+                      width={14}
+                      height={14}
+                    />
+                    <span className="text-sm text-[#F0F0F0]">
+                      {CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-[#2D2D3D]">
-                  <span className="text-[#B0B0B8]">Estimated Value</span>
-                  <span className="text-[#C8F55A] font-bold text-xl">
-                    ₦{estimatedNaira.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  <span className="text-sm text-[#B0B0B8]">Estimated Value</span>
+                  <span className="text-[#C8F55A] font-bold text-lg">
+                    ₦{estimatedNaira.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                 </div>
               </div>
 
-              <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-4">
-                <p className="text-sm text-[#B0B0B8]">
-                  📧 You'll receive an email and in-app notification when your quote is ready. Bulk trade quotes are typically generated within 5-15 minutes during business hours.
+              <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-3">
+                <p className="text-xs text-[#B0B0B8]">
+                  📧 You'll receive a notification when your quote is ready (typically 5-15 min during business hours).
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-3">
                 <motion.button
-                  onClick={() => (window.location.href = "/client/dashboard")}
+                  onClick={() => (window.location.href = "/client/quotes")}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  className="sm:flex-1 py-4 rounded-xl font-semibold text-[#F0F0F0] border-2 border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
+                  className="flex-1 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all"
                 >
-                  Go to Dashboard
+                  View My Quotes
                 </motion.button>
                 <motion.button
                   onClick={() => {
@@ -365,9 +435,9 @@ export default function TradeRequestPage() {
                   }}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
-                  className="sm:flex-1 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all"
+                  className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] hover:bg-[#641AE4]/5 transition-all"
                 >
-                  Request Another Quote
+                  New Request
                 </motion.button>
               </div>
             </motion.div>

@@ -27,6 +27,7 @@ const publicRoutes = [
   '/auth/forgot-password',
   '/auth/verify-email',
   '/auth/reset-password',
+  '/auth/set-password',
   '/demo',
   '/',
 ];
@@ -65,7 +66,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // If user is authenticated and trying to access auth routes, redirect to dashboard
     if (isAuthenticated && isAuthRoute) {
-      const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/client/dashboard';
+      const redirectPath = user?.role === 'admin' 
+        ? '/admin/dashboard' 
+        : user?.role === 'dealer' 
+          ? '/dealer/dashboard' 
+          : '/client/dashboard';
       router.replace(redirectPath);
       return;
     }

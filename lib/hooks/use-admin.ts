@@ -164,3 +164,18 @@ export const useAuditLogs = (query: adminApi.AuditLogsQuery) => {
     queryFn: () => adminApi.getAuditLogs(query),
   });
 };
+
+
+// Toggle user auto payout mutation (admin)
+export const useToggleUserAutoPayout = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => 
+      adminApi.toggleUserAutoPayout(id, enabled),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: adminUserKey(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    },
+  });
+};

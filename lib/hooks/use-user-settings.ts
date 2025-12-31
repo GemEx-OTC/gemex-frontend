@@ -20,6 +20,7 @@ export const userSettingsKeys = {
   bankAccount: () => [...userSettingsKeys.all, 'bank-account'] as const,
   dealerRates: () => [...userSettingsKeys.all, 'dealer-rates'] as const,
   exchangeRates: () => [...userSettingsKeys.all, 'exchange-rates'] as const,
+  autoPayout: () => [...userSettingsKeys.all, 'auto-payout'] as const,
 };
 
 // ============ PROFILE HOOKS ============
@@ -173,5 +174,28 @@ export const useVerifyOtp = () => {
 export const useVerifyPassword = () => {
   return useMutation({
     mutationFn: (data: userSettingsApi.VerifyPasswordInput) => userSettingsApi.verifyUserPassword(data),
+  });
+};
+
+
+// ============ AUTO PAYOUT HOOKS ============
+
+export const useAutoPayoutStatus = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.autoPayout(),
+    queryFn: userSettingsApi.getAutoPayoutStatus,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useToggleAutoPayout = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (enabled: boolean) => userSettingsApi.toggleAutoPayout(enabled),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.autoPayout() });
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
   });
 };

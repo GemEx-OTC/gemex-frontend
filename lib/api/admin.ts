@@ -197,6 +197,7 @@ export interface UserDetails {
   kycStatus: string;
   isActive: boolean;
   emailVerified: boolean;
+  autoPayoutEnabled: boolean;
   bankAccount?: {
     bankName: string;
     accountNumber: string;
@@ -495,5 +496,17 @@ export const getAdminTrades = async (query: AdminTradesQuery = {}): Promise<Admi
 // Get admin trade details
 export const getAdminTradeDetails = async (id: string): Promise<AdminTradeDetails> => {
   const response = await apiClient.get<ApiResponse<AdminTradeDetails>>(`/admin/trades/${id}`);
+  return response.data.data;
+};
+
+// Toggle user auto payout (admin)
+export const toggleUserAutoPayout = async (id: string, enabled: boolean): Promise<{ message: string; autoPayoutEnabled: boolean }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; autoPayoutEnabled: boolean }>>(`/admin/users/${id}/auto-payout`, { enabled });
+  return response.data.data;
+};
+
+// Get user auto payout status (admin)
+export const getUserAutoPayoutStatus = async (id: string): Promise<{ autoPayoutEnabled: boolean }> => {
+  const response = await apiClient.get<ApiResponse<{ autoPayoutEnabled: boolean }>>(`/admin/users/${id}/auto-payout`);
   return response.data.data;
 };

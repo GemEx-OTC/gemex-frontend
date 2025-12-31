@@ -18,6 +18,8 @@ import {
   useUpdateBankAccount,
   useVerifyBankAccount,
   useToggleTwoFactor,
+  useAutoPayoutStatus,
+  useToggleAutoPayout,
 } from "@/lib/hooks/use-user-settings"
 
 type TabType = "account" | "bank" | "notifications" | "security"
@@ -38,6 +40,8 @@ export default function SettingsPage() {
   const updateBankMutation = useUpdateBankAccount()
   const verifyBankMutation = useVerifyBankAccount()
   const toggleTwoFactorMutation = useToggleTwoFactor()
+  const { data: autoPayoutData } = useAutoPayoutStatus()
+  const toggleAutoPayoutMutation = useToggleAutoPayout()
 
   const [profileForm, setProfileForm] = useState({ fullName: "", phoneNumber: "" })
   const [bankDetails, setBankDetails] = useState({ bankCode: "", bankName: "", accountNumber: "", accountName: "" })
@@ -216,7 +220,26 @@ export default function SettingsPage() {
                 <div className={`mt-6 p-5 border rounded-xl ${isKycVerified ? "bg-[#C8F55A]/5 border-[#C8F55A]/30" : "bg-[#1E1E2B]/80 border-[#2D2D3D]"}`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isKycVerified ? "bg-[#C8F55A]/20" : "bg-[#2D2D3D]"}`}>{isKycVerified ? <Zap className="w-6 h-6 text-[#C8F55A]" /> : <Lock className="w-6 h-6 text-[#B0B0B8]" />}</div>
-                    <div className="flex-1"><div className="flex items-center gap-3 mb-1"><h3 className="font-semibold text-[#F0F0F0]">Auto Payout</h3><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${isKycVerified ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-amber-500/20 text-amber-400"}`}>{isKycVerified ? "Active" : "Unavailable"}</span></div><p className="text-sm text-[#B0B0B8]">{isKycVerified ? "Payouts are processed automatically when trades are settled." : "Complete KYC verification to unlock automatic payouts."}</p></div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-[#F0F0F0]">Auto Payout</h3>
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${autoPayoutData?.autoPayoutEnabled ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-amber-500/20 text-amber-400"}`}>{autoPayoutData?.autoPayoutEnabled ? "Enabled" : "Disabled"}</span>
+                        </div>
+                        {isKycVerified && (
+                          <motion.button 
+                            onClick={() => toggleAutoPayoutMutation.mutate(!autoPayoutData?.autoPayoutEnabled, {
+                              onSuccess: () => toast.success(autoPayoutData?.autoPayoutEnabled ? "Auto payout disabled" : "Auto payout enabled! 🚀", { description: autoPayoutData?.autoPayoutEnabled ? "You will need to manually request payouts." : "Payouts will be processed automatically when trades settle." })
+                            })} 
+                            disabled={toggleAutoPayoutMutation.isPending} 
+                            className={`relative w-14 h-8 rounded-full transition-all ${autoPayoutData?.autoPayoutEnabled ? "bg-[#C8F55A]" : "bg-[#1E1E2B]"}`}
+                          >
+                            <motion.div animate={{ x: autoPayoutData?.autoPayoutEnabled ? 24 : 2 }} transition={{ type: "spring", stiffness: 500, damping: 30 }} className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg" />
+                          </motion.button>
+                        )}
+                      </div>
+                      <p className="text-sm text-[#B0B0B8]">{isKycVerified ? (autoPayoutData?.autoPayoutEnabled ? "Payouts are processed automatically when trades are settled." : "Enable to automatically receive payouts when trades settle.") : "Complete KYC verification to unlock automatic payouts."}</p>
+                    </div>
                   </div>
                 </div>
               </div>

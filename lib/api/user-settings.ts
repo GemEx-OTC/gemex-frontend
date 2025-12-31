@@ -14,6 +14,7 @@ export interface UserProfile {
   bankAccount: BankAccount | null;
   notificationPreferences: NotificationPreferences;
   twoFactorEnabled: boolean;
+  autoPayoutEnabled: boolean;
   createdAt: string;
   lastLoginAt?: string;
 }
@@ -202,5 +203,18 @@ export interface VerifyPasswordInput {
 
 export const verifyUserPassword = async (data: VerifyPasswordInput): Promise<{ valid: boolean }> => {
   const response = await apiClient.post<ApiResponse<{ valid: boolean }>>('/user-settings/verify-password', data);
+  return response.data.data;
+};
+
+
+// ============ AUTO PAYOUT APIs ============
+
+export const getAutoPayoutStatus = async (): Promise<{ autoPayoutEnabled: boolean }> => {
+  const response = await apiClient.get<ApiResponse<{ autoPayoutEnabled: boolean }>>('/user-settings/auto-payout');
+  return response.data.data;
+};
+
+export const toggleAutoPayout = async (enabled: boolean): Promise<{ autoPayoutEnabled: boolean }> => {
+  const response = await apiClient.post<ApiResponse<{ autoPayoutEnabled: boolean }>>('/user-settings/auto-payout', { enabled });
   return response.data.data;
 };

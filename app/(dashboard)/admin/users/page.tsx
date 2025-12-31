@@ -16,6 +16,7 @@ import {
   useSuspendUser, 
   useReactivateUser,
   useCreateUserWallets,
+  useToggleUserAutoPayout,
 } from "@/lib/hooks/use-admin"
 import type { ListUsersQuery, UserListItem } from "@/lib/api/admin"
 
@@ -51,6 +52,7 @@ export default function AdminUsersPage() {
   const suspendMutation = useSuspendUser()
   const reactivateMutation = useReactivateUser()
   const createWalletsMutation = useCreateUserWallets()
+  const toggleAutoPayoutMutation = useToggleUserAutoPayout()
 
   // Get active filter count for badge
   const activeFilters = [statusFilter, kycFilter].filter(f => f !== "all").length
@@ -447,6 +449,33 @@ export default function AdminUsersPage() {
                           ) : (
                             <p className="text-[#808090] text-sm">No wallets created</p>
                           )}
+                        </div>
+
+                        <div className="p-4 bg-[#2D2D3D]/30 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-[#808090] text-sm mb-1">Auto Payout</div>
+                              <p className="text-xs text-[#808090]">
+                                {userDetails.autoPayoutEnabled 
+                                  ? "Payouts are processed automatically when trades settle" 
+                                  : "User must manually request payouts"}
+                              </p>
+                            </div>
+                            <button 
+                              onClick={() => toggleAutoPayoutMutation.mutate(
+                                { id: userDetails.id, enabled: !userDetails.autoPayoutEnabled },
+                                { onSuccess: () => toast.success(userDetails.autoPayoutEnabled ? "Auto payout disabled" : "Auto payout enabled") }
+                              )} 
+                              disabled={toggleAutoPayoutMutation.isPending}
+                              className={`relative w-12 h-6 rounded-full transition-all ${userDetails.autoPayoutEnabled ? "bg-[#C8F55A]" : "bg-[#1E1E2B]"}`}
+                            >
+                              <motion.div 
+                                animate={{ x: userDetails.autoPayoutEnabled ? 24 : 2 }} 
+                                transition={{ type: "spring", stiffness: 500, damping: 30 }} 
+                                className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-lg" 
+                              />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="pt-4 border-t border-[#2D2D3D]">

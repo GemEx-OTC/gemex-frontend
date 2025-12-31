@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import { DemoAccountsCard } from "@/components/demo-accounts-card"
 import { validateDemoAccount } from "@/lib/demo-accounts"
 import { useLogin } from "@/lib/hooks/use-auth"
@@ -22,31 +23,28 @@ const formVariants = {
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [showDemoAccounts, setShowDemoAccounts] = useState(false)
   
   const router = useRouter()
   const loginMutation = useLogin()
 
   const handleLogin = async (loginEmail: string, loginPassword: string) => {
-    setError("")
-
     if (!loginEmail || !loginPassword) {
-      setError("Please fill in all fields to continue.")
+      toast.error("Please fill in all fields to continue.")
       return
     }
 
     // Check if it's a demo account first
     const demoAccount = validateDemoAccount(loginEmail, loginPassword)
     if (demoAccount) {
-      console.log("Demo account login:", demoAccount.role)
+      toast.success(`Welcome! Logging in as ${demoAccount.role}...`)
       window.location.href = demoAccount.redirectTo
       return
     }
 
     // Validate email format
     if (!loginEmail.includes("@")) {
-      setError("Please enter a valid email address.")
+      toast.error("Please enter a valid email address.")
       return
     }
 
@@ -54,25 +52,26 @@ export default function LoginPage() {
     loginMutation.mutate(
       { email: loginEmail, password: loginPassword },
       {
+        onSuccess: () => {
+          toast.success("Login successful!")
+        },
         onError: (err: ApiError) => {
           console.log('Login error:', JSON.stringify(err, null, 2))
           
           if (err.code === 'EMAIL_NOT_VERIFIED') {
-            // Redirect to verify email page - OTP was already sent by the backend
+            toast.info("Please verify your email to continue.")
             const verifyEmail = err.data?.email || loginEmail
             router.push(`/auth/verify-email?email=${encodeURIComponent(verifyEmail)}`)
           } else if (err.code === 'MUST_CHANGE_PASSWORD') {
-            // Redirect to set new password page with temp token
+            toast.info("Please set a new password to continue.")
             const tempToken = err.data?.accessToken
             if (tempToken) {
-              console.log('Redirecting to set-password page')
               window.location.href = `/auth/set-password?token=${encodeURIComponent(tempToken)}`
             } else {
-              console.error('No access token in MUST_CHANGE_PASSWORD response')
-              setError("Password change required but session expired. Please try again.")
+              toast.error("Password change required but session expired. Please try again.")
             }
           } else {
-            setError(err.message || "Invalid credentials. Please try again.")
+            toast.error(err.message || "Invalid credentials. Please try again.")
           }
         },
       }
@@ -138,16 +137,6 @@ export default function LoginPage() {
               disabled={loginMutation.isPending}
             />
           </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg"
-            >
-              {error}
-            </motion.div>
-          )}
 
           <motion.button
             type="submit"

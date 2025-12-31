@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import { useSetNewPassword } from "@/lib/hooks/use-auth"
 import { Lock, Eye, EyeOff, Check, X, Shield, Loader2 } from "lucide-react"
 
@@ -22,7 +23,6 @@ function SetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [error, setError] = useState("")
   const [isReady, setIsReady] = useState(false)
   
   const router = useRouter()
@@ -58,23 +58,25 @@ function SetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
 
     if (!tempToken) {
-      setError("Session expired. Please login again.")
+      toast.error("Session expired. Please login again.")
       return
     }
 
     if (!isValidPassword) {
-      setError("Please ensure your password meets all requirements.")
+      toast.error("Please ensure your password meets all requirements.")
       return
     }
 
     setNewPasswordMutation.mutate(
       { newPassword: password, tempToken },
       {
+        onSuccess: () => {
+          toast.success("Password set successfully!")
+        },
         onError: (err: any) => {
-          setError(err.message || "Failed to set password. Please try again.")
+          toast.error(err.message || "Failed to set password. Please try again.")
         },
       }
     )
@@ -184,16 +186,6 @@ function SetPasswordForm() {
             <ValidationItem valid={hasNumber} text="One number" />
             <ValidationItem valid={passwordsMatch} text="Passwords match" />
           </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg"
-            >
-              {error}
-            </motion.div>
-          )}
 
           <motion.button
             type="submit"

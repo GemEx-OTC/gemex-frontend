@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import { useVerifyEmail, useResendOtp } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 
@@ -22,7 +23,6 @@ function VerifyEmailContent() {
   const emailParam = searchParams.get("email") || ""
   
   const [email] = useState(emailParam)
-  const [error, setError] = useState("")
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [resendTimer, setResendTimer] = useState(60)
   const [canResend, setCanResend] = useState(false)
@@ -40,7 +40,6 @@ function VerifyEmailContent() {
     }
   }, [resendTimer])
 
-  // Focus first input on mount
   useEffect(() => {
     otpRefs.current[0]?.focus()
   }, [])
@@ -72,19 +71,25 @@ function VerifyEmailContent() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     const otpValue = otp.join("")
     if (otpValue.length !== 6) {
-      setError("Please enter the complete 6-digit code.")
+      toast.error("Please enter the complete 6-digit code.")
       return
     }
     if (!email) {
-      setError("Email is required. Please go back to login.")
+      toast.error("Email is required. Please go back to login.")
       return
     }
     verifyEmailMutation.mutate(
       { email, otp: otpValue },
-      { onError: (err: ApiError) => setError(err.message || "Invalid or expired code.") }
+      {
+        onSuccess: () => {
+          toast.success("Email verified successfully!")
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Invalid or expired code.")
+        },
+      }
     )
   }
 
@@ -93,10 +98,16 @@ function VerifyEmailContent() {
     setResendTimer(60)
     setCanResend(false)
     setOtp(["", "", "", "", "", ""])
-    setError("")
     resendOtpMutation.mutate(
       { email },
-      { onError: (err: ApiError) => setError(err.message || "Failed to resend code.") }
+      {
+        onSuccess: () => {
+          toast.success("Verification code sent!")
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Failed to resend code.")
+        },
+      }
     )
   }
 
@@ -108,9 +119,7 @@ function VerifyEmailContent() {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-[#F0F0F0]">Email Required</h1>
           <p className="text-[#B0B0B8]">Please login first to verify your email.</p>
-          <a href="/auth/login" className="inline-block text-[#641AE4] hover:underline">
-            Go to Login
-          </a>
+          <a href="/auth/login" className="inline-block text-[#641AE4] hover:underline">Go to Login</a>
         </div>
       </motion.div>
     )
@@ -145,16 +154,6 @@ function VerifyEmailContent() {
             ))}
           </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg text-center"
-            >
-              {error}
-            </motion.div>
-          )}
-
           <motion.button
             type="submit"
             disabled={isLoading || otp.join("").length !== 6}
@@ -167,18 +166,11 @@ function VerifyEmailContent() {
 
           <div className="text-center">
             {canResend ? (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={isLoading}
-                className="text-[#641AE4] hover:text-[#9A24D2] font-medium transition-colors disabled:opacity-50"
-              >
+              <button type="button" onClick={handleResendOtp} disabled={isLoading} className="text-[#641AE4] hover:text-[#9A24D2] font-medium transition-colors disabled:opacity-50">
                 Resend code
               </button>
             ) : (
-              <p className="text-[#B0B0B8]">
-                Resend code in <span className="text-[#F0F0F0] font-medium">{resendTimer}s</span>
-              </p>
+              <p className="text-[#B0B0B8]">Resend code in <span className="text-[#F0F0F0] font-medium">{resendTimer}s</span></p>
             )}
           </div>
         </form>
@@ -186,9 +178,7 @@ function VerifyEmailContent() {
         <div className="mt-8 p-4 bg-[#2D2D3D]/30 rounded-lg">
           <p className="text-sm text-[#B0B0B8] text-center">
             Didn't receive the code? Check your spam folder or{" "}
-            <a href="/auth/login" className="text-[#641AE4] hover:underline">
-              try logging in again
-            </a>
+            <a href="/auth/login" className="text-[#641AE4] hover:underline">try logging in again</a>
           </p>
         </div>
 
@@ -201,7 +191,6 @@ function VerifyEmailContent() {
     </motion.div>
   )
 }
-
 
 function LoadingFallback() {
   return (

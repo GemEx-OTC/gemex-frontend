@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import { useForgotPassword } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 
@@ -19,24 +20,27 @@ const formVariants = {
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState("")
   
   const forgotPasswordMutation = useForgotPassword()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
 
     if (!email || !email.includes("@")) {
-      setError("Please enter a valid email address.")
+      toast.error("Please enter a valid email address.")
       return
     }
 
     forgotPasswordMutation.mutate(
       { email },
       {
-        onSuccess: () => setSubmitted(true),
-        onError: (err: ApiError) => setError(err.message || "Failed to send reset link."),
+        onSuccess: () => {
+          toast.success("Reset link sent! Check your email.")
+          setSubmitted(true)
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Failed to send reset link.")
+        },
       }
     )
   }
@@ -67,16 +71,6 @@ export default function ForgotPasswordPage() {
                   className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50"
                 />
               </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg"
-                >
-                  {error}
-                </motion.div>
-              )}
 
               <motion.button
                 type="submit"

@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
 import { useRegister, useVerifyEmail, useResendOtp } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
 
@@ -24,7 +25,6 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
   
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [resendTimer, setResendTimer] = useState(60)
@@ -54,23 +54,22 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
 
     if (!fullName || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields to create your account.")
+      toast.error("Please fill in all fields to create your account.")
       return
     }
     if (!email.includes("@")) {
-      setError("Please enter a valid email address.")
+      toast.error("Please enter a valid email address.")
       return
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match. Please try again.")
+      toast.error("Passwords do not match. Please try again.")
       return
     }
     const passwordError = validatePassword(password)
     if (passwordError) {
-      setError(passwordError)
+      toast.error(passwordError)
       return
     }
 
@@ -78,12 +77,13 @@ export default function SignupPage() {
       { fullName, email, password },
       {
         onSuccess: () => {
+          toast.success("Account created! Please verify your email.")
           setStep("otp")
           setResendTimer(60)
           setCanResend(false)
         },
         onError: (err: ApiError) => {
-          setError(err.message || "Registration failed. Please try again.")
+          toast.error(err.message || "Registration failed. Please try again.")
         },
       }
     )
@@ -116,15 +116,21 @@ export default function SignupPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     const otpValue = otp.join("")
     if (otpValue.length !== 6) {
-      setError("Please enter the complete 6-digit code.")
+      toast.error("Please enter the complete 6-digit code.")
       return
     }
     verifyEmailMutation.mutate(
       { email, otp: otpValue },
-      { onError: (err: ApiError) => setError(err.message || "Invalid or expired code.") }
+      {
+        onSuccess: () => {
+          toast.success("Email verified successfully!")
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Invalid or expired code.")
+        },
+      }
     )
   }
 
@@ -133,17 +139,22 @@ export default function SignupPage() {
     setResendTimer(60)
     setCanResend(false)
     setOtp(["", "", "", "", "", ""])
-    setError("")
     resendOtpMutation.mutate(
       { email },
-      { onError: (err: ApiError) => setError(err.message || "Failed to resend code.") }
+      {
+        onSuccess: () => {
+          toast.success("Verification code sent!")
+        },
+        onError: (err: ApiError) => {
+          toast.error(err.message || "Failed to resend code.")
+        },
+      }
     )
   }
 
   const handleBackToDetails = () => {
     setStep("details")
     setOtp(["", "", "", "", "", ""])
-    setError("")
   }
 
   const isLoading = registerMutation.isPending || verifyEmailMutation.isPending || resendOtpMutation.isPending
@@ -176,7 +187,6 @@ export default function SignupPage() {
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#F0F0F0] mb-2">Confirm Password</label>
                   <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
                 </div>
-                {error && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg">{error}</motion.div>}
                 <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? "Creating account..." : "Continue"}</motion.button>
                 <p className="text-xs text-[#B0B0B8] text-center">By creating an account, you agree to our <a href="#" className="text-[#641AE4] hover:underline">Terms of Service</a> and <a href="#" className="text-[#641AE4] hover:underline">Privacy Policy</a></p>
               </form>
@@ -194,7 +204,6 @@ export default function SignupPage() {
                 <div className="flex justify-center gap-3">
                   {otp.map((digit, index) => (<input key={index} ref={(el) => { otpRefs.current[index] = el }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={(e) => handleOtpChange(index, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(index, e)} onPaste={handleOtpPaste} disabled={isLoading} className="w-12 h-14 text-center text-xl font-bold bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />))}
                 </div>
-                {error && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg text-center">{error}</motion.div>}
                 <motion.button type="submit" disabled={isLoading || otp.join("").length !== 6} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{verifyEmailMutation.isPending ? "Verifying..." : "Verify Email"}</motion.button>
                 <div className="text-center">{canResend ? <button type="button" onClick={handleResendOtp} disabled={isLoading} className="text-[#641AE4] hover:text-neon-lime font-medium transition-colors disabled:opacity-50">Resend code</button> : <p className="text-[#B0B0B8]">Resend code in <span className="text-[#F0F0F0] font-medium">{resendTimer}s</span></p>}</div>
               </form>

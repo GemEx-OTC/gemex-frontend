@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Wallet, LayoutDashboard, Users, Briefcase, Bell } from "lucide-react"
+import { Home, FileText, Wallet, LayoutDashboard, Users, Briefcase, Bell, BarChart3 } from "lucide-react"
 import { useNotifications } from "@/lib/hooks/useNotifications"
 
 interface MobileBottomNavProps {
@@ -28,6 +28,8 @@ const roleNavItems = {
   admin: [
     { name: "Home", href: "/admin/dashboard", icon: Home },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Reports", href: "/admin/reports", icon: BarChart3 },
+    { name: "Alerts", href: "/admin/notifications", icon: Bell },
     { name: "Dealers", href: "/admin/dealers", icon: Briefcase },
   ],
 }
@@ -36,10 +38,11 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
   const pathname = usePathname()
   const navItems = roleNavItems[role]
   
-  // Only fetch notifications for clients
+  // Fetch notifications for clients and admins
+  const shouldFetchNotifications = role === "client" || role === "admin"
   const { unreadCount } = useNotifications({
-    autoFetch: role === "client",
-    pollInterval: role === "client" ? 30000 : 0,
+    autoFetch: shouldFetchNotifications,
+    pollInterval: shouldFetchNotifications ? 30000 : 0,
     filters: { limit: 5 },
   })
 

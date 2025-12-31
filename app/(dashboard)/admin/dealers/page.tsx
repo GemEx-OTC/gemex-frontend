@@ -269,9 +269,14 @@ export default function AdminDealersPage() {
       {/* Dealers Table */}
       {!isLoading && !error && (
         <>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="overflow-x-auto">
-            <div className="min-w-full bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-lg overflow-hidden">
-              <table className="w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full"
+          >
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-[#3D3D4D] scrollbar-track-transparent">
+              <div className="bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-lg overflow-hidden inline-block min-w-full">
+                <table className="min-w-[700px] w-full">
                 <thead>
                   <tr className="border-b border-[#2D2D3D] bg-[#2D2D3D]/50">
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">Dealer</th>
@@ -325,6 +330,7 @@ export default function AdminDealersPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </motion.div>
 

@@ -3,7 +3,8 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, Wallet, LayoutDashboard, Users, Briefcase } from "lucide-react"
+import { Home, FileText, Wallet, LayoutDashboard, Users, Briefcase, Bell } from "lucide-react"
+import { useNotifications } from "@/lib/hooks/useNotifications"
 
 interface MobileBottomNavProps {
   role: "client" | "dealer" | "admin"
@@ -15,6 +16,7 @@ const roleNavItems = {
     { name: "Home", href: "/client/dashboard", icon: Home },
     { name: "Quotes", href: "/client/quotes", icon: FileText },
     { name: "History", href: "/client/history", icon: LayoutDashboard },
+    { name: "Alerts", href: "/client/notifications", icon: Bell },
     { name: "Wallet", href: "/client/wallet", icon: Wallet },
   ],
   dealer: [
@@ -33,6 +35,13 @@ const roleNavItems = {
 export function MobileBottomNav({ role }: MobileBottomNavProps) {
   const pathname = usePathname()
   const navItems = roleNavItems[role]
+  
+  // Only fetch notifications for clients
+  const { unreadCount } = useNotifications({
+    autoFetch: role === "client",
+    pollInterval: role === "client" ? 30000 : 0,
+    filters: { limit: 5 },
+  })
 
   return (
     <motion.nav
@@ -44,6 +53,7 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+          const isNotifications = item.name === "Alerts"
 
           return (
             <Link key={item.href} href={item.href} className="flex-1">
@@ -60,6 +70,15 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                       layoutId="mobileActiveIndicator"
                       className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-secondary"
                     />
+                  )}
+                  {isNotifications && unreadCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center text-[10px] font-bold bg-primary text-primary-foreground rounded-full"
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </motion.span>
                   )}
                 </div>
                 <span className="text-xs font-medium">{item.name}</span>

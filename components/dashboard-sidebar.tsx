@@ -3,9 +3,10 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { LogOut, User } from "lucide-react"
+import { useLogout } from "@/lib/hooks/use-auth"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 interface SidebarProps {
   role: "client" | "dealer" | "admin"
@@ -15,7 +16,7 @@ interface SidebarProps {
 const roleMenus = {
   client: [
     { name: "Dashboard", href: "/client/dashboard", icon: "📊" },
-    { name: "Request Quote", href: "/client/trade", icon: "💱" },
+    { name: "My Quotes", href: "/client/quotes", icon: "📋" },
     { name: "History", href: "/client/history", icon: "📜" },
     { name: "Wallet", href: "/client/wallet", icon: "💰" },
     { name: "Notifications", href: "/client/notifications", icon: "🔔" },
@@ -32,6 +33,7 @@ const roleMenus = {
   admin: [
     { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
     { name: "Users", href: "/admin/users", icon: "👥" },
+    { name: "Dealers", href: "/admin/dealers", icon: "🤝" },
     { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
     { name: "Settings", href: "/admin/settings", icon: "⚙️" },
     { name: "Audit Logs", href: "/admin/audit", icon: "📝" },
@@ -41,15 +43,12 @@ const roleMenus = {
 
 export function DashboardSidebar({ role, currentPath }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const router = useRouter()
+  const { user } = useAuth()
+  const logoutMutation = useLogout()
   const menu = roleMenus[role]
 
   const handleLogout = () => {
-    // Clear any session data
-    sessionStorage.clear()
-    localStorage.clear()
-    // Redirect to login
-    router.push("/auth/login")
+    logoutMutation.mutate()
   }
 
   return (
@@ -110,8 +109,12 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">{role} User</p>
-                <p className="text-xs text-muted-foreground truncate">{role}@gemex.demo</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {user?.fullName || `${role} User`}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email || `${role}@gemex.demo`}
+                </p>
               </div>
             </div>
 
@@ -120,10 +123,11 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-destructive-foreground bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-all focus:outline-none focus:ring-2 focus:ring-destructive/50"
+              disabled={logoutMutation.isPending}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-destructive-foreground bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 transition-all focus:outline-none focus:ring-2 focus:ring-destructive/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <LogOut className="w-4 h-4" />
-              <span>Logout</span>
+              <span>{logoutMutation.isPending ? "Logging out..." : "Logout"}</span>
             </motion.button>
 
             {/* Version */}

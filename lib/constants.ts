@@ -9,7 +9,6 @@ export const CRYPTO_ASSETS = {
 export const CRYPTO_NETWORKS = {
   TRC20: { name: "Tron (TRC20)", chain: "TRON" },
   BSC: { name: "BNB Smart Chain", chain: "BSC" },
-  ERC20: { name: "Ethereum (ERC20)", chain: "ETH" },
   BTC: { name: "Bitcoin Network", chain: "BTC" },
 } as const
 

@@ -6,6 +6,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Menu, X, User, LogOut, Bell } from "lucide-react"
+import { useLogout } from "@/lib/hooks/use-auth"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 interface MobileTopNavProps {
   role: "client" | "dealer" | "admin"
@@ -15,11 +17,11 @@ interface MobileTopNavProps {
 export function MobileTopNav({ role, unreadCount = 3 }: MobileTopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
+  const { user } = useAuth()
+  const logoutMutation = useLogout()
 
   const handleLogout = () => {
-    sessionStorage.clear()
-    localStorage.clear()
-    router.push("/auth/login")
+    logoutMutation.mutate()
   }
 
   const handleNotificationsClick = () => {
@@ -103,8 +105,8 @@ export function MobileTopNav({ role, unreadCount = 3 }: MobileTopNavProps) {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground capitalize">{role} User</p>
-                    <p className="text-sm text-muted-foreground">{role}@gemex.demo</p>
+                    <p className="font-medium text-foreground">{user?.fullName || `${role} User`}</p>
+                    <p className="text-sm text-muted-foreground">{user?.email || `${role}@gemex.demo`}</p>
                   </div>
                 </div>
               </div>
@@ -114,10 +116,11 @@ export function MobileTopNav({ role, unreadCount = 3 }: MobileTopNavProps) {
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                  disabled={logoutMutation.isPending}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span className="font-medium">Logout</span>
+                  <span className="font-medium">{logoutMutation.isPending ? "Logging out..." : "Logout"}</span>
                 </motion.button>
               </div>
             </motion.div>

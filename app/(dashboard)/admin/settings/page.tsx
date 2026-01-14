@@ -509,7 +509,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 text-blue-500 mt-0.5" />
                     <p className="text-xs text-blue-600 dark:text-blue-400">
-                      BTC/NGN = (Tatum BTC/USD - Deduction) × BTC Dollar Rate
+                      BTC/NGN = (Bybit BTC/USD - Deduction) × BTC Dollar Rate
                     </p>
                   </div>
                 </div>

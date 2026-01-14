@@ -82,20 +82,22 @@ export interface ExchangeRates {
   USDT_NGN: number;
   USDC_NGN: number;
   BTC_USD: number;
+  BTC_USD_RATE: number;
+  BTC_USD_DEDUCTION: number;
   USD_NGN: number;
   BTC_NGN: number;
   lastUpdated: string;
 }
 
-// Simplified - only USDT_NGN is required, BTC rates are auto-calculated
+// Admin can set USDT_NGN rate and optionally a separate BTC_USD_RATE
 export interface UpdateExchangeRatesInput {
   USDT_NGN: number;
+  BTC_USD_RATE?: number;
+  BTC_USD_DEDUCTION?: number;
 }
 
 export interface BtcPriceInfo {
   btcUsd: number;
-  adjustedBtcUsd: number;
-  deduction: number;
   source: string;
   cachedAt: string | null;
 }

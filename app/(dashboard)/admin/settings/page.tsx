@@ -39,6 +39,8 @@ export default function AdminSettingsPage() {
   const { data: btcPriceData, isLoading: btcLoading, refetch: refetchBtcPrice } = useBtcPriceInfo()
   const updateRatesMutation = useUpdateGlobalExchangeRates()
   const [usdtNgnRate, setUsdtNgnRate] = useState("")
+  const [btcUsdRate, setBtcUsdRate] = useState("")
+  const [btcUsdDeduction, setBtcUsdDeduction] = useState("500")
   
   // Bank Account
   const { data: bankAccount, isLoading: bankLoading } = useBankAccount()
@@ -66,6 +68,8 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     if (exchangeRatesData) {
       setUsdtNgnRate(exchangeRatesData.USDT_NGN?.toString() || "1580")
+      setBtcUsdRate(exchangeRatesData.BTC_USD_RATE?.toString() || exchangeRatesData.USDT_NGN?.toString() || "1580")
+      setBtcUsdDeduction(exchangeRatesData.BTC_USD_DEDUCTION?.toString() || "500")
     }
   }, [exchangeRatesData])
 
@@ -99,9 +103,13 @@ export default function AdminSettingsPage() {
   }
 
   const performRatesSave = () => {
-    updateRatesMutation.mutate({ USDT_NGN: Number(usdtNgnRate) }, {
-      onSuccess: () => toast.success("Exchange rate updated! 📈"),
-      onError: () => toast.error("Failed to update rate"),
+    updateRatesMutation.mutate({ 
+      USDT_NGN: Number(usdtNgnRate),
+      BTC_USD_RATE: Number(btcUsdRate),
+      BTC_USD_DEDUCTION: Number(btcUsdDeduction),
+    }, {
+      onSuccess: () => toast.success("Exchange rates updated! 📈"),
+      onError: () => toast.error("Failed to update rates"),
     })
   }
 
@@ -168,8 +176,8 @@ export default function AdminSettingsPage() {
     })
   }
 
-  const calculatedBtcNgn = btcPriceData && usdtNgnRate 
-    ? Math.round((btcPriceData.adjustedBtcUsd) * Number(usdtNgnRate))
+  const calculatedBtcNgn = btcPriceData && btcUsdRate 
+    ? Math.round((btcPriceData.btcUsd - Number(btcUsdDeduction)) * Number(btcUsdRate))
     : exchangeRatesData?.BTC_NGN || 0
 
   const formatBtcNgn = (value: number) => {
@@ -419,7 +427,39 @@ export default function AdminSettingsPage() {
                       placeholder="1580"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">This rate applies to both USDT and USDC</p>
+                  <p className="text-xs text-muted-foreground mt-2">Rate for USDT and USDC trades</p>
+                </div>
+
+                {/* BTC USD Rate Input */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">BTC Dollar → NGN Rate</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-lg">₦</span>
+                    <input
+                      type="number"
+                      value={btcUsdRate}
+                      onChange={(e) => setBtcUsdRate(e.target.value)}
+                      className="flex-1 bg-muted border border-border focus:border-primary text-foreground px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono text-xl"
+                      placeholder="1580"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Dollar rate used for BTC/NGN calculation</p>
+                </div>
+
+                {/* BTC Deduction Input */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">BTC Price Deduction</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-lg">$</span>
+                    <input
+                      type="number"
+                      value={btcUsdDeduction}
+                      onChange={(e) => setBtcUsdDeduction(e.target.value)}
+                      className="flex-1 bg-muted border border-border focus:border-primary text-foreground px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono"
+                      placeholder="500"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Amount deducted from BTC/USD price</p>
                 </div>
 
                 {/* BTC Price Info */}
@@ -446,7 +486,11 @@ export default function AdminSettingsPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Deduction</span>
-                        <span className="font-mono text-destructive">-${btcPriceData.deduction}</span>
+                        <span className="font-mono text-destructive">-${btcUsdDeduction}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">BTC Dollar Rate</span>
+                        <span className="font-mono text-foreground">₦{Number(btcUsdRate).toLocaleString()}</span>
                       </div>
                       <div className="border-t border-border pt-2 mt-2">
                         <div className="flex justify-between">
@@ -465,7 +509,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 text-blue-500 mt-0.5" />
                     <p className="text-xs text-blue-600 dark:text-blue-400">
-                      BTC/NGN = (Bybit BTC/USD - $500) × USDT Rate
+                      BTC/NGN = (Tatum BTC/USD - Deduction) × BTC Dollar Rate
                     </p>
                   </div>
                 </div>
@@ -477,7 +521,7 @@ export default function AdminSettingsPage() {
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-3 rounded-xl font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all disabled:opacity-50"
                 >
-                  {updateRatesMutation.isPending ? "Saving..." : "Save Exchange Rate"}
+                  {updateRatesMutation.isPending ? "Saving..." : "Save Exchange Rates"}
                 </motion.button>
               </div>
             )}

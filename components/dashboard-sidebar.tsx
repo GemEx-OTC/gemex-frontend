@@ -1,10 +1,30 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { LogOut, User } from "lucide-react"
+import { 
+  LogOut, 
+  User, 
+  LayoutDashboard, 
+  FileText, 
+  History, 
+  Wallet, 
+  Bell, 
+  Settings, 
+  ClipboardList,
+  Briefcase,
+  BarChart3,
+  Users,
+  Handshake,
+  ScrollText,
+  ChevronDown,
+  TrendingUp,
+  Shield,
+  Activity,
+  Droplets
+} from "lucide-react"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { useAuth } from "@/lib/providers/auth-provider"
 
@@ -13,43 +33,205 @@ interface SidebarProps {
   currentPath: string
 }
 
-const roleMenus = {
+interface MenuItem {
+  name: string
+  href: string
+  icon: React.ElementType
+}
+
+interface MenuGroup {
+  label: string
+  icon: React.ElementType
+  items: MenuItem[]
+}
+
+const roleMenus: Record<string, MenuItem[]> = {
   client: [
-    { name: "Dashboard", href: "/client/dashboard", icon: "📊" },
-    { name: "My Quotes", href: "/client/quotes", icon: "📋" },
-    { name: "History", href: "/client/history", icon: "📜" },
-    { name: "Wallet", href: "/client/wallet", icon: "💰" },
-    { name: "Notifications", href: "/client/notifications", icon: "🔔" },
-    { name: "Settings", href: "/client/settings", icon: "⚙️" },
+    { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
+    { name: "My Quotes", href: "/client/quotes", icon: ClipboardList },
+    { name: "History", href: "/client/history", icon: History },
+    { name: "Wallet", href: "/client/wallet", icon: Wallet },
+    { name: "Notifications", href: "/client/notifications", icon: Bell },
+    { name: "Settings", href: "/client/settings", icon: Settings },
   ],
   dealer: [
-    { name: "Dashboard", href: "/dealer/dashboard", icon: "📊" },
-    { name: "Quote Queue", href: "/dealer/quotes", icon: "📋" },
-    { name: "Trades", href: "/dealer/trades", icon: "💼" },
-    { name: "Wallet", href: "/dealer/wallet", icon: "💰" },
-    { name: "Reports", href: "/dealer/reports", icon: "📈" },
-    { name: "Notifications", href: "/dealer/notifications", icon: "🔔" },
-    { name: "Settings", href: "/dealer/settings", icon: "⚙️" },
-  ],
-  admin: [
-    { name: "Dashboard", href: "/admin/dashboard", icon: "📊" },
-    { name: "Users", href: "/admin/users", icon: "👥" },
-    { name: "Dealers", href: "/admin/dealers", icon: "🤝" },
-    { name: "Audit Logs", href: "/admin/audit", icon: "📝" },
-    { name: "Reports", href: "/admin/reports", icon: "📈" },
-    { name: "Notifications", href: "/admin/notifications", icon: "🔔" },
-    { name: "Settings", href: "/admin/settings", icon: "⚙️" },
+    { name: "Dashboard", href: "/dealer/dashboard", icon: LayoutDashboard },
+    { name: "Quote Queue", href: "/dealer/quotes", icon: ClipboardList },
+    { name: "Trades", href: "/dealer/trades", icon: Briefcase },
+    { name: "Wallet", href: "/dealer/wallet", icon: Wallet },
+    { name: "Reports", href: "/dealer/reports", icon: BarChart3 },
+    { name: "Notifications", href: "/dealer/notifications", icon: Bell },
+    { name: "Settings", href: "/dealer/settings", icon: Settings },
   ],
 }
 
+// Admin menu is grouped for better organization
+const adminMenuGroups: MenuGroup[] = [
+  {
+    label: "Overview",
+    icon: Activity,
+    items: [
+      { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+      { name: "Liquidity", href: "/admin/liquidity", icon: Droplets },
+      { name: "Trades", href: "/admin/trades", icon: TrendingUp },
+      { name: "Reports", href: "/admin/reports", icon: BarChart3 },
+    ]
+  },
+  {
+    label: "User Management",
+    icon: Users,
+    items: [
+      { name: "Clients", href: "/admin/users", icon: Users },
+      { name: "Dealers", href: "/admin/dealers", icon: Handshake },
+    ]
+  },
+  {
+    label: "Compliance",
+    icon: Shield,
+    items: [
+      { name: "Audit Logs", href: "/admin/audit", icon: ScrollText },
+    ]
+  },
+]
+
+const adminGeneralItems: MenuItem[] = [
+  { name: "Wallet", href: "/admin/wallet", icon: Wallet },
+  { name: "Notifications", href: "/admin/notifications", icon: Bell },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
+]
+
+function SidebarItem({ item, isActive }: { item: MenuItem; isActive: boolean }) {
+  const Icon = item.icon
+  return (
+    <Link href={item.href}>
+      <motion.div
+        whileHover={{ scale: 1.02, x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className={`relative px-4 py-3 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-3 ${
+          isActive
+            ? "bg-primary/10 text-secondary border border-primary/20"
+            : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        }`}
+      >
+        <Icon className="w-5 h-5" />
+        <span>{item.name}</span>
+        {isActive && (
+          <motion.div
+            layoutId="activeIndicator"
+            className="absolute left-0 top-0 bottom-0 w-1 bg-secondary rounded-r"
+          />
+        )}
+      </motion.div>
+    </Link>
+  )
+}
+
+function CollapsibleGroup({ 
+  group, 
+  currentPath, 
+  defaultOpen = false 
+}: { 
+  group: MenuGroup
+  currentPath: string
+  defaultOpen?: boolean 
+}) {
+  const hasActiveItem = group.items.some(item => currentPath === item.href)
+  const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveItem)
+  const GroupIcon = group.icon
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-sidebar-foreground transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <GroupIcon className="w-4 h-4" />
+          <span>{group.label}</span>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-4 h-4" />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-1 pl-2">
+              {group.items.map((item) => (
+                <SidebarItem 
+                  key={item.href} 
+                  item={item} 
+                  isActive={currentPath === item.href} 
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export function DashboardSidebar({ role, currentPath }: SidebarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
   const { user } = useAuth()
   const logoutMutation = useLogout()
-  const menu = roleMenus[role]
 
   const handleLogout = () => {
     logoutMutation.mutate()
+  }
+
+  const renderNavigation = () => {
+    if (role === "admin") {
+      return (
+        <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+          {adminMenuGroups.map((group) => (
+            <CollapsibleGroup 
+              key={group.label} 
+              group={group} 
+              currentPath={currentPath}
+              defaultOpen={true}
+            />
+          ))}
+          
+          {/* Separator */}
+          <div className="border-t border-sidebar-border my-4" />
+          
+          {/* General items without grouping */}
+          <div className="space-y-1">
+            {adminGeneralItems.map((item) => (
+              <SidebarItem 
+                key={item.href} 
+                item={item} 
+                isActive={currentPath === item.href} 
+              />
+            ))}
+          </div>
+        </nav>
+      )
+    }
+
+    // Client and Dealer menus (flat structure)
+    const menu = roleMenus[role]
+    return (
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {menu.map((item) => (
+          <SidebarItem 
+            key={item.href} 
+            item={item} 
+            isActive={currentPath === item.href} 
+          />
+        ))}
+      </nav>
+    )
   }
 
   return (
@@ -74,33 +256,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {menu.map((item) => {
-              const isActive = currentPath === item.href
-              return (
-                <Link key={item.href} href={item.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.02, x: 4 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`relative px-4 py-3 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-3 ${
-                      isActive
-                        ? "bg-primary/10 text-secondary border border-primary/20"
-                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                    }`}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span>{item.name}</span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeIndicator"
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-secondary rounded-r"
-                      />
-                    )}
-                  </motion.div>
-                </Link>
-              )
-            })}
-          </nav>
+          {renderNavigation()}
 
           {/* Footer */}
           <div className="p-4 border-t border-sidebar-border space-y-3">

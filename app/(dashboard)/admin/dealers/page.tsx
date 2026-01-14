@@ -6,7 +6,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { 
   Plus, UserCheck, UserX, Eye, X, Key, Mail, Calendar, 
   Shield, User, Loader2, AlertTriangle, ChevronDown,
-  TrendingUp, BanknoteIcon, History, FileText
+  TrendingUp, BanknoteIcon, History, FileText, Handshake, Activity
 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
@@ -16,7 +16,8 @@ import {
   useCreateDealer, 
   useSuspendDealer, 
   useReactivateDealer,
-  useResetDealerPassword 
+  useResetDealerPassword,
+  useAdminDashboard
 } from "@/lib/hooks/use-admin"
 import type { Dealer, CreateDealerInput } from "@/lib/api/admin"
 
@@ -52,6 +53,9 @@ export default function AdminDealersPage() {
   const suspendDealerMutation = useSuspendDealer()
   const reactivateDealerMutation = useReactivateDealer()
   const resetPasswordMutation = useResetDealerPassword()
+  
+  // Fetch dashboard stats for dealer metrics
+  const { data: dashboardStats } = useAdminDashboard()
 
   // Get active filter count
   const activeFilters = statusFilter !== "all" ? 1 : 0
@@ -176,6 +180,45 @@ export default function AdminDealersPage() {
         title="Dealer Management" 
         subtitle="Create and manage dealer accounts" 
       />
+
+      {/* Dealer Metrics Summary */}
+      {dashboardStats && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="grid grid-cols-3 gap-4 mb-6"
+        >
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-purple-500/10">
+                <Handshake className="w-4 h-4 text-purple-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Total Dealers</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.dealers.total.toLocaleString()}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-green-500/10">
+                <Activity className="w-4 h-4 text-green-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Active Dealers</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.dealers.active}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-blue-500/10">
+                <UserCheck className="w-4 h-4 text-blue-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Verified Dealers</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.dealers.verified}</p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Search and Filter */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

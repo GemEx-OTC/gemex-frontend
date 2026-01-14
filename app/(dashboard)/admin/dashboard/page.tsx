@@ -2,9 +2,24 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { FloatingRateDock } from "@/components/floating-rate-dock"
 import Link from "next/link"
 import { useAdminDashboard } from "@/lib/hooks/use-admin"
-import { Loader2, AlertTriangle, RefreshCw } from "lucide-react"
+import { 
+  Loader2, 
+  AlertTriangle, 
+  RefreshCw, 
+  Users, 
+  Handshake,
+  TrendingUp,
+  ArrowUpRight,
+  DollarSign,
+  BarChart3,
+  ScrollText,
+  CheckCircle2,
+  Timer,
+  ArrowRightLeft
+} from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 
 const containerVariants = {
@@ -29,12 +44,10 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-const getActivityType = (severity: string) => {
-  switch (severity) {
-    case 'critical': return 'warning'
-    case 'warning': return 'warning'
-    default: return 'info'
-  }
+const formatCompactNumber = (num: number) => {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
+  return num.toString()
 }
 
 export default function AdminDashboardPage() {
@@ -70,320 +83,209 @@ export default function AdminDashboardPage() {
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <DashboardHeader
         title="System Administration"
-        subtitle="Oversee platform health, users, and compliance"
+        subtitle="Oversee platform health and trading activity"
         action={{
-          label: "User Management",
-          onClick: () => (window.location.href = "/admin/users"),
+          label: "View All Trades",
+          onClick: () => (window.location.href = "/admin/trades"),
         }}
       />
 
-      {/* Client Metrics */}
-      <motion.div variants={itemVariants} className="mb-4">
-        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-          <span>👤</span> Client Accounts
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-2 border-blue-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Clients</p>
+      {/* Trade Summary - Key Metrics */}
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <ArrowRightLeft className="w-5 h-5 text-blue-500" />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.users.total}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.users.total.toLocaleString()}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-blue-600 dark:text-blue-400">Registered clients</p>
           </div>
+          <p className="text-2xl font-bold text-foreground">{dashboard.trades.total.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Total Trades</p>
+        </div>
 
-          <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm font-medium text-green-600 dark:text-green-400">Active Today</p>
+        <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <CheckCircle2 className="w-5 h-5 text-green-500" />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.users.activeToday}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.users.activeToday.toLocaleString()}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-green-600 dark:text-green-400">Clients logged in today</p>
           </div>
+          <p className="text-2xl font-bold text-foreground">{dashboard.trades.settled.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Settled Trades</p>
+        </div>
 
-          <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Verified Clients</p>
+        <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Timer className="w-5 h-5 text-amber-500" />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.users.verified}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.users.verified.toLocaleString()}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-purple-600 dark:text-purple-400">✓ KYC Compliant</p>
           </div>
+          <p className="text-2xl font-bold text-foreground">{dashboard.trades.pending.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Pending Trades</p>
+        </div>
 
-          <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border-2 border-amber-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending KYC</p>
+        <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <DollarSign className="w-5 h-5 text-purple-500" />
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.users.pendingKyc}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.users.pendingKyc}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-amber-600 dark:text-amber-400">⏳ Review needed</p>
           </div>
+          <p className="text-2xl font-bold text-foreground">{formatCompactNumber(dashboard.trades.totalVolume)}</p>
+          <p className="text-sm text-muted-foreground">Total Volume (NGN)</p>
         </div>
       </motion.div>
 
-      {/* Dealer Metrics */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-          <span>🤝</span> Dealer Accounts
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-6 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border-2 border-cyan-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
-              <p className="text-sm font-medium text-cyan-600 dark:text-cyan-400">Total Dealers</p>
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Left Column - Trade Volume Details */}
+        <motion.div variants={itemVariants}>
+          <div className="p-6 rounded-xl bg-card border border-border h-full">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              Trade Volume Breakdown
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-600 dark:text-green-400">Settled Volume</span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(dashboard.trades.settledVolume)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{dashboard.trades.settled} trades completed</p>
+              </div>
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Timer className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Volume</span>
+                </div>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(dashboard.trades.pendingVolume)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{dashboard.trades.pending} trades in progress</p>
+              </div>
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.dealers.total}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.dealers.total.toLocaleString()}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-cyan-600 dark:text-cyan-400">Registered dealers</p>
           </div>
+        </motion.div>
 
-          <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm font-medium text-green-600 dark:text-green-400">Active Dealers</p>
+        {/* Right Column - Recent Activity Preview */}
+        <motion.div variants={itemVariants}>
+          <div className="p-6 rounded-xl bg-card border border-border h-full">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <ScrollText className="w-5 h-5 text-primary" />
+              Recent Activity
+            </h3>
+            <div className="space-y-2">
+              {dashboard.recentActivity.length > 0 ? (
+                dashboard.recentActivity.slice(0, 3).map((activity, idx) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg"
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                        activity.severity === "critical"
+                          ? "bg-red-500"
+                          : activity.severity === "warning"
+                            ? "bg-amber-500"
+                            : "bg-blue-500"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{activity.action.replace(/_/g, ' ')}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex-shrink-0">
+                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No recent activity
+                </div>
+              )}
             </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.dealers.active}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.dealers.active}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-green-600 dark:text-green-400">Currently active</p>
+            <Link href="/admin/audit" className="block mt-4 text-sm text-primary hover:text-primary/80 transition-colors text-center">
+              View All Activity →
+            </Link>
           </div>
+        </motion.div>
+      </div>
 
-          <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Verified Dealers</p>
-            </div>
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={dashboard.dealers.verified}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl font-bold text-foreground mb-1"
-              >
-                {dashboard.dealers.verified}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-sm text-purple-600 dark:text-purple-400">✓ KYC Compliant</p>
-          </div>
-        </div>
-      </motion.div>
+      {/* Floating Rate Dock */}
+      <FloatingRateDock exchangeRates={dashboard.exchangeRates} />
 
-      {/* Trade & Exchange Metrics */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            ₦{dashboard.exchangeRates.USDT_NGN.toLocaleString()}
-          </p>
-          <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
-        </div>
+      {/* Quick Actions */}
+      <motion.div variants={itemVariants}>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link href="/admin/trades">
+            <motion.div
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="p-5 rounded-xl bg-card border border-border hover:border-green-500/50 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                  <ArrowRightLeft className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Trades</h4>
+                  <p className="text-xs text-muted-foreground">Monitor all trades</p>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
 
-        <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">₿</span>
-            <p className="text-sm font-medium text-orange-600 dark:text-orange-400">BTC/USD Rate</p>
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse ml-auto"></div>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            ${dashboard.exchangeRates.BTC_USD.toLocaleString()}
-          </p>
-          <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
-        </div>
+          <Link href="/admin/users">
+            <motion.div
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="p-5 rounded-xl bg-card border border-border hover:border-blue-500/50 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                  <Users className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Users</h4>
+                  <p className="text-xs text-muted-foreground">Manage clients</p>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
 
-        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-2 border-teal-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">₦</span>
-            <p className="text-sm font-medium text-teal-600 dark:text-teal-400">USD/NGN Rate</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            ₦{dashboard.exchangeRates.USD_NGN.toLocaleString()}
-          </p>
-          <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
-        </div>
+          <Link href="/admin/dealers">
+            <motion.div
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="p-5 rounded-xl bg-card border border-border hover:border-purple-500/50 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                  <Handshake className="w-5 h-5 text-purple-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Dealers</h4>
+                  <p className="text-xs text-muted-foreground">Manage dealers</p>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
 
-        <div className="p-6 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border-2 border-indigo-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">📊</span>
-            <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Total Trades</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            {dashboard.trades.total.toLocaleString()}
-          </p>
-          <p className="text-sm text-indigo-600 dark:text-indigo-400">
-            {formatCurrency(dashboard.trades.totalVolume)} volume
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Trades Summary */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10 border-2 border-green-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">✅</span>
-            <p className="text-sm font-medium text-green-600 dark:text-green-400">Settled Trades</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            {dashboard.trades.settled.toLocaleString()}
-          </p>
-          <p className="text-sm text-green-600 dark:text-green-400">
-            {formatCurrency(dashboard.trades.settledVolume)} settled
-          </p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border-2 border-amber-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">⏳</span>
-            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Pending Trades</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">
-            {dashboard.trades.pending.toLocaleString()}
-          </p>
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            {formatCurrency(dashboard.trades.pendingVolume)} pending
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Recent Activity Log */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-foreground">Recent Activity</h2>
-          <Link href="/admin/audit" className="text-sm text-primary hover:text-primary/80 transition-colors">
-            View All →
+          <Link href="/admin/audit">
+            <motion.div
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="p-5 rounded-xl bg-card border border-border hover:border-amber-500/50 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                  <ScrollText className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Audit Logs</h4>
+                  <p className="text-xs text-muted-foreground">Review activity</p>
+                </div>
+              </div>
+            </motion.div>
           </Link>
         </div>
-        <div className="space-y-3">
-          {dashboard.recentActivity.length > 0 ? (
-            dashboard.recentActivity.map((activity, idx) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-primary/40 transition-all"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      activity.severity === "critical"
-                        ? "bg-red-500"
-                        : activity.severity === "warning"
-                          ? "bg-amber-500"
-                          : "bg-blue-500"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-foreground font-medium">{activity.action.replace(/_/g, ' ')}</div>
-                    <div className="text-muted-foreground text-sm">{activity.details}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{activity.actor}</div>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No recent activity
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Admin Controls */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/admin/users">
-          <motion.div
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/30 hover:border-blue-500/50 transition-all cursor-pointer"
-          >
-            <div className="text-3xl mb-3">👥</div>
-            <h3 className="font-semibold text-foreground mb-1">User Management</h3>
-            <p className="text-sm text-muted-foreground">Manage users, verify status, and handle suspensions</p>
-          </motion.div>
-        </Link>
-
-        <Link href="/admin/dealers">
-          <motion.div
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-violet-500/5 border border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer"
-          >
-            <div className="text-3xl mb-3">🤝</div>
-            <h3 className="font-semibold text-foreground mb-1">Dealer Management</h3>
-            <p className="text-sm text-muted-foreground">Create and manage dealer accounts for high-volume trading</p>
-          </motion.div>
-        </Link>
-
-        <Link href="/admin/audit">
-          <motion.div
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/30 hover:border-amber-500/50 transition-all cursor-pointer"
-          >
-            <div className="text-3xl mb-3">📝</div>
-            <h3 className="font-semibold text-foreground mb-1">Audit Logs</h3>
-            <p className="text-sm text-muted-foreground">Review comprehensive activity and compliance logs</p>
-          </motion.div>
-        </Link>
       </motion.div>
     </motion.div>
   )

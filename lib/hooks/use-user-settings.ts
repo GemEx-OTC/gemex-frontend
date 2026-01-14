@@ -144,6 +144,15 @@ export const useGlobalExchangeRates = () => {
   });
 };
 
+export const useBtcPriceInfo = () => {
+  return useQuery({
+    queryKey: [...userSettingsKeys.all, 'btc-price'] as const,
+    queryFn: userSettingsApi.getBtcPriceInfo,
+    staleTime: 60 * 1000, // 1 minute
+    refetchInterval: 60 * 1000, // Auto-refresh every minute
+  });
+};
+
 export const useUpdateGlobalExchangeRates = () => {
   const queryClient = useQueryClient();
   

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, TrendingUp, Info, AlertTriangle } from "lucide-react"
-import { NIGERIAN_BANKS } from "@/lib/constants"
+import { BankSelector } from "@/components/bank-selector"
 import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
@@ -125,10 +125,9 @@ export default function DealerSettingsPage() {
   }
 
   const performBankSave = () => {
-    const selectedBank = NIGERIAN_BANKS.find((b) => b.code === bankDetails.bankCode)
     updateBankMutation.mutate({
       bankCode: bankDetails.bankCode,
-      bankName: selectedBank?.name || bankDetails.bankName,
+      bankName: bankDetails.bankName,
       accountNumber: bankDetails.accountNumber,
       accountName: bankDetails.accountName,
     }, {
@@ -254,9 +253,20 @@ export default function DealerSettingsPage() {
                 {twoFactorEnabled && <div className="mb-4 p-3 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg"><p className="text-xs text-[#B0B0B8]"><span className="text-[#641AE4] font-medium">🔐 2FA Enabled:</span> OTP verification required to save bank account changes.</p></div>}
                 <div className="space-y-5 mt-6">
                   <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Select Bank</label>
-                    <select value={bankDetails.bankCode} onChange={(e) => { const bc = e.target.value; setBankDetails((p) => ({ ...p, bankCode: bc, accountName: "" })); setIsVerified(false); if (bankDetails.accountNumber.length === 10 && bc) verifyBankMutation.mutate({ bankCode: bc, accountNumber: bankDetails.accountNumber }, { onSuccess: (d) => { setBankDetails((p) => ({ ...p, accountName: d.accountName })); setIsVerified(true) } }) }} className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none appearance-none cursor-pointer">
-                      <option value="">Choose your bank</option>{NIGERIAN_BANKS.map((b) => <option key={b.code} value={b.code}>{b.name}</option>)}
-                    </select></div>
+                    <BankSelector
+                      value={bankDetails.bankCode}
+                      onChange={(code, name) => {
+                        setBankDetails((p) => ({ ...p, bankCode: code, bankName: name, accountName: "" }))
+                        setIsVerified(false)
+                        if (bankDetails.accountNumber.length === 10 && code) {
+                          verifyBankMutation.mutate(
+                            { bankCode: code, accountNumber: bankDetails.accountNumber },
+                            { onSuccess: (d) => { setBankDetails((p) => ({ ...p, accountName: d.accountName })); setIsVerified(true) } }
+                          )
+                        }
+                      }}
+                    />
+                  </div>
                   <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Account Number</label>
                     <div className="relative"><input type="text" value={bankDetails.accountNumber} onChange={(e) => handleAccountNumberChange(e.target.value)} placeholder="Enter 10-digit account number" maxLength={10} className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 pr-12 rounded transition-all focus:outline-none font-mono" />{verifyBankMutation.isPending && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="w-5 h-5 text-[#C8F55A] animate-spin" /></div>}</div></div>
                   <AnimatePresence>

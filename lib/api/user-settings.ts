@@ -87,12 +87,17 @@ export interface ExchangeRates {
   lastUpdated: string;
 }
 
+// Simplified - only USDT_NGN is required, BTC rates are auto-calculated
 export interface UpdateExchangeRatesInput {
-  USDT_NGN?: number;
-  USDC_NGN?: number;
-  BTC_USD?: number;
-  USD_NGN?: number;
-  BTC_NGN?: number;
+  USDT_NGN: number;
+}
+
+export interface BtcPriceInfo {
+  btcUsd: number;
+  adjustedBtcUsd: number;
+  deduction: number;
+  source: string;
+  cachedAt: string | null;
 }
 
 // ============ PROFILE APIs ============
@@ -164,6 +169,11 @@ export const updateDealerRates = async (data: UpdateDealerRatesInput): Promise<D
 
 export const getGlobalExchangeRates = async (): Promise<ExchangeRates> => {
   const response = await apiClient.get<ApiResponse<ExchangeRates>>('/user-settings/admin/exchange-rates');
+  return response.data.data;
+};
+
+export const getBtcPriceInfo = async (): Promise<BtcPriceInfo> => {
+  const response = await apiClient.get<ApiResponse<BtcPriceInfo>>('/user-settings/admin/btc-price');
   return response.data.data;
 };
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard } from "lucide-react"
+import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft } from "lucide-react"
 import Image from "next/image"
 import { getAdminTrades, type AdminTrade } from "@/lib/api/admin"
 
@@ -230,7 +230,7 @@ export default function AdminTradesPage() {
       {/* Empty State */}
       {!loading && trades.length === 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-          <div className="text-5xl mb-4">💱</div>
+          <ArrowRightLeft className="w-12 h-12 text-[#2D2D3D] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">No trades found</h3>
           <p className="text-[#B0B0B8]">
             {filter === "all" ? "No trades in the system yet" : `No ${filter.toLowerCase()} trades`}

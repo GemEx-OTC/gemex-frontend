@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import { KycVerificationModal } from "@/components/kyc-verification-modal"
+import { FloatingRateDock } from "@/components/floating-rate-dock"
 import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
 import { Clock, Shield, AlertCircle } from "lucide-react"
@@ -173,53 +174,8 @@ export default function ClientDashboardPage() {
         </div>
       </motion.div>
 
-      {/* Exchange Rates Section */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/10 border-2 border-purple-500/40">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-            <p className="text-sm font-medium text-purple-600 dark:text-purple-400">USDT/USDC Rate</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USDT_NGN.toLocaleString()}</p>
-          <p className="text-sm text-purple-600 dark:text-purple-400">Per 1 USD</p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/10 border-2 border-orange-500/40">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">₿</span>
-              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">BTC/USD Rate</p>
-            </div>
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">${exchangeRates.BTC_USD.toLocaleString()}</p>
-          <p className="text-sm text-orange-600 dark:text-orange-400">Live market rate</p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border-2 border-teal-500/40">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">₦</span>
-              <p className="text-sm font-medium text-teal-600 dark:text-teal-400">USD/NGN Rate</p>
-            </div>
-            <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{exchangeRates.USD_NGN.toLocaleString()}</p>
-          <p className="text-sm text-teal-600 dark:text-teal-400">USD to NGN</p>
-        </div>
-
-        <div className="p-6 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border-2 border-indigo-500/40">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">₿₦</span>
-              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">BTC/NGN Rate</p>
-            </div>
-            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-          </div>
-          <p className="text-2xl font-bold text-foreground mb-1">₦{(exchangeRates.BTC_NGN / 1000000).toFixed(1)}M</p>
-          <p className="text-sm text-indigo-600 dark:text-indigo-400">Direct rate</p>
-        </div>
-      </motion.div>
+      {/* Floating Rate Dock - Replaces Exchange Rates Cards */}
+      <FloatingRateDock exchangeRates={exchangeRates} />
 
       {/* Main CTA Section */}
       <motion.div variants={itemVariants} className="mb-8">

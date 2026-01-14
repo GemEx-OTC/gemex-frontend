@@ -6,7 +6,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { 
   UserX, UserCheck, Eye, X, Shield, Mail, Calendar, 
   TrendingUp, BanknoteIcon, User, Loader2, AlertTriangle, 
-  Wallet, History, FileText, ChevronDown
+  Wallet, History, FileText, ChevronDown, Users, Clock, Activity
 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
@@ -17,6 +17,7 @@ import {
   useReactivateUser,
   useCreateUserWallets,
   useToggleUserAutoPayout,
+  useAdminDashboard,
 } from "@/lib/hooks/use-admin"
 import type { ListUsersQuery, UserListItem } from "@/lib/api/admin"
 
@@ -53,6 +54,9 @@ export default function AdminUsersPage() {
   const reactivateMutation = useReactivateUser()
   const createWalletsMutation = useCreateUserWallets()
   const toggleAutoPayoutMutation = useToggleUserAutoPayout()
+  
+  // Fetch dashboard stats for client metrics
+  const { data: dashboardStats } = useAdminDashboard()
 
   // Get active filter count for badge
   const activeFilters = [statusFilter, kycFilter].filter(f => f !== "all").length
@@ -137,6 +141,55 @@ export default function AdminUsersPage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
       <DashboardHeader title="User Management" subtitle="Monitor and manage client accounts" />
+
+      {/* Client Metrics Summary */}
+      {dashboardStats && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        >
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-blue-500/10">
+                <Users className="w-4 h-4 text-blue-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Total Clients</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.users.total.toLocaleString()}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-green-500/10">
+                <Activity className="w-4 h-4 text-green-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Active Today</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.users.activeToday.toLocaleString()}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-purple-500/10">
+                <UserCheck className="w-4 h-4 text-purple-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Verified</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.users.verified.toLocaleString()}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-[#1E1E2B]/80 border border-[#2D2D3D]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-amber-500/10">
+                <Clock className="w-4 h-4 text-amber-500" />
+              </div>
+              <span className="text-sm text-[#808090]">Pending KYC</span>
+            </div>
+            <p className="text-2xl font-bold text-[#F0F0F0]">{dashboardStats.users.pendingKyc}</p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Search and Filter - Simplified */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

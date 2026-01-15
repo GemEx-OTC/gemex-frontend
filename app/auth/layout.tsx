@@ -46,9 +46,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           >
             <div className="flex items-center gap-3 mb-12">
               <div className="w-12 h-12 relative">
-                <Image src="/images/gemex-20logo.png" alt="GemEx" fill className="object-contain" />
+                <Image src="/images/gemex-20logo.png" alt="GemOTC" fill className="object-contain" />
               </div>
-              <span className="text-2xl font-bold text-[#F0F0F0]">GemEx</span>
+              <span className="text-2xl font-bold text-[#F0F0F0]">GemOTC</span>
             </div>
 
             <div className="space-y-6">
@@ -95,9 +95,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="lg:hidden flex justify-center mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 relative">
-                  <Image src="/images/gemex-20logo.png" alt="GemEx" fill className="object-contain" />
+                  <Image src="/images/gemex-20logo.png" alt="GemOTC" fill className="object-contain" />
                 </div>
-                <span className="text-xl font-bold text-[#F0F0F0]">GemEx</span>
+                <span className="text-xl font-bold text-[#F0F0F0]">GemOTC</span>
               </div>
             </div>
 

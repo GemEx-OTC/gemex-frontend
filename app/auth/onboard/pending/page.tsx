@@ -187,8 +187,8 @@ export default function PendingVerificationPage() {
             className="text-center text-sm text-[#B0B0B8] mt-8"
           >
             Need help? Contact our support team at{" "}
-            <a href="mailto:support@gemex.com" className="text-[#641AE4] hover:underline">
-              support@gemex.com
+            <a href="mailto:support@gemotc.com" className="text-[#641AE4] hover:underline">
+              support@gemotc.com
             </a>
           </motion.p>
         </div>

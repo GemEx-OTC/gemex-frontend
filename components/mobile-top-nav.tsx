@@ -63,7 +63,7 @@ export function MobileTopNav({ role, unreadCount = 0 }: MobileTopNavProps) {
             <div className="relative w-24 h-8">
               <Image
                 src="/images/mainlogo_type.svg"
-                alt="GemEx"
+                alt="GemOTC"
                 fill
                 className="object-contain"
                 priority
@@ -128,7 +128,7 @@ export function MobileTopNav({ role, unreadCount = 0 }: MobileTopNavProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">{user?.fullName || `${role} User`}</p>
-                    <p className="text-sm text-muted-foreground">{user?.email || `${role}@gemex.demo`}</p>
+                    <p className="text-sm text-muted-foreground">{user?.email || `${role}@gemotc.demo`}</p>
                   </div>
                 </div>
               </div>

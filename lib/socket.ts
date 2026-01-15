@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { getTokens } from './api/client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_GEMEX_API_BASE_URL || 'http://localhost:4000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_GEMOTC_API_BASE_URL || 'http://localhost:4000';
 
 let socket: Socket | null = null;
 

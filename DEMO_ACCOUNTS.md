@@ -1,4 +1,4 @@
-# 🎭 GemEx Demo Accounts
+# 🎭 GemOTC Demo Accounts
 
 ## Quick Access
 
@@ -8,7 +8,7 @@ Visit **[/demo](/demo)** to see all demo accounts with one-click login.
 
 ### 👤 Client Account
 **Role:** Client/Trader  
-**Email:** `client@gemex.demo`  
+**Email:** `client@gemotc.demo`  
 **Password:** `client123`  
 **Dashboard:** `/client/dashboard`
 
@@ -23,7 +23,7 @@ Visit **[/demo](/demo)** to see all demo accounts with one-click login.
 
 ### 💼 Dealer Account
 **Role:** Dealer/Operator  
-**Email:** `dealer@gemex.demo`  
+**Email:** `dealer@gemotc.demo`  
 **Password:** `dealer123`  
 **Dashboard:** `/dealer/dashboard`
 
@@ -38,7 +38,7 @@ Visit **[/demo](/demo)** to see all demo accounts with one-click login.
 
 ### ⚙️ Admin Account
 **Role:** System Administrator  
-**Email:** `admin@gemex.demo`  
+**Email:** `admin@gemotc.demo`  
 **Password:** `admin123`  
 **Dashboard:** `/admin/dashboard`
 

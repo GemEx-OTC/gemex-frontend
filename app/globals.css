@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* GemEx Enhanced Color Palette - Improved Readability */
+  /* GemOTC Enhanced Color Palette - Improved Readability */
   --charcoal-grey: #1a1a24;
   --charcoal-light: #242438;
   --charcoal-lighter: #2d2d42;
@@ -56,7 +56,7 @@
 }
 
 .dark {
-  /* GemEx Dark Mode - Enhanced Readability & Contrast */
+  /* GemOTC Dark Mode - Enhanced Readability & Contrast */
   --background: #1a1a24;
   --foreground: #f8f9fa;
   --card: #242438;
@@ -140,7 +140,7 @@
     @apply bg-background text-foreground;
   }
 
-  /* <CHANGE> GemEx Typography - Clean modern sans-serif */
+  /* <CHANGE> GemOTC Typography - Clean modern sans-serif */
   h1,
   h2,
   h3,
@@ -150,7 +150,7 @@
     @apply font-semibold text-foreground;
   }
 
-  /* GemEx Form inputs - Enhanced focus states */
+  /* GemOTC Form inputs - Enhanced focus states */
   input,
   textarea,
   select {
@@ -159,7 +159,7 @@
 }
 
 @layer components {
-  /* GemEx Enhanced Utility Classes */
+  /* GemOTC Enhanced Utility Classes */
   .gemex-card {
     @apply bg-card text-card-foreground border border-border rounded-lg p-6 shadow-sm;
   }

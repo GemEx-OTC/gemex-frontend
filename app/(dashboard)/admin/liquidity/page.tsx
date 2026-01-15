@@ -192,7 +192,7 @@ export default function LiquidityPage() {
           <p className="text-3xl font-bold text-foreground">
             {stats ? formatCurrency(stats.totalDisbursedOTC) : "—"}
           </p>
-          <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">From GemEx OTC</p>
+          <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">From GemOTC</p>
         </motion.div>
 
         {/* Rails Payouts */}
@@ -209,7 +209,7 @@ export default function LiquidityPage() {
           <p className="text-3xl font-bold text-foreground">
             {stats ? formatCurrency(stats.totalDisbursedRails) : "—"}
           </p>
-          <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">From GemEx Rails</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">From GemOTC Rails</p>
         </motion.div>
       </div>
 

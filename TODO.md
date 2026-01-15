@@ -1,12 +1,12 @@
-# GemEx Frontend - TODO List
+# GemOTC Frontend - TODO List
 
-Based on the GemEx Dashboard PDF requirements and current implementation review.
+Based on the GemOTC Dashboard PDF requirements and current implementation review.
 
 ## ✅ COMPLETED
 
 ### Core Setup
 - [x] Next.js 16 with App Router configured
-- [x] Tailwind CSS v4 setup with custom GemEx colors
+- [x] Tailwind CSS v4 setup with custom GemOTC colors
 - [x] Framer Motion installed and integrated
 - [x] Dark mode first design implemented
 - [x] Custom color palette configured (Charcoal Grey, Vivid Violet, Neon Lime, etc.)
@@ -28,7 +28,7 @@ Based on the GemEx Dashboard PDF requirements and current implementation review.
 - [x] Basic dashboard pages for all three roles
 
 ### Components
-- [x] GemEx logo component
+- [x] GemOTC logo component
 - [x] Auth header component
 - [x] Dashboard header component
 - [x] Dashboard sidebar component

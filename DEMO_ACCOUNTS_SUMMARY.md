@@ -4,9 +4,9 @@
 
 | Role | Email | Password | Dashboard |
 |------|-------|----------|-----------|
-| 👤 **Client** | `client@gemex.demo` | `client123` | `/client/dashboard` |
-| 💼 **Dealer** | `dealer@gemex.demo` | `dealer123` | `/dealer/dashboard` |
-| ⚙️ **Admin** | `admin@gemex.demo` | `admin123` | `/admin/dashboard` |
+| 👤 **Client** | `client@gemotc.demo` | `client123` | `/client/dashboard` |
+| 💼 **Dealer** | `dealer@gemotc.demo` | `dealer123` | `/dealer/dashboard` |
+| ⚙️ **Admin** | `admin@gemotc.demo` | `admin123` | `/admin/dashboard` |
 
 ## 🚀 Quick Start
 

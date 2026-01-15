@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-Updated the wallet functionality to align with the GemEx backend specification, supporting multiple crypto networks and following best product design practices.
+Updated the wallet functionality to align with the GemOTC backend specification, supporting multiple crypto networks and following best product design practices.
 
 ## ✅ Changes Implemented
 
@@ -141,7 +141,7 @@ const NETWORK_INFO = {
 - ✅ Educational content for new users
 
 ### 4. Consistency
-- ✅ Matches GemEx color system
+- ✅ Matches GemOTC color system
 - ✅ Consistent with other dashboard pages
 - ✅ Follows established animation patterns
 - ✅ Uses shared components (DashboardHeader)

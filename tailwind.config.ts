@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // GemEx Enhanced Color Palette
+        // GemOTC Enhanced Color Palette
         'charcoal-grey': '#1a1a24',
         'charcoal-light': '#242438',
         'charcoal-lighter': '#2d2d42',

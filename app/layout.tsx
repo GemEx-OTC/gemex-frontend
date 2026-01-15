@@ -23,8 +23,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <title>GemEx - OTC Trading Desk</title>
-        <meta name="description" content="GemEx: Professional OTC Desk for seamless crypto and fiat trading" />
+        <title>GemOTC - OTC Trading Desk</title>
+        <meta name="description" content="GemOTC: Professional OTC Desk for seamless crypto and fiat trading" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}>

@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_GEMEX_API_BASE_URL || 'http://localhost:4000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_GEMOTC_API_BASE_URL || 'http://localhost:4000';
 const API_PREFIX = '/api/v1';
 
 // Create axios instance

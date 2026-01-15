@@ -276,7 +276,7 @@ export function FloatingRateDock({ exchangeRates }: FloatingRateDockProps) {
             {/* Footer */}
             <div className="flex-shrink-0 px-4 py-4 border-t border-border bg-muted/30">
               <p className="text-xs text-center text-muted-foreground mb-3">
-                Rates refresh automatically • Powered by GemEx
+                Rates refresh automatically • Powered by GemOTC
               </p>
               <button
                 onClick={() => setIsOpen(false)}

@@ -61,9 +61,9 @@ export default function Home() {
             className="flex items-center gap-2"
           >
             <div className="w-8 h-8 relative">
-              <Image src="/images/gemex-20logo.png" alt="GemEx" fill className="object-contain" />
+              <Image src="/images/gemex-20logo.png" alt="GemOTC" fill className="object-contain" />
             </div>
-            <span className="font-semibold text-[#F0F0F0]">GemEx</span>
+            <span className="font-semibold text-[#F0F0F0]">GemOTC</span>
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex gap-4">
             <Link href="/auth/login" className="px-4 py-2 text-[#F0F0F0] hover:text-[#641AE4] transition-colors">

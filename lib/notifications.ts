@@ -1,4 +1,4 @@
-// Notification types and utilities for GemEx OTC Platform
+// Notification types and utilities for GemOTC Platform
 // Re-export API types for convenience
 export type { 
   NotificationType, 

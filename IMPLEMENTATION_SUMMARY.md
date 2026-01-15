@@ -1,4 +1,4 @@
-# GemEx Frontend - Implementation Summary
+# GemOTC Frontend - Implementation Summary
 
 ## 🎯 Critical Features Implemented
 
@@ -156,7 +156,7 @@
 - KYCProgressBar
 - DashboardHeader
 - MetricCard (enhanced with animations)
-- GemExLogo
+- GemOTCLogo
 - AuthHeader
 
 ## 🚀 What's Ready for Production
@@ -196,7 +196,7 @@
 
 ## 🎉 Summary
 
-Successfully implemented **all critical features** from the GemEx Dashboard PDF specification:
+Successfully implemented **all critical features** from the GemOTC Dashboard PDF specification:
 - ✅ Complete KYC onboarding flow (5 pages)
 - ✅ Dealer dashboard with real-time metrics
 - ✅ Admin dashboard with secure controls

@@ -247,7 +247,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
             <div className="relative w-full h-14">
               <Image
                 src="/images/mainlogo_type.svg"
-                alt="GemEx"
+                alt="GemOTC"
                 fill
                 className="object-contain"
                 priority
@@ -270,7 +270,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
                   {user?.fullName || `${role} User`}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {user?.email || `${role}@gemex.demo`}
+                  {user?.email || `${role}@gemotc.demo`}
                 </p>
               </div>
             </div>
@@ -289,7 +289,7 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
 
             {/* Version */}
             <div className="text-xs text-muted-foreground text-center">
-              <p>GemEx OTC v1.0.0</p>
+              <p>GemOTC v1.0.0</p>
             </div>
           </div>
         </div>

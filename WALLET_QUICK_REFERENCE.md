@@ -180,7 +180,7 @@ POST /api/v1/wallets/withdrawal-address
 - **Documentation**: See `WALLET_IMPROVEMENTS.md`
 - **Integration Guide**: See `WALLET_INTEGRATION_GUIDE.md`
 - **Backend Spec**: See `BACKEND_ALIGNMENT_SUMMARY.md`
-- **Design System**: See `GemEx Color Guide (Web App).pdf`
+- **Design System**: See `GemOTC Color Guide (Web App).pdf`
 
 ---
 

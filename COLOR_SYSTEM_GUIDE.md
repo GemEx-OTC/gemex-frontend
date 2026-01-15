@@ -1,7 +1,7 @@
-# GemEx Color System Guide
+# GemOTC Color System Guide
 
 ## Overview
-This document outlines the improved color system for GemEx that prioritizes readability, accessibility, and consistent user experience across all interfaces.
+This document outlines the improved color system for GemOTC that prioritizes readability, accessibility, and consistent user experience across all interfaces.
 
 ## Key Improvements Made
 

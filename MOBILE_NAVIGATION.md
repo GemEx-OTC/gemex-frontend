@@ -15,7 +15,7 @@
 ```
 ┌─────────────────────┐
 │ 👤 Client User      │
-│ client@gemex.demo   │
+│ client@gemotc.demo   │
 ├─────────────────────┤
 │ 🚪 Logout           │
 └─────────────────────┘

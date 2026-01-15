@@ -1,8 +1,8 @@
-# GemEx Business Model Update - Implementation Summary
+# GemOTC Business Model Update - Implementation Summary
 
 ## 🎯 Overview
 
-Updated the GemEx platform to reflect the actual business model: **No balance holding for clients**. Clients send crypto to deposit addresses and receive Naira directly to their bank accounts.
+Updated the GemOTC platform to reflect the actual business model: **No balance holding for clients**. Clients send crypto to deposit addresses and receive Naira directly to their bank accounts.
 
 ## 📋 Key Changes
 

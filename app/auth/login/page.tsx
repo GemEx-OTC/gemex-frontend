@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { useLogin } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
+import { Eye, EyeOff } from "lucide-react"
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -21,6 +22,7 @@ const formVariants = {
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   
   const router = useRouter()
   const loginMutation = useLogin()
@@ -102,15 +104,25 @@ export default function LoginPage() {
                 Forgot password?
               </a>
             </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="gemex-input px-4 py-3.5"
-              disabled={loginMutation.isPending}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="gemex-input px-4 pr-10 py-3.5"
+                disabled={loginMutation.isPending}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0B0B8] hover:text-primary transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <motion.button

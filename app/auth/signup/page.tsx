@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { useRegister, useVerifyEmail, useResendOtp } from "@/lib/hooks/use-auth"
 import type { ApiError } from "@/lib/api/types"
+import { Eye, EyeOff } from "lucide-react"
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -25,6 +26,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [resendTimer, setResendTimer] = useState(60)
@@ -180,12 +183,32 @@ export default function SignupPage() {
                 </div>
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-[#F0F0F0] mb-2">Password</label>
-                  <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a strong password" disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
+                  <div className="relative">
+                    <input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a strong password" disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 pr-10 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9BA5] hover:text-[#641AE4] transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                   <p className="text-[#B0B0B8] text-xs mt-2">Min 8 chars with uppercase, lowercase, and number</p>
                 </div>
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#F0F0F0] mb-2">Confirm Password</label>
-                  <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
+                  <div className="relative">
+                    <input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter your password" disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 pr-10 py-3.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9BA5] hover:text-[#641AE4] transition-colors"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? "Creating account..." : "Continue"}</motion.button>
                 <p className="text-xs text-[#B0B0B8] text-center">By creating an account, you agree to our <a href="#" className="text-[#641AE4] hover:underline">Terms of Service</a> and <a href="#" className="text-[#641AE4] hover:underline">Privacy Policy</a></p>

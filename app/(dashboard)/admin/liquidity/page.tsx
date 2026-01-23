@@ -49,43 +49,50 @@ interface LiquidityStats {
 }
 
 // API functions
-const LIQUIDITY_API_URL = process.env.NEXT_PUBLIC_LIQUIDITY_API_URL || "http://localhost:3003"
+const OTC_API_URL = process.env.NEXT_PUBLIC_OTC_API_URL || "http://localhost:4000"
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("accessToken")
+  return {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  }
+}
 
 const fetchBalance = async (): Promise<LiquidityBalance> => {
-  const res = await fetch(`${LIQUIDITY_API_URL}/api/disbursements/balance`)
+  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/balance`, {
+    headers: getAuthHeaders(),
+  })
   if (!res.ok) throw new Error("Failed to fetch balance")
   const data = await res.json()
   return data.data
 }
 
-const fetchDisbursements = async (page = 1, limit = 10): Promise<{ disbursements: Disbursement[], total: number }> => {
-  const res = await fetch(`${LIQUIDITY_API_URL}/api/disbursements?page=${page}&limit=${limit}`)
+const fetchDisbursements = async (page = 1, limit = 10): Promise<{ disbursements: Disbursement[], pagination: { total: number } }> => {
+  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/disbursements?page=${page}&limit=${limit}`, {
+    headers: getAuthHeaders(),
+  })
   if (!res.ok) throw new Error("Failed to fetch disbursements")
   const data = await res.json()
   return data.data
 }
 
 const fetchStats = async (): Promise<LiquidityStats> => {
-  // This would be a dedicated stats endpoint - for now we'll calculate from disbursements
-  const res = await fetch(`${LIQUIDITY_API_URL}/api/disbursements?limit=1000`)
+  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/stats`, {
+    headers: getAuthHeaders(),
+  })
   if (!res.ok) throw new Error("Failed to fetch stats")
   const data = await res.json()
-  const disbursements: Disbursement[] = data.data.disbursements || []
-  
-  return {
-    pendingPayouts: disbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").reduce((sum, d) => sum + d.amount, 0),
-    totalDisbursedOTC: disbursements.filter(d => d.status === "SUCCESS" && d.source === "OTC").reduce((sum, d) => sum + d.amount, 0),
-    totalDisbursedRails: disbursements.filter(d => d.status === "SUCCESS" && d.source === "RAILS").reduce((sum, d) => sum + d.amount, 0),
-    successCount: disbursements.filter(d => d.status === "SUCCESS").length,
-    failedCount: disbursements.filter(d => d.status === "FAILED").length,
-    pendingCount: disbursements.filter(d => d.status === "PENDING" || d.status === "PROCESSING").length,
-  }
+  return data.data
 }
 
 const formatCurrency = (amount: number) => {
-  if (amount >= 1000000) return `₦${(amount / 1000000).toFixed(2)}M`
-  if (amount >= 1000) return `₦${(amount / 1000).toFixed(1)}K`
-  return `₦${amount.toLocaleString()}`
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 const getStatusBadge = (status: string) => {
@@ -120,6 +127,9 @@ export default function LiquidityPage() {
     queryKey: ["disbursements", page],
     queryFn: () => fetchDisbursements(page, 10),
   })
+
+  const disbursements = disbursementsData?.disbursements || []
+  const total = disbursementsData?.pagination?.total || 0
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["liquidity-stats"],
@@ -260,14 +270,14 @@ export default function LiquidityPage() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : disbursementsData?.disbursements?.length === 0 ? (
+        ) : disbursements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Droplets className="w-12 h-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No payouts yet</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {disbursementsData?.disbursements?.map((disbursement, idx) => {
+            {disbursements.map((disbursement, idx) => {
               const statusBadge = getStatusBadge(disbursement.status)
               const sourceBadge = getSourceBadge(disbursement.source)
               const StatusIcon = statusBadge.icon
@@ -315,10 +325,10 @@ export default function LiquidityPage() {
         )}
 
         {/* Pagination */}
-        {disbursementsData && disbursementsData.total > 10 && (
+        {total > 10 && (
           <div className="px-6 py-4 border-t border-border flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Showing {((page - 1) * 10) + 1} - {Math.min(page * 10, disbursementsData.total)} of {disbursementsData.total}
+              Showing {((page - 1) * 10) + 1} - {Math.min(page * 10, total)} of {total}
             </p>
             <div className="flex gap-2">
               <button
@@ -330,7 +340,7 @@ export default function LiquidityPage() {
               </button>
               <button
                 onClick={() => setPage(p => p + 1)}
-                disabled={page * 10 >= disbursementsData.total}
+                disabled={page * 10 >= total}
                 className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next

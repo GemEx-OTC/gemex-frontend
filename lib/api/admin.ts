@@ -510,3 +510,58 @@ export const getUserAutoPayoutStatus = async (id: string): Promise<{ autoPayoutE
   const response = await apiClient.get<ApiResponse<{ autoPayoutEnabled: boolean }>>(`/admin/users/${id}/auto-payout`);
   return response.data.data;
 };
+
+// Bank types
+export interface Bank {
+  code: string;
+  name: string;
+}
+
+export interface BankAccountValidation {
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
+}
+
+export interface ManualPayoutInput {
+  tradeId: string;
+  amount: number;
+  destinationBankCode: string;
+  destinationAccountNumber: string;
+  destinationAccountName: string;
+  narration?: string;
+  useUserBankAccount?: boolean;
+}
+
+export interface ManualPayoutResponse {
+  tradeId: string;
+  transactionId: string;
+  payoutReference: string;
+  amount: number;
+  status: string;
+  destinationAccountNumber: string;
+  destinationAccountName: string;
+  fee: number;
+  message: string;
+}
+
+// Get supported banks
+export const getSupportedBanks = async (): Promise<Bank[]> => {
+  const response = await apiClient.get<ApiResponse<Bank[]>>('/admin/banks');
+  return response.data.data;
+};
+
+// Validate bank account
+export const validateBankAccount = async (accountNumber: string, bankCode: string): Promise<BankAccountValidation> => {
+  const response = await apiClient.post<ApiResponse<BankAccountValidation>>('/admin/validate-bank-account', {
+    accountNumber,
+    bankCode,
+  });
+  return response.data.data;
+};
+
+// Initiate manual payout
+export const initiateManualPayout = async (data: ManualPayoutInput): Promise<ManualPayoutResponse> => {
+  const response = await apiClient.post<ApiResponse<ManualPayoutResponse>>(`/admin/trades/${data.tradeId}/manual-payout`, data);
+  return response.data.data;
+};

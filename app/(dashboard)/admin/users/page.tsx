@@ -6,7 +6,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { 
   UserX, UserCheck, Eye, X, Shield, Mail, Calendar, 
   TrendingUp, BanknoteIcon, User, Loader2, AlertTriangle, 
-  Wallet, History, FileText, ChevronDown, Users, Clock, Activity
+  Wallet, History, FileText, ChevronDown, Users, Clock, Activity, Send
 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
@@ -20,6 +20,7 @@ import {
   useAdminDashboard,
 } from "@/lib/hooks/use-admin"
 import type { ListUsersQuery, UserListItem } from "@/lib/api/admin"
+import { ManualPayoutModal } from "@/components/admin/manual-payout-modal"
 
 type DetailsTab = "overview" | "transactions" | "activity"
 
@@ -37,6 +38,8 @@ export default function AdminUsersPage() {
   const [detailsTab, setDetailsTab] = useState<DetailsTab>("overview")
   const [suspendReason, setSuspendReason] = useState("")
   const [confirmText, setConfirmText] = useState("")
+  const [showPayoutModal, setShowPayoutModal] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null)
 
   // Build query
   const query: ListUsersQuery = {
@@ -136,6 +139,33 @@ export default function AdminUsersPage() {
     if (status === "Failed") return "bg-red-500/20 text-red-300"
     if (status.includes("Pending") || status.includes("Awaiting")) return "bg-amber-500/20 text-amber-300"
     return "bg-blue-500/20 text-blue-300"
+  }
+
+  const handleInitiatePayout = (txn: any) => {
+    setSelectedTransaction({
+      id: txn.id,
+      transactionId: txn.id,
+      nairaAmount: txn.nairaAmount,
+      cryptoAsset: txn.cryptoAsset,
+      cryptoAmount: txn.cryptoAmount,
+      status: txn.status,
+      client: {
+        fullName: userDetails?.fullName,
+        email: userDetails?.email,
+      },
+      clientName: userDetails?.fullName,
+      payoutAccountNumber: userDetails?.bankAccount?.accountNumber,
+      payoutAccountName: userDetails?.bankAccount?.accountName,
+      payoutBankCode: userDetails?.bankAccount?.bankCode,
+    })
+    setShowPayoutModal(true)
+  }
+
+  const handlePayoutSuccess = () => {
+    // Refetch user details to update transaction status
+    if (selectedUserId) {
+      // The useUserDetails hook will automatically refetch
+    }
   }
 
   return (
@@ -556,9 +586,20 @@ export default function AdminUsersPage() {
                             <div key={txn.id} className="p-4 bg-[#2D2D3D]/30 rounded-lg">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="font-mono text-emerald-300 text-sm font-bold">{txn.id}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(txn.status)}`}>
-                                  {txn.status}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(txn.status)}`}>
+                                    {txn.status}
+                                  </span>
+                                  {txn.status === "CryptoConfirmed" && (
+                                    <button
+                                      onClick={() => handleInitiatePayout(txn)}
+                                      className="px-2 py-1 rounded text-xs font-medium bg-[#C8F55A] text-[#1E1E2B] hover:bg-[#B8E54A] transition-all flex items-center gap-1"
+                                    >
+                                      <Send className="w-3 h-3" />
+                                      Payout
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                 <div>
@@ -695,6 +736,19 @@ export default function AdminUsersPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Manual Payout Modal */}
+      {selectedTransaction && (
+        <ManualPayoutModal
+          trade={selectedTransaction}
+          isOpen={showPayoutModal}
+          onClose={() => {
+            setShowPayoutModal(false)
+            setSelectedTransaction(null)
+          }}
+          onSuccess={handlePayoutSuccess}
+        />
+      )}
     </motion.div>
   )
 }

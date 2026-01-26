@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft } from "lucide-react"
+import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft, Send } from "lucide-react"
 import Image from "next/image"
 import { getAdminTrades, type AdminTrade } from "@/lib/api/admin"
+import { ManualPayoutModal } from "@/components/admin/manual-payout-modal"
 
 // Asset icons
 const ASSET_CONFIG = {
@@ -30,6 +31,8 @@ export default function AdminTradesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, pages: 0 })
+  const [selectedTrade, setSelectedTrade] = useState<AdminTrade | null>(null)
+  const [showPayoutModal, setShowPayoutModal] = useState(false)
 
   // Fetch trades
   const fetchTrades = useCallback(async () => {
@@ -64,6 +67,15 @@ export default function AdminTradesPage() {
     const hours = Math.floor(minutes / 60)
     if (hours < 24) return `${hours}h ago`
     return `${Math.floor(hours / 24)}d ago`
+  }
+
+  const handleInitiatePayout = (trade: AdminTrade) => {
+    setSelectedTrade(trade)
+    setShowPayoutModal(true)
+  }
+
+  const handlePayoutSuccess = () => {
+    fetchTrades()
   }
 
   // Calculate totals
@@ -159,6 +171,7 @@ export default function AdminTradesPage() {
                   <th className="text-right px-4 py-3 text-sm font-medium text-[#B0B0B8]">Naira</th>
                   <th className="text-center px-4 py-3 text-sm font-medium text-[#B0B0B8]">Status</th>
                   <th className="text-right px-4 py-3 text-sm font-medium text-[#B0B0B8]">Created</th>
+                  <th className="text-center px-4 py-3 text-sm font-medium text-[#B0B0B8]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -218,6 +231,19 @@ export default function AdminTradesPage() {
                         <div className="text-sm text-[#F0F0F0]">{getTimeSince(trade.createdAt)}</div>
                         <div className="text-xs text-[#B0B0B8]">{new Date(trade.createdAt).toLocaleDateString()}</div>
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        {trade.status === "CryptoConfirmed" && (
+                          <motion.button
+                            onClick={() => handleInitiatePayout(trade)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#C8F55A] text-[#1E1E2B] hover:bg-[#B8E54A] transition-all flex items-center gap-1.5 mx-auto"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Payout
+                          </motion.button>
+                        )}
+                      </td>
                     </motion.tr>
                   )
                 })}
@@ -265,6 +291,19 @@ export default function AdminTradesPage() {
             </motion.button>
           </div>
         </div>
+      )}
+
+      {/* Manual Payout Modal */}
+      {selectedTrade && (
+        <ManualPayoutModal
+          trade={selectedTrade}
+          isOpen={showPayoutModal}
+          onClose={() => {
+            setShowPayoutModal(false)
+            setSelectedTrade(null)
+          }}
+          onSuccess={handlePayoutSuccess}
+        />
       )}
     </motion.div>
   )

@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
 import { AlertCircle, Info, ArrowRight, Check, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { createQuote } from "@/lib/api/quotes"
+import { getExchangeRates } from "@/lib/api/settings"
 
 // Asset icons and brand colors
 const ASSET_CONFIG = {
@@ -49,18 +50,32 @@ export default function TradeRequestPage() {
     cryptoNetwork: "TRC20" as keyof typeof CRYPTO_NETWORKS,
     cryptoAmount: "50000",
   })
+  const [systemRates, setSystemRates] = useState({
+    USDT: 0,
+    BTC: 0,
+    USDC: 0,
+  })
 
-  // Mock system rates
-  const systemRates = {
-    USDT: 1565,
-    BTC: 43500000,
-    USDC: 1565,
-  }
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const rates = await getExchangeRates()
+        setSystemRates({
+          USDT: rates.USDT_NGN,
+          BTC: rates.BTC_NGN,
+          USDC: rates.USDC_NGN,
+        })
+      } catch (err) {
+        console.error("Failed to fetch exchange rates:", err)
+      }
+    }
+    fetchRates()
+  }, [])
 
   const handleSubmitRequest = async () => {
     setSubmitting(true)
     setError(null)
-    
+
     try {
       await createQuote({
         cryptoAsset: tradeData.cryptoAsset,
@@ -94,21 +109,19 @@ export default function TradeRequestPage() {
           {steps.map((s, idx) => (
             <div key={s} className="flex items-center">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                  step === s
-                    ? "bg-[#641AE4] text-white scale-110"
-                    : idx < steps.indexOf(step)
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step === s
+                  ? "bg-[#641AE4] text-white scale-110"
+                  : idx < steps.indexOf(step)
                     ? "bg-[#C8F55A] text-[#1E1E2B]"
                     : "bg-[#2D2D3D] text-[#B0B0B8]"
-                }`}
+                  }`}
               >
                 {idx < steps.indexOf(step) ? <Check className="w-4 h-4" /> : idx + 1}
               </div>
               {idx < 2 && (
                 <div
-                  className={`w-10 md:w-16 h-0.5 mx-2 rounded-full transition-all ${
-                    idx < steps.indexOf(step) ? "bg-[#C8F55A]" : "bg-[#2D2D3D]"
-                  }`}
+                  className={`w-10 md:w-16 h-0.5 mx-2 rounded-full transition-all ${idx < steps.indexOf(step) ? "bg-[#C8F55A]" : "bg-[#2D2D3D]"
+                    }`}
                 />
               )}
             </div>
@@ -155,24 +168,22 @@ export default function TradeRequestPage() {
                       <motion.button
                         key={key}
                         onClick={() => {
-                          setTradeData({ 
-                            ...tradeData, 
+                          setTradeData({
+                            ...tradeData,
                             cryptoAsset: key as keyof typeof CRYPTO_ASSETS,
                             cryptoNetwork: key === "BTC" ? "BTC" : "TRC20"
                           })
                         }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`relative p-3 rounded-lg text-center font-medium transition-all ${
-                          isSelected
-                            ? "bg-gradient-to-br from-[#641AE4] to-[#9A24D2] text-white shadow-lg shadow-[#641AE4]/20"
-                            : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]/80 border border-[#2D2D3D]"
-                        }`}
+                        className={`relative p-3 rounded-lg text-center font-medium transition-all ${isSelected
+                          ? "bg-gradient-to-br from-[#641AE4] to-[#9A24D2] text-white shadow-lg shadow-[#641AE4]/20"
+                          : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]/80 border border-[#2D2D3D]"
+                          }`}
                       >
                         <div className="flex flex-col items-center gap-2">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
-                          }`}>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
+                            }`}>
                             <Image
                               src={config.icon}
                               alt={`${asset.symbol} icon`}
@@ -220,15 +231,13 @@ export default function TradeRequestPage() {
                           }
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`relative p-3 rounded-lg text-left transition-all flex items-center gap-2 ${
-                            isSelected
-                              ? "bg-[#641AE4] text-white shadow-md"
-                              : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] border border-[#2D2D3D]"
-                          }`}
+                          className={`relative p-3 rounded-lg text-left transition-all flex items-center gap-2 ${isSelected
+                            ? "bg-[#641AE4] text-white shadow-md"
+                            : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] border border-[#2D2D3D]"
+                            }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
-                          }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
+                            }`}>
                             <Image
                               src={config.icon}
                               alt={`${network.name} icon`}
@@ -315,13 +324,13 @@ export default function TradeRequestPage() {
                     onChange={(e) => setTradeData({ ...tradeData, cryptoAmount: e.target.value })}
                     placeholder="0.00"
                     min={minAmount}
-                    className="w-full bg-transparent text-3xl md:text-4xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
+                    className="w-full bg-transparent border-none focus:ring-0 text-3xl md:text-4xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
                   />
                 </div>
                 <p className="text-xs text-[#B0B0B8] mt-1">
                   Min: {minAmount.toLocaleString()} {tradeData.cryptoAsset}
                 </p>
-                
+
                 <div className="mt-4 pt-4 border-t border-[#2D2D3D]">
                   <div className="flex justify-between items-center">
                     <span className="text-[#B0B0B8] text-sm">Estimated Naira</span>

@@ -39,10 +39,10 @@ export default function AdminTradesPage() {
     try {
       setLoading(true)
       setError(null)
-      const result = await getAdminTrades({ 
+      const result = await getAdminTrades({
         status: filter === "all" ? undefined : filter,
         page: pagination.page,
-        limit: pagination.limit 
+        limit: pagination.limit
       })
       setTrades(result.trades)
       setPagination(prev => ({ ...prev, total: result.pagination.total, pages: result.pagination.pages }))
@@ -85,9 +85,9 @@ export default function AdminTradesPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <DashboardHeader 
-        title="Trades Management" 
-        subtitle="Monitor and track all trades across the platform" 
+      <DashboardHeader
+        title="Trades Management"
+        subtitle="Monitor and track all trades across the platform"
       />
 
       {/* Stats Cards */}
@@ -139,11 +139,10 @@ export default function AdminTradesPage() {
             onClick={() => setFilter(tab.value as typeof filter)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              filter === tab.value 
-                ? "bg-[#641AE4] text-white" 
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${filter === tab.value
+                ? "bg-[#641AE4] text-white"
                 : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0]"
-            }`}
+              }`}
           >
             {tab.label}
           </motion.button>
@@ -178,7 +177,7 @@ export default function AdminTradesPage() {
                 {trades.map((trade, idx) => {
                   const statusConfig = STATUS_CONFIG[trade.status as TradeStatus]
                   const assetConfig = ASSET_CONFIG[trade.cryptoAsset as keyof typeof ASSET_CONFIG]
-                  
+
                   return (
                     <motion.tr
                       key={trade.id}
@@ -237,10 +236,10 @@ export default function AdminTradesPage() {
                             onClick={() => handleInitiatePayout(trade)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#C8F55A] text-[#1E1E2B] hover:bg-[#B8E54A] transition-all flex items-center gap-1.5 mx-auto"
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#641AE4] text-white hover:bg-[#5014b8] transition-all flex items-center gap-1.5 mx-auto"
                           >
                             <Send className="w-3.5 h-3.5" />
-                            Payout
+                            Approve Payout
                           </motion.button>
                         )}
                       </td>

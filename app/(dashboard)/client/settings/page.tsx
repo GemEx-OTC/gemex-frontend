@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 <div className="mb-4"><h2 className="text-lg font-semibold text-[#F0F0F0]">Naira Payout Account</h2><p className="text-sm text-[#B0B0B8] mt-1">Link your bank account to receive Naira payments</p></div>
                 {twoFactorEnabled && (
                   <div className="mb-4 p-3 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg">
-                    <p className="text-xs text-[#B0B0B8]"><span className="text-[#641AE4] font-medium">🔐 2FA Enabled:</span> OTP verification required to save bank account changes.</p>
+                    <p className="text-sm text-[#D1D1D6]"><span className="text-[#D8B4FE] font-bold">🔐 2FA Enabled:</span> OTP verification required to save bank account changes.</p>
                   </div>
                 )}
                 <div className="space-y-5 mt-6">

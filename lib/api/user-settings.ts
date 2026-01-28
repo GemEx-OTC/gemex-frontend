@@ -151,7 +151,7 @@ export const updateBankAccount = async (data: UpdateBankAccountInput): Promise<B
 };
 
 export const verifyBankAccount = async (data: VerifyBankAccountInput): Promise<VerifyBankAccountResponse> => {
-  const response = await apiClient.post<ApiResponse<VerifyBankAccountResponse>>('/user-settings/verify-bank', data);
+  const response = await apiClient.post<ApiResponse<VerifyBankAccountResponse>>('/banks/verify', data);
   return response.data.data;
 };
 

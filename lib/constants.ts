@@ -26,10 +26,10 @@ export const TRANSACTION_STATUS = {
     description: "Waiting for crypto deposit",
   },
   CryptoConfirmed: {
-    label: "Crypto Confirmed",
-    color: "text-green-100 dark:text-green-200",
-    bg: "bg-green-600/90 dark:bg-green-700/90",
-    description: "Deposit confirmed on blockchain",
+    label: "Payment Approval Pending",
+    color: "text-blue-100 dark:text-blue-200",
+    bg: "bg-blue-600/90 dark:bg-blue-700/90",
+    description: "Deposit confirmed, awaiting payout approval",
   },
   PayoutPending: {
     label: "Payout Pending",

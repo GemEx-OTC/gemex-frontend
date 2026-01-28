@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -34,6 +35,7 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; color: string; bg: str
 }
 
 export default function ClientQuotesPage() {
+  const router = useRouter()
   const [filter, setFilter] = useState<"all" | QuoteStatus>("all")
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,9 +52,9 @@ export default function ClientQuotesPage() {
     try {
       setLoading(true)
       setError(null)
-      const result = await getQuotes({ 
+      const result = await getQuotes({
         status: filter === "all" ? undefined : filter,
-        limit: 50 
+        limit: 50
       })
       setQuotes(result.quotes)
     } catch (err: any) {
@@ -101,7 +103,7 @@ export default function ClientQuotesPage() {
 
   const handleAcceptQuote = async () => {
     if (!selectedQuote) return
-    
+
     setProcessing(true)
     try {
       const result = await acceptQuote(selectedQuote._id)
@@ -148,9 +150,13 @@ export default function ClientQuotesPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <DashboardHeader 
-        title="My Quotes" 
-        subtitle="View and manage your bulk trade quote requests" 
+      <DashboardHeader
+        title="My Quotes"
+        subtitle="View and manage your bulk trade quote requests"
+        action={{
+          label: "Request Quote",
+          onClick: () => router.push("/client/trade")
+        }}
       />
 
       {/* Error Alert */}
@@ -171,33 +177,35 @@ export default function ClientQuotesPage() {
       )}
 
       {/* Action Required Banners */}
-      {quotedCount > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-xl"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C8F55A]/20 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-[#C8F55A]" />
+      {
+        quotedCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-xl"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#C8F55A]/20 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-[#C8F55A]" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-[#F0F0F0]">
+                  {quotedCount} quote{quotedCount > 1 ? "s" : ""} ready for review
+                </p>
+                <p className="text-sm text-[#B0B0B8]">Review and accept before they expire</p>
+              </div>
+              <motion.button
+                onClick={() => setFilter("Quoted")}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all"
+              >
+                View
+              </motion.button>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-[#F0F0F0]">
-                {quotedCount} quote{quotedCount > 1 ? "s" : ""} ready for review
-              </p>
-              <p className="text-sm text-[#B0B0B8]">Review and accept before they expire</p>
-            </div>
-            <motion.button
-              onClick={() => setFilter("Quoted")}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-4 py-2 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all"
-            >
-              View
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )
+      }
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -212,19 +220,17 @@ export default function ClientQuotesPage() {
             onClick={() => setFilter(tab.value as typeof filter)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
-              filter === tab.value 
-                ? "bg-[#641AE4] text-white" 
-                : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0]"
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${filter === tab.value
+              ? "bg-[#641AE4] text-white"
+              : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0]"
+              }`}
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
-                filter === tab.value 
-                  ? "bg-white/30 text-white" 
-                  : "bg-[#C8F55A]/20 text-[#C8F55A]"
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${filter === tab.value
+                ? "bg-white/30 text-white"
+                : "bg-[#C8F55A]/20 text-[#C8F55A]"
+                }`}>
                 {tab.count}
               </span>
             )}
@@ -233,180 +239,185 @@ export default function ClientQuotesPage() {
       </div>
 
       {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-[#641AE4] animate-spin" />
-        </div>
-      )}
+      {
+        loading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-[#641AE4] animate-spin" />
+          </div>
+        )
+      }
 
       {/* Quotes List */}
-      {!loading && (
-        <div className="space-y-3">
-          {quotes.map((quote, idx) => {
-            const statusConfig = STATUS_CONFIG[quote.status]
-            const assetConfig = ASSET_CONFIG[quote.cryptoAsset as keyof typeof ASSET_CONFIG]
-            const networkConfig = NETWORK_CONFIG[quote.cryptoNetwork as keyof typeof NETWORK_CONFIG]
-            const rateDiff = quote.firmRate ? getRateDifference(quote.systemRate, quote.firmRate) : 0
-            
-            return (
-              <motion.div
-                key={quote._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`p-4 bg-[#1E1E2B]/80 border rounded-xl transition-all ${
-                  quote.status === "Quoted" 
-                    ? "border-[#C8F55A]/40 shadow-lg shadow-[#C8F55A]/10" 
-                    : "border-[#2D2D3D] hover:border-[#641AE4]/40"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  {/* Left: Asset Info */}
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-[#2D2D3D] flex items-center justify-center">
-                        {assetConfig && (
-                          <Image
-                            src={assetConfig.icon}
-                            alt={quote.cryptoAsset}
-                            width={28}
-                            height={28}
-                          />
-                        )}
-                      </div>
-                      {networkConfig && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1E1E2B] flex items-center justify-center border border-[#2D2D3D]">
-                          <Image
-                            src={networkConfig.icon}
-                            alt={quote.cryptoNetwork}
-                            width={12}
-                            height={12}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#F0F0F0]">
-                          {quote.cryptoAmount.toLocaleString()} {quote.cryptoAsset}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
-                          {statusConfig.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[#B0B0B8]">
-                        <span>{CRYPTO_NETWORKS[quote.cryptoNetwork]?.name || quote.cryptoNetwork}</span>
-                        <span>•</span>
-                        <span className="font-mono text-xs">{quote._id.slice(-8).toUpperCase()}</span>
-                      </div>
-                    </div>
-                  </div>
+      {
+        !loading && (
+          <div className="space-y-3">
+            {quotes.map((quote, idx) => {
+              const statusConfig = STATUS_CONFIG[quote.status]
+              const assetConfig = ASSET_CONFIG[quote.cryptoAsset as keyof typeof ASSET_CONFIG]
+              const networkConfig = NETWORK_CONFIG[quote.cryptoNetwork as keyof typeof NETWORK_CONFIG]
+              const rateDiff = quote.firmRate ? getRateDifference(quote.systemRate, quote.firmRate) : 0
 
-                  {/* Right: Amount */}
-                  <div className="text-right">
-                    {quote.status === "Quoted" && quote.firmNairaAmount ? (
-                      <>
-                        <div className="font-bold text-lg text-[#C8F55A]">
-                          ₦{quote.firmNairaAmount.toLocaleString()}
-                        </div>
-                        <div className="flex items-center justify-end gap-1 text-xs">
-                          <span className="text-[#B0B0B8]">Rate: ₦{quote.firmRate?.toLocaleString()}</span>
-                          {rateDiff !== 0 && (
-                            <span className={`flex items-center ${rateDiff > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                              {rateDiff > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                              {Math.abs(rateDiff).toFixed(2)}%
-                            </span>
+              return (
+                <motion.div
+                  key={quote._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`p-4 bg-[#1E1E2B]/80 border rounded-xl transition-all ${quote.status === "Quoted"
+                    ? "border-[#C8F55A]/40 shadow-lg shadow-[#C8F55A]/10"
+                    : "border-[#2D2D3D] hover:border-[#641AE4]/40"
+                    }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left: Asset Info */}
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full bg-[#2D2D3D] flex items-center justify-center">
+                          {assetConfig && (
+                            <Image
+                              src={assetConfig.icon}
+                              alt={quote.cryptoAsset}
+                              width={28}
+                              height={28}
+                            />
                           )}
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="font-bold text-[#F0F0F0]">
-                          ₦{quote.estimatedNaira.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-[#B0B0B8]">Estimated</div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions for Quoted */}
-                {quote.status === "Quoted" && quote.expiresAt && (
-                  <div className="mt-3 pt-3 border-t border-[#2D2D3D]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Timer className="w-4 h-4 text-amber-400" />
-                        <span className="text-amber-400 font-medium">{getTimeRemaining(quote.expiresAt)}</span>
-                        {quote.dealerId && (
-                          <span className="text-[#B0B0B8]">• Quoted by {getDealerName(quote)}</span>
+                        {networkConfig && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1E1E2B] flex items-center justify-center border border-[#2D2D3D]">
+                            <Image
+                              src={networkConfig.icon}
+                              alt={quote.cryptoNetwork}
+                              width={12}
+                              height={12}
+                            />
+                          </div>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#F0F0F0]">
+                            {quote.cryptoAmount.toLocaleString()} {quote.cryptoAsset}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
+                            {statusConfig.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-[#B0B0B8]">
+                          <span>{CRYPTO_NETWORKS[quote.cryptoNetwork]?.name || quote.cryptoNetwork}</span>
+                          <span>•</span>
+                          <span className="font-mono text-xs">{quote._id.slice(-8).toUpperCase()}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Amount */}
+                    <div className="text-right">
+                      {quote.status === "Quoted" && quote.firmNairaAmount ? (
+                        <>
+                          <div className="font-bold text-lg text-[#C8F55A]">
+                            ₦{quote.firmNairaAmount.toLocaleString()}
+                          </div>
+                          <div className="flex items-center justify-end gap-1 text-xs">
+                            <span className="text-[#B0B0B8]">Rate: ₦{quote.firmRate?.toLocaleString()}</span>
+                            {rateDiff !== 0 && (
+                              <span className={`flex items-center ${rateDiff > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {rateDiff > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                {Math.abs(rateDiff).toFixed(2)}%
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-bold text-[#F0F0F0]">
+                            ₦{quote.estimatedNaira.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-[#B0B0B8]">Estimated</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions for Quoted */}
+                  {quote.status === "Quoted" && quote.expiresAt && (
+                    <div className="mt-3 pt-3 border-t border-[#2D2D3D]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Timer className="w-4 h-4 text-amber-400" />
+                          <span className="text-amber-400 font-medium">{getTimeRemaining(quote.expiresAt)}</span>
+                          {quote.dealerId && (
+                            <span className="text-[#B0B0B8]">• Quoted by {getDealerName(quote)}</span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <motion.button
+                            onClick={() => handleCancelQuote(quote._id)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium text-[#F0F0F0] border border-[#2D2D3D] hover:border-red-500/50 hover:text-red-400 transition-all"
+                          >
+                            Decline
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleOpenAcceptModal(quote)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-1.5 rounded-lg text-sm font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all flex items-center gap-1"
+                          >
+                            Accept Quote
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending Status */}
+                  {quote.status === "Pending" && (
+                    <div className="mt-3 pt-3 border-t border-[#2D2D3D]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-[#B0B0B8]">
+                          <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                          <span>Waiting for dealer to provide firm quote...</span>
+                        </div>
                         <motion.button
                           onClick={() => handleCancelQuote(quote._id)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="px-3 py-1.5 rounded-lg text-sm font-medium text-[#F0F0F0] border border-[#2D2D3D] hover:border-red-500/50 hover:text-red-400 transition-all"
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium text-[#B0B0B8] border border-[#2D2D3D] hover:border-red-500/50 hover:text-red-400 transition-all"
                         >
-                          Decline
-                        </motion.button>
-                        <motion.button
-                          onClick={() => handleOpenAcceptModal(quote)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="px-4 py-1.5 rounded-lg text-sm font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all flex items-center gap-1"
-                        >
-                          Accept Quote
-                          <ArrowRight className="w-4 h-4" />
+                          Cancel
                         </motion.button>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Pending Status */}
-                {quote.status === "Pending" && (
-                  <div className="mt-3 pt-3 border-t border-[#2D2D3D]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-[#B0B0B8]">
-                        <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                        <span>Waiting for dealer to provide firm quote...</span>
-                      </div>
-                      <motion.button
-                        onClick={() => handleCancelQuote(quote._id)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium text-[#B0B0B8] border border-[#2D2D3D] hover:border-red-500/50 hover:text-red-400 transition-all"
-                      >
-                        Cancel
-                      </motion.button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )
-          })}
-        </div>
-      )}
+                  )}
+                </motion.div>
+              )
+            })}
+          </div>
+        )
+      }
 
       {/* Empty State */}
-      {!loading && quotes.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-          <div className="text-5xl mb-4">📋</div>
-          <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">No quotes found</h3>
-          <p className="text-[#B0B0B8] mb-4">
-            {filter === "all" ? "You haven't requested any quotes yet" : `No ${filter.toLowerCase()} quotes`}
-          </p>
-          <motion.button
-            onClick={() => window.location.href = "/client/trade"}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="px-6 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all"
-          >
-            Request a Quote
-          </motion.button>
-        </motion.div>
-      )}
+      {
+        !loading && quotes.length === 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+            <div className="text-5xl mb-4">📋</div>
+            <h3 className="text-lg font-semibold text-[#F0F0F0] mb-2">No quotes found</h3>
+            <p className="text-[#B0B0B8] mb-4">
+              {filter === "all" ? "You haven't requested any quotes yet" : `No ${filter.toLowerCase()} quotes`}
+            </p>
+            <motion.button
+              onClick={() => router.push("/client/trade")}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all"
+            >
+              Request a Quote
+            </motion.button>
+          </motion.div>
+        )
+      }
 
       {/* Multi-Step Modal */}
       <AnimatePresence>
@@ -423,13 +434,12 @@ export default function ClientQuotesPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`bg-[#1E1E2B] border-2 rounded-2xl p-6 max-w-md w-full ${
-                modalStep === "confirmed" 
-                  ? "border-emerald-500/40" 
-                  : modalStep === "deposit" 
-                  ? "border-amber-500/40" 
+              className={`bg-[#1E1E2B] border-2 rounded-2xl p-6 max-w-md w-full ${modalStep === "confirmed"
+                ? "border-emerald-500/40"
+                : modalStep === "deposit"
+                  ? "border-amber-500/40"
                   : "border-[#C8F55A]/40"
-              }`}
+                }`}
             >
               {/* Step 1: Accept Quote */}
               {modalStep === "accept" && (
@@ -559,11 +569,10 @@ export default function ClientQuotesPage() {
                         onClick={handleCopyAddress}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`w-full py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
-                          copied 
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
-                            : "bg-[#C8F55A]/20 text-[#C8F55A] border border-[#C8F55A]/30 hover:bg-[#C8F55A]/30"
-                        }`}
+                        className={`w-full py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${copied
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : "bg-[#C8F55A]/20 text-[#C8F55A] border border-[#C8F55A]/30 hover:bg-[#C8F55A]/30"
+                          }`}
                       >
                         {copied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Address</>}
                       </motion.button>
@@ -660,7 +669,7 @@ export default function ClientQuotesPage() {
 
                   <div className="flex gap-3">
                     <motion.button
-                      onClick={() => window.location.href = "/client/history"}
+                      onClick={() => router.push("/client/history")}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 py-3 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] transition-all flex items-center justify-center gap-2"
@@ -683,6 +692,6 @@ export default function ClientQuotesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </motion.div >
   )
 }

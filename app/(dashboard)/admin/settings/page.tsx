@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { 
   Shield, LogOut, Loader2, TrendingUp, User, Info, RefreshCw, 
-  Building2, CheckCircle2, AlertCircle 
+  Building2, CheckCircle2, AlertCircle, CreditCard
 } from "lucide-react"
+import { BankSelector } from "@/components/bank-selector"
 import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
@@ -21,8 +22,8 @@ import {
   useBankAccount,
   useUpdateBankAccount,
   useVerifyBankAccount,
+  useBanks,
 } from "@/lib/hooks/use-user-settings"
-import { NIGERIAN_BANKS } from "@/lib/constants"
 
 export default function AdminSettingsPage() {
   const [showOtpModal, setShowOtpModal] = useState(false)
@@ -44,6 +45,7 @@ export default function AdminSettingsPage() {
   
   // Bank Account
   const { data: bankAccount, isLoading: bankLoading } = useBankAccount()
+  const { data: banksData, isLoading: banksLoading } = useBanks()
   const updateBankMutation = useUpdateBankAccount()
   const verifyBankMutation = useVerifyBankAccount()
   const [bankForm, setBankForm] = useState({
@@ -113,31 +115,31 @@ export default function AdminSettingsPage() {
     })
   }
 
-  const handleVerifyBank = async () => {
-    if (!bankForm.bankCode || !bankForm.accountNumber || bankForm.accountNumber.length !== 10) {
-      toast.error("Please enter a valid bank and 10-digit account number")
-      return
-    }
+  const handleAccountNumberChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 10)
+    setBankForm(prev => ({ ...prev, accountNumber: cleaned, accountName: "" }))
     
-    setIsVerifyingBank(true)
-    verifyBankMutation.mutate(
-      { bankCode: bankForm.bankCode, accountNumber: bankForm.accountNumber },
-      {
-        onSuccess: (data) => {
-          setBankForm(prev => ({
-            ...prev,
-            accountName: data.accountName,
-            bankName: NIGERIAN_BANKS.find(b => b.code === prev.bankCode)?.name || prev.bankName,
-          }))
-          toast.success("Account verified!")
-          setIsVerifyingBank(false)
-        },
-        onError: () => {
-          toast.error("Failed to verify account")
-          setIsVerifyingBank(false)
-        },
-      }
-    )
+    if (cleaned.length === 10 && bankForm.bankCode) {
+      setIsVerifyingBank(true)
+      verifyBankMutation.mutate(
+        { bankCode: bankForm.bankCode, accountNumber: cleaned },
+        {
+          onSuccess: (data) => {
+            setBankForm(prev => ({
+              ...prev,
+              accountName: data.accountName,
+              bankName: (banksData || []).find(b => b.code === prev.bankCode)?.name || prev.bankName,
+            }))
+            toast.success("Account verified!")
+            setIsVerifyingBank(false)
+          },
+          onError: () => {
+            toast.error("Failed to verify account")
+            setIsVerifyingBank(false)
+          },
+        }
+      )
+    }
   }
 
   const handleSaveBank = () => {
@@ -255,19 +257,19 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Bank Account Card */}
-          <div className="p-6 bg-card border border-border rounded-2xl">
+          <div className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-2xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-500" />
+                <CreditCard className="w-6 h-6 text-blue-500" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-bold text-foreground">Bank Account</h2>
-                <p className="text-sm text-muted-foreground">For receiving payouts</p>
+                <h2 className="text-lg font-bold text-foreground">Payout Account</h2>
+                <p className="text-sm text-muted-foreground">Admin bank details for disbursements</p>
               </div>
               {bankAccount?.isVerified && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-green-500/10 rounded-full">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-xs text-green-500 font-medium">Verified</span>
+                <div className="flex items-center gap-1 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                  <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Verified</span>
                 </div>
               )}
             </div>
@@ -279,73 +281,82 @@ export default function AdminSettingsPage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Bank</label>
-                  <select
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">Select Bank</label>
+                  <BankSelector
+                    banks={banksData}
+                    isLoading={banksLoading}
                     value={bankForm.bankCode}
-                    onChange={(e) => {
-                      const bank = NIGERIAN_BANKS.find(b => b.code === e.target.value)
-                      setBankForm({ 
-                        ...bankForm, 
-                        bankCode: e.target.value,
-                        bankName: bank?.name || "",
+                    onChange={(code, name) => {
+                      setBankForm(prev => ({ 
+                        ...prev, 
+                        bankCode: code, 
+                        bankName: name,
                         accountName: "" 
-                      })
+                      }))
+                      if (bankForm.accountNumber.length === 10 && code) {
+                        handleAccountNumberChange(bankForm.accountNumber)
+                      }
                     }}
-                    className="w-full bg-muted border border-border focus:border-primary text-foreground px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    <option value="">Select Bank</option>
-                    {NIGERIAN_BANKS.map(bank => (
-                      <option key={bank.code} value={bank.code}>{bank.name}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">Account Number</label>
-                  <div className="flex gap-2">
+                  <div className="relative">
                     <input
                       type="text"
                       value={bankForm.accountNumber}
-                      onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 10), accountName: "" })}
+                      onChange={(e) => handleAccountNumberChange(e.target.value)}
                       placeholder="0123456789"
                       maxLength={10}
-                      className="flex-1 bg-muted border border-border focus:border-primary text-foreground px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono"
+                      className="w-full bg-muted border border-border focus:border-primary text-foreground px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono text-lg tracking-widest"
                     />
-                    <motion.button
-                      onClick={handleVerifyBank}
-                      disabled={isVerifyingBank || bankForm.accountNumber.length !== 10 || !bankForm.bankCode}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-3 rounded-xl font-medium bg-secondary text-secondary-foreground hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isVerifyingBank ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify"}
-                    </motion.button>
+                    {isVerifyingBank && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {bankForm.accountName && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-500">Account Verified</span>
-                    </div>
-                    <p className="text-foreground font-semibold">{bankForm.accountName}</p>
-                    <p className="text-sm text-muted-foreground">{bankForm.bankName}</p>
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {bankForm.accountName && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl mt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          <span className="text-xs font-bold text-green-500 uppercase">Account Found</span>
+                        </div>
+                        <p className="text-foreground font-bold text-lg">{bankForm.accountName}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-tight">{bankForm.bankName}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <motion.button
                   onClick={handleSaveBank}
                   disabled={updateBankMutation.isPending || !bankForm.accountName}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-xl font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all disabled:opacity-50"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className={`w-full mt-4 py-4 rounded-xl font-bold text-primary-foreground transition-all shadow-lg
+                    ${!bankForm.accountName 
+                      ? "bg-muted text-muted-foreground cursor-not-allowed grayscale" 
+                      : "bg-primary hover:bg-primary/90 shadow-primary/20"}`}
                 >
-                  {updateBankMutation.isPending ? "Saving..." : "Save Bank Account"}
+                  {updateBankMutation.isPending ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </div>
+                  ) : (
+                    "Update Payout Account"
+                  )}
                 </motion.button>
               </div>
             )}

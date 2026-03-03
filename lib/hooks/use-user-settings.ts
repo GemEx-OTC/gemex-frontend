@@ -21,6 +21,7 @@ export const userSettingsKeys = {
   dealerRates: () => [...userSettingsKeys.all, 'dealer-rates'] as const,
   exchangeRates: () => [...userSettingsKeys.all, 'exchange-rates'] as const,
   autoPayout: () => [...userSettingsKeys.all, 'auto-payout'] as const,
+  banks: () => [...userSettingsKeys.all, 'banks'] as const,
 };
 
 // ============ PROFILE HOOKS ============
@@ -110,6 +111,14 @@ export const useUpdateBankAccount = () => {
 export const useVerifyBankAccount = () => {
   return useMutation({
     mutationFn: (data: VerifyBankAccountInput) => userSettingsApi.verifyBankAccount(data),
+  });
+};
+
+export const useBanks = () => {
+  return useQuery({
+    queryKey: userSettingsKeys.banks(),
+    queryFn: userSettingsApi.getBanks,
+    staleTime: 24 * 60 * 60 * 1000,
   });
 };
 

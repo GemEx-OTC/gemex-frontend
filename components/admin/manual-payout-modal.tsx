@@ -24,6 +24,7 @@ import {
   type Bank,
   type AdminTrade 
 } from "@/lib/api/admin"
+import { BankSelector } from "@/components/bank-selector"
 
 interface ManualPayoutModalProps {
   trade: AdminTrade & {
@@ -68,11 +69,20 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
   useEffect(() => {
     if (isOpen) {
       loadBanks()
-      // Pre-fill user bank details if available
-      if (trade.payoutAccountNumber && useUserBank) {
-        setAccountNumber(trade.payoutAccountNumber)
+      // Pre-fill user bank details if available and valid
+      const hasValidBank = trade.payoutAccountNumber && 
+                          trade.payoutAccountNumber !== 'PENDING' && 
+                          trade.payoutBankCode !== 'PENDING';
+                          
+      if (hasValidBank && useUserBank) {
+        setAccountNumber(trade.payoutAccountNumber!)
         setAccountName(trade.payoutAccountName || "")
         setSelectedBankCode(trade.payoutBankCode || "")
+        setVerified(true)
+      } else if (!hasValidBank) {
+        // Force manual entry if no valid bank details
+        setUseUserBank(false)
+        setVerified(false)
       }
     }
   }, [isOpen])
@@ -216,13 +226,20 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
       }
       setStep("bank")
     } else if (step === "bank") {
-      if (useUserBank && trade.payoutAccountNumber) {
+      const hasValidBank = trade.payoutAccountNumber && 
+                          trade.payoutAccountNumber !== 'PENDING' && 
+                          trade.payoutBankCode !== 'PENDING';
+
+      if (useUserBank && hasValidBank) {
         // User's bank is pre-verified
-        setAccountNumber(trade.payoutAccountNumber)
+        setAccountNumber(trade.payoutAccountNumber!)
         setAccountName(trade.payoutAccountName || "")
         setSelectedBankCode(trade.payoutBankCode || "")
         setVerified(true)
         setStep("confirm")
+      } else if (useUserBank && !hasValidBank) {
+        toast.error("No valid bank account found. Please enter details manually.")
+        setUseUserBank(false)
       } else {
         // Custom bank - check if verified
         if (!verified) {
@@ -361,7 +378,6 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
                   </motion.div>
                 )}
 
-                {/* Step 2: Bank Selection */}
                 {step === "bank" && (
                   <motion.div
                     key="bank"
@@ -370,166 +386,215 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="flex items-center gap-4 p-4 bg-[#2D2D3D]/50 rounded-lg">
-                      <div className="flex-1">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            checked={useUserBank}
-                            onChange={() => setUseUserBank(true)}
-                            className="w-4 h-4 text-[#C8F55A] focus:ring-[#C8F55A]"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-[#F0F0F0]">Use User's Bank Account</p>
-                            <p className="text-xs text-[#808090]">Send to registered account</p>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* User's Registered Bank Card */}
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => {
+                          const hasValidBank = trade.payoutAccountNumber && 
+                                              trade.payoutAccountNumber !== 'PENDING' && 
+                                              trade.payoutBankCode !== 'PENDING';
+                          if (hasValidBank) {
+                            setUseUserBank(true)
+                            setAccountNumber(trade.payoutAccountNumber!)
+                            setAccountName(trade.payoutAccountName || "")
+                            setSelectedBankCode(trade.payoutBankCode || "")
+                            setVerified(true)
+                          } else {
+                            toast.error("User's bank account is not fully configured.")
+                          }
+                        }}
+                        className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group
+                          ${useUserBank 
+                            ? "bg-[#641AE4]/10 border-[#641AE4] shadow-[0_0_20px_rgba(100,26,228,0.2)]" 
+                            : "bg-[#2D2D3D]/40 border-[#3D3D4D] hover:border-[#4D4D5D]"}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl transition-colors
+                            ${useUserBank ? "bg-[#641AE4] text-white" : "bg-[#3D3D4D] text-[#808090] group-hover:text-[#F0F0F0]"}`}>
+                            <Building2 className="w-6 h-6" />
                           </div>
-                        </label>
-                      </div>
-                      {trade.payoutAccountNumber && (
-                        <div className="text-right">
-                          <p className="text-xs text-[#808090]">{trade.payoutAccountNumber}</p>
-                          <p className="text-xs text-[#C8F55A]">{trade.payoutAccountName}</p>
+                          <div>
+                            <p className={`font-bold transition-colors ${useUserBank ? "text-[#F0F0F0]" : "text-[#808090]"}`}>
+                              Use User's Bank Account
+                            </p>
+                            <p className="text-sm text-[#808090]">Send to registered account</p>
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        
+                        <div className="flex flex-col items-end gap-1">
+                          {trade.payoutAccountNumber && trade.payoutAccountNumber !== 'PENDING' ? (
+                            <>
+                              <p className={`text-sm font-mono font-medium ${useUserBank ? "text-[#C8F55A]" : "text-[#808090]"}`}>
+                                {trade.payoutAccountNumber}
+                              </p>
+                              <p className={`text-xs font-medium uppercase tracking-wider ${useUserBank ? "text-[#B0B0B8]" : "text-[#606070]"}`}>
+                                {trade.payoutAccountName || "N/A"}
+                              </p>
+                            </>
+                          ) : (
+                            <span className="text-xs px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-md font-medium">
+                              NOT CONFIGURED
+                            </span>
+                          )}
+                        </div>
 
-                    <div className="flex items-center gap-4 p-4 bg-[#2D2D3D]/50 rounded-lg">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={!useUserBank}
-                          onChange={() => {
-                            setUseUserBank(false)
+                        {useUserBank && (
+                          <motion.div 
+                            layoutId="active-indicator"
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-[#C8F55A] rounded-full flex items-center justify-center border-4 border-[#1E1E2B] z-10"
+                          >
+                            <CheckCircle className="w-3 h-3 text-[#1E1E2B]" />
+                          </motion.div>
+                        )}
+                      </motion.div>
+
+                      {/* Custom Bank Card */}
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => {
+                          setUseUserBank(false)
+                          if (useUserBank) {
                             setAccountNumber("")
                             setAccountName("")
                             setSelectedBankCode("")
                             setVerified(false)
-                          }}
-                          className="w-4 h-4 text-[#C8F55A] focus:ring-[#C8F55A]"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-[#F0F0F0]">Use Different Account</p>
-                          <p className="text-xs text-[#808090]">Enter custom bank details</p>
+                          }
+                        }}
+                        className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group
+                          ${!useUserBank 
+                            ? "bg-[#641AE4]/10 border-[#641AE4] shadow-[0_0_20px_rgba(100,26,228,0.2)]" 
+                            : "bg-[#2D2D3D]/40 border-[#3D3D4D] hover:border-[#4D4D5D]"}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl transition-colors
+                            ${!useUserBank ? "bg-[#641AE4] text-white" : "bg-[#3D3D4D] text-[#808090] group-hover:text-[#F0F0F0]"}`}>
+                            <CreditCard className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className={`font-bold transition-colors ${!useUserBank ? "text-[#F0F0F0]" : "text-[#808090]"}`}>
+                              Use Different Account
+                            </p>
+                            <p className="text-sm text-[#808090]">Enter custom payout details</p>
+                          </div>
                         </div>
-                      </label>
+
+                        {!useUserBank && (
+                          <motion.div 
+                            layoutId="active-indicator"
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-[#C8F55A] rounded-full flex items-center justify-center border-4 border-[#1E1E2B] z-10"
+                          >
+                            <CheckCircle className="w-3 h-3 text-[#1E1E2B]" />
+                          </motion.div>
+                        )}
+                      </motion.div>
                     </div>
 
                     {!useUserBank && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="space-y-4 pt-4 border-t border-[#2D2D3D]"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-5 pt-6 border-t border-[#2D2D3D]/50"
                       >
-                        <div>
-                          <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
-                            Select Bank <span className="text-red-400">*</span>
-                          </label>
-                          <select
-                            value={selectedBankCode}
-                            onChange={(e) => {
-                              setSelectedBankCode(e.target.value)
-                              setVerified(false)
-                              setAccountName("")
-                            }}
-                            className="w-full bg-[#2D2D3D] border border-[#3D3D4D] focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-lg focus:outline-none transition-all"
-                          >
-                            <option value="">Choose a bank</option>
-                            {banks.map((bank) => (
-                              <option key={bank.code} value={bank.code}>
-                                {bank.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-[#F0F0F0] mb-2">
-                            Account Number <span className="text-red-400">*</span>
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={accountNumber}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, "").slice(0, 10)
-                                setAccountNumber(value)
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div>
+                            <label className="block text-sm font-semibold text-[#B0B0B8] mb-2 uppercase tracking-wider">
+                              Select Bank
+                            </label>
+                            <BankSelector
+                              banks={banks}
+                              value={selectedBankCode}
+                              onChange={(code, name) => {
+                                setSelectedBankCode(code)
                                 setVerified(false)
                                 setAccountName("")
-                                setVerificationError("")
                               }}
-                              className="w-full bg-[#2D2D3D] border border-[#3D3D4D] focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 pr-12 rounded-lg focus:outline-none transition-all font-mono"
-                              placeholder="0000000000"
-                              maxLength={10}
+                              isLoading={loadingBanks}
                             />
-                            {verifying && (
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                <Loader2 className="w-5 h-5 text-[#641AE4] animate-spin" />
-                              </div>
-                            )}
-                            {verified && accountName && (
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                <CheckCircle className="w-5 h-5 text-green-400" />
-                              </div>
-                            )}
-                            {verificationError && !verifying && (
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                <AlertCircle className="w-5 h-5 text-red-400" />
-                              </div>
-                            )}
                           </div>
-                          <p className="text-xs text-[#808090] mt-1">
-                            {accountNumber.length < 10 && "Enter 10-digit account number"}
-                            {accountNumber.length === 10 && !selectedBankCode && "Select a bank first"}
-                          </p>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-[#B0B0B8] mb-2 uppercase tracking-wider">
+                              Account Number
+                            </label>
+                            <div className="relative group">
+                              <input
+                                type="text"
+                                value={accountNumber}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, "").slice(0, 10)
+                                  setAccountNumber(value)
+                                  setVerified(false)
+                                  setAccountName("")
+                                  setVerificationError("")
+                                }}
+                                className="w-full bg-[#2D2D3D] border-2 border-[#3D3D4D] group-hover:border-[#4D4D5D] focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl focus:outline-none transition-all font-mono text-lg tracking-widest placeholder:tracking-normal placeholder:text-[#5D5D6D]"
+                                placeholder="0000000000"
+                                maxLength={10}
+                              />
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                {verifying && <Loader2 className="w-5 h-5 text-[#641AE4] animate-spin" />}
+                                {verified && accountName && <CheckCircle className="w-5 h-5 text-[#C8F55A]" />}
+                                {verificationError && !verifying && <AlertCircle className="w-5 h-5 text-red-400" />}
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Account Name Display */}
-                        {accountName && verified && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <CheckCircle className="w-5 h-5 text-green-400" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-green-300">Account Verified</p>
-                                <p className="text-lg font-bold text-[#F0F0F0] mt-1">{accountName}</p>
+                        {/* Account Name Display / Status */}
+                        <AnimatePresence mode="wait">
+                          {accountName && verified ? (
+                            <motion.div
+                              key="verified"
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="p-5 bg-[#C8F55A]/5 border border-[#C8F55A]/20 rounded-2xl flex items-center gap-4"
+                            >
+                              <div className="w-12 h-12 rounded-xl bg-[#C8F55A] flex items-center justify-center flex-shrink-0">
+                                <User className="w-6 h-6 text-[#1E1E2B]" />
                               </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Verification Error */}
-                        {verificationError && !verifying && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg"
-                          >
-                            <div className="flex items-start gap-3">
-                              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-red-300">Verification Failed</p>
-                                <p className="text-sm text-red-200 mt-1">{verificationError}</p>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-[#C8F55A] uppercase tracking-widest mb-1">Receiver Name</p>
+                                <p className="text-xl font-bold text-[#F0F0F0] truncate">{accountName}</p>
                               </div>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Verifying Status */}
-                        {verifying && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                              <p className="text-sm text-blue-300">Verifying account details...</p>
-                            </div>
-                          </motion.div>
-                        )}
+                            </motion.div>
+                          ) : verificationError && !verifying ? (
+                            <motion.div
+                              key="error"
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="p-5 bg-red-500/5 border border-red-500/20 rounded-2xl flex items-center gap-4"
+                            >
+                              <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="w-6 h-6 text-red-400" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-red-400 uppercase tracking-widest mb-1">Validation Error</p>
+                                <p className="text-sm text-red-200/80">{verificationError}</p>
+                              </div>
+                            </motion.div>
+                          ) : verifying ? (
+                            <motion.div
+                              key="verifying"
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="p-5 bg-[#641AE4]/5 border border-[#641AE4]/20 rounded-2xl flex items-center gap-4"
+                            >
+                              <div className="w-12 h-12 rounded-xl bg-[#641AE4]/20 flex items-center justify-center flex-shrink-0">
+                                <Loader2 className="w-6 h-6 text-[#641AE4] animate-spin" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-[#641AE4] uppercase tracking-widest mb-1">Verifying...</p>
+                                <p className="text-sm text-[#B0B0B8]">Looking up account details via Nomba Bank</p>
+                              </div>
+                            </motion.div>
+                          ) : null}
+                        </AnimatePresence>
                       </motion.div>
                     )}
                   </motion.div>

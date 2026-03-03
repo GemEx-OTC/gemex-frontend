@@ -2,23 +2,23 @@
 
 import { useState, useRef, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, ChevronDown, Building2, Check, X } from "lucide-react"
-import banksData from "@/lib/data/banks.json"
+import { Search, ChevronDown, Building2, Check, X, Loader2 } from "lucide-react"
 
-interface Bank {
+export interface Bank {
   name: string
   code: string
-  nipBankCode: string | null
 }
 
 interface BankSelectorProps {
   value: string
   onChange: (bankCode: string, bankName: string) => void
+  banks?: Bank[]
+  isLoading?: boolean
   placeholder?: string
   disabled?: boolean
 }
 
-export function BankSelector({ value, onChange, placeholder = "Search for your bank...", disabled = false }: BankSelectorProps) {
+export function BankSelector({ value, onChange, banks = [], isLoading = false, placeholder = "Search for your bank...", disabled = false }: BankSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -26,31 +26,31 @@ export function BankSelector({ value, onChange, placeholder = "Search for your b
   const listRef = useRef<HTMLDivElement>(null)
 
   // Get unique banks sorted alphabetically
-  const banks = useMemo(() => {
+  const uniqueBanksOptions = useMemo(() => {
     const uniqueBanks = new Map<string, Bank>()
-    banksData.forEach((bank: Bank) => {
+    banks.forEach((bank: Bank) => {
       if (!uniqueBanks.has(bank.code)) {
         uniqueBanks.set(bank.code, bank)
       }
     })
     return Array.from(uniqueBanks.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [])
+  }, [banks])
 
   // Filter banks based on search
   const filteredBanks = useMemo(() => {
-    if (!searchQuery.trim()) return banks
+    if (!searchQuery.trim()) return uniqueBanksOptions
     const query = searchQuery.toLowerCase()
-    return banks.filter(
+    return uniqueBanksOptions.filter(
       (bank) =>
         bank.name.toLowerCase().includes(query) ||
         bank.code.includes(query)
     )
-  }, [banks, searchQuery])
+  }, [uniqueBanksOptions, searchQuery])
 
   // Get selected bank
   const selectedBank = useMemo(() => {
-    return banks.find((b) => b.code === value)
-  }, [banks, value])
+    return uniqueBanksOptions.find((b) => b.code === value)
+  }, [uniqueBanksOptions, value])
 
 
   // Close dropdown when clicking outside
@@ -100,7 +100,7 @@ export function BankSelector({ value, onChange, placeholder = "Search for your b
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Building2 className={`w-5 h-5 flex-shrink-0 ${selectedBank ? "text-[#C8F55A]" : "text-[#B0B0B8]"}`} />
           <span className={`truncate ${selectedBank ? "text-[#F0F0F0]" : "text-[#B0B0B8]"}`}>
-            {selectedBank ? selectedBank.name : "Choose your bank"}
+            {isLoading ? "Loading banks..." : selectedBank ? selectedBank.name : "Choose your bank"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -148,9 +148,13 @@ export function BankSelector({ value, onChange, placeholder = "Search for your b
             <div ref={listRef} className="max-h-64 overflow-y-auto overscroll-contain">
               {filteredBanks.length === 0 ? (
                 <div className="px-4 py-8 text-center">
-                  <Building2 className="w-10 h-10 text-[#B0B0B8]/50 mx-auto mb-2" />
-                  <p className="text-sm text-[#B0B0B8]">No banks found</p>
-                  <p className="text-xs text-[#B0B0B8]/70 mt-1">Try a different search term</p>
+                  {isLoading ? (
+                    <Loader2 className="w-10 h-10 text-[#C8F55A] animate-spin mx-auto mb-2" />
+                  ) : (
+                    <Building2 className="w-10 h-10 text-[#B0B0B8]/50 mx-auto mb-2" />
+                  )}
+                  <p className="text-sm text-[#B0B0B8]">{isLoading ? "Loading banks..." : "No banks found"}</p>
+                  {!isLoading && <p className="text-xs text-[#B0B0B8]/70 mt-1">Try a different search term</p>}
                 </div>
               ) : (
                 <div className="py-1">
@@ -194,7 +198,7 @@ export function BankSelector({ value, onChange, placeholder = "Search for your b
             {/* Footer */}
             <div className="px-4 py-2 border-t border-[#2D2D3D] bg-[#1E1E2B]/80">
               <p className="text-xs text-[#B0B0B8]">
-                {filteredBanks.length} of {banks.length} banks
+                {filteredBanks.length} of {uniqueBanksOptions.length} banks
               </p>
             </div>
           </motion.div>

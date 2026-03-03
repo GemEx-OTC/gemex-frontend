@@ -417,6 +417,9 @@ export interface AdminTrade {
   status: string;
   cryptoTxId?: string;
   fiatTxRef?: string;
+  payoutBankCode?: string;
+  payoutAccountNumber?: string;
+  payoutAccountName?: string;
   createdAt: string;
   updatedAt: string;
 }

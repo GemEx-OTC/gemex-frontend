@@ -27,6 +27,11 @@ export interface BankAccount {
   isVerified: boolean;
 }
 
+export interface Bank {
+  code: string;
+  name: string;
+}
+
 export interface NotificationPreferences {
   emailNotifications?: boolean;
   smsNotifications?: boolean;
@@ -164,6 +169,13 @@ export const getDealerRates = async (): Promise<DealerRates> => {
 
 export const updateDealerRates = async (data: UpdateDealerRatesInput): Promise<DealerRates> => {
   const response = await apiClient.put<ApiResponse<DealerRates>>('/user-settings/dealer/rates', data);
+  return response.data.data;
+};
+
+// ============ BANK LISTING APIs ============
+
+export const getBanks = async (): Promise<Bank[]> => {
+  const response = await apiClient.get<ApiResponse<Bank[]>>('/banks');
   return response.data.data;
 };
 

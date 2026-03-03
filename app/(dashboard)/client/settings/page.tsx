@@ -20,6 +20,7 @@ import {
   useToggleTwoFactor,
   useAutoPayoutStatus,
   useToggleAutoPayout,
+  useBanks,
 } from "@/lib/hooks/use-user-settings"
 
 type TabType = "account" | "bank" | "notifications" | "security"
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   const { data: profile, isLoading: profileLoading } = useProfile()
   const { data: notificationPrefs } = useNotificationPreferences()
   const { data: bankAccountData } = useBankAccount()
+  const { data: banksData, isLoading: banksLoading } = useBanks()
 
   const updateProfileMutation = useUpdateProfile()
   const updateNotificationsMutation = useUpdateNotificationPreferences()
@@ -207,6 +209,8 @@ export default function SettingsPage() {
                 <div className="space-y-5 mt-6">
                   <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Select Bank</label>
                     <BankSelector
+                      banks={banksData}
+                      isLoading={banksLoading}
                       value={bankDetails.bankCode}
                       onChange={(code, name) => {
                         setBankDetails((p) => ({ ...p, bankCode: code, bankName: name, accountName: "" }))

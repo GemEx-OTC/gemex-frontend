@@ -303,7 +303,7 @@ export default function LiquidityPage() {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {disbursement.destinationBankName} • ****{disbursement.destinationAccountNumber.slice(-4)}
+                          {disbursement.destinationBankName} • {disbursement.destinationAccountNumber}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {formatDistanceToNow(new Date(disbursement.createdAt), { addSuffix: true })}

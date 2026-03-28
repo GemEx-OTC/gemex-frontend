@@ -9,6 +9,11 @@ export interface DashboardUser {
   kycStatus: 'Pending' | 'Submitted' | 'Verified' | 'Rejected';
   bankVerified: boolean;
   emailVerified: boolean;
+  phoneVerified: boolean;
+  phoneNumber?: string;
+  ninVerified: boolean;
+  cacVerified: boolean;
+  tier: number;
 }
 
 export interface DashboardMetrics {

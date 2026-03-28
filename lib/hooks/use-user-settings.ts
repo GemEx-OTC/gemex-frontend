@@ -187,6 +187,42 @@ export const useVerifyOtp = () => {
   });
 };
 
+export const useSendPhoneOtp = () => {
+  return useMutation({
+    mutationFn: (phoneNumber: string) => userSettingsApi.sendPhoneOtp(phoneNumber),
+  });
+};
+
+export const useVerifyPhoneOtp = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { phoneNumber: string; otp: string }) => userSettingsApi.verifyPhoneOtp(data.phoneNumber, data.otp),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+export const useVerifyNin = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nin: string) => userSettingsApi.verifyNin(nin),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
+export const useVerifyCac = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rcNumber: string) => userSettingsApi.verifyCac(rcNumber),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+    },
+  });
+};
+
 // ============ PASSWORD VERIFICATION HOOK ============
 
 export const useVerifyPassword = () => {

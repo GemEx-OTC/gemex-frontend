@@ -8,8 +8,12 @@ export interface UserProfile {
   fullName: string;
   phoneNumber?: string;
   role: 'client' | 'dealer' | 'admin';
+  tier: number;
   kycStatus: string;
   emailVerified: boolean;
+  phoneVerified: boolean;
+  ninVerified: boolean;
+  cacVerified: boolean;
   isActive: boolean;
   bankAccount: BankAccount | null;
   notificationPreferences: NotificationPreferences;
@@ -198,7 +202,7 @@ export const updateGlobalExchangeRates = async (data: UpdateExchangeRatesInput):
 
 // ============ OTP APIs ============
 
-export type OtpActionType = 'password' | 'bank_account' | 'phone_number' | 'quote_rates' | 'exchange_rates';
+export type OtpActionType = 'password' | 'bank_account' | 'phone_number' | 'quote_rates' | 'exchange_rates' | 'phone_verification';
 
 export interface SendOtpInput {
   actionType: OtpActionType;
@@ -240,5 +244,29 @@ export const getAutoPayoutStatus = async (): Promise<{ autoPayoutEnabled: boolea
 
 export const toggleAutoPayout = async (enabled: boolean): Promise<{ autoPayoutEnabled: boolean }> => {
   const response = await apiClient.post<ApiResponse<{ autoPayoutEnabled: boolean }>>('/user-settings/auto-payout', { enabled });
+  return response.data.data;
+};
+
+// ============ PHONE VERIFICATION APIs ============
+
+export const sendPhoneOtp = async (phoneNumber: string): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/phone/send-otp', { phoneNumber });
+  return response.data.data;
+};
+
+export const verifyPhoneOtp = async (phoneNumber: string, otp: string): Promise<{ message: string; phoneVerified: boolean }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; phoneVerified: boolean }>>('/auth/phone/verify-otp', { phoneNumber, otp });
+  return response.data.data;
+};
+
+// ============ TIER VERIFICATION APIs ============
+
+export const verifyNin = async (nin: string): Promise<{ message: string; tier: number }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; tier: number }>>('/kyc/verify/nin', { nin });
+  return response.data.data;
+};
+
+export const verifyCac = async (rcNumber: string): Promise<{ message: string; tier: number }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; tier: number }>>('/kyc/verify/cac', { rcNumber });
   return response.data.data;
 };

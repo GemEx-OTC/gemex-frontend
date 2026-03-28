@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap } from "lucide-react"
+import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap, X } from "lucide-react"
 import { BankSelector } from "@/components/bank-selector"
 import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
-import { OtpVerificationModal } from "@/components/settings/otp-verification-modal"
+import { OtpVerificationModal } from "@/components/otp-verification-modal"
 import {
   useProfile,
   useUpdateProfile,
@@ -21,6 +21,10 @@ import {
   useAutoPayoutStatus,
   useToggleAutoPayout,
   useBanks,
+  useSendPhoneOtp,
+  useVerifyPhoneOtp,
+  useVerifyNin,
+  useVerifyCac
 } from "@/lib/hooks/use-user-settings"
 
 type TabType = "account" | "bank" | "notifications" | "security"
@@ -28,7 +32,11 @@ type TabType = "account" | "bank" | "notifications" | "security"
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("account")
   const [showOtpModal, setShowOtpModal] = useState(false)
-  const [pendingAction, setPendingAction] = useState<"phone_number" | "bank_account" | null>(null)
+  const [pendingAction, setPendingAction] = useState<"phone_number" | "bank_account" | "phone_verification" | null>(null)
+  const [showNinModal, setShowNinModal] = useState(false)
+  const [showCacModal, setShowCacModal] = useState(false)
+  const [ninValue, setNinValue] = useState("")
+  const [cacValue, setCacValue] = useState("")
   const [originalPhoneNumber, setOriginalPhoneNumber] = useState("")
   const logoutMutation = useLogout()
 
@@ -44,6 +52,11 @@ export default function SettingsPage() {
   const toggleTwoFactorMutation = useToggleTwoFactor()
   const { data: autoPayoutData } = useAutoPayoutStatus()
   const toggleAutoPayoutMutation = useToggleAutoPayout()
+  
+  const sendPhoneOtpMutation = useSendPhoneOtp()
+  const verifyPhoneOtpMutation = useVerifyPhoneOtp()
+  const verifyNinMutation = useVerifyNin()
+  const verifyCacMutation = useVerifyCac()
 
   const [profileForm, setProfileForm] = useState({ fullName: "", phoneNumber: "" })
   const [bankDetails, setBankDetails] = useState({ bankCode: "", bankName: "", accountNumber: "", accountName: "" })
@@ -67,6 +80,10 @@ export default function SettingsPage() {
 
   const handleLogout = () => logoutMutation.mutate()
   const isKycVerified = profile?.kycStatus === "Verified"
+  const userTier = profile?.tier || 1
+  const phoneVerified = profile?.phoneVerified || false
+  const ninVerified = profile?.ninVerified || false
+  const cacVerified = profile?.cacVerified || false
 
   // Check if phone number changed
   const phoneNumberChanged = profileForm.phoneNumber !== originalPhoneNumber
@@ -105,13 +122,64 @@ export default function SettingsPage() {
 
   const handleSaveBankAccount = () => {
     if (!isVerified) return
-    // If 2FA enabled, require OTP
+
+    if (!phoneVerified) {
+      setPendingAction("phone_verification")
+      setShowOtpModal(true)
+      return
+    }
+
     if (twoFactorEnabled) {
       setPendingAction("bank_account")
       setShowOtpModal(true)
       return
     }
+
     performBankSave()
+  }
+
+  const handleVerifyPhone = () => {
+    if (!profileForm.phoneNumber) {
+      toast.error("Phone number missing", { description: "Please enter your phone number first." })
+      return
+    }
+    sendPhoneOtpMutation.mutate(profileForm.phoneNumber, {
+      onSuccess: () => {
+        setPendingAction("phone_verification")
+        setShowOtpModal(true)
+      },
+      onError: (err: any) => toast.error("Failed to send OTP", { description: err.message })
+    })
+  }
+
+  const handleVerifyNin = () => {
+    if (ninValue.length !== 11) {
+      toast.error("Invalid NIN", { description: "NIN must be 11 digits." })
+      return
+    }
+    verifyNinMutation.mutate(ninValue, {
+      onSuccess: () => {
+        toast.success("NIN Verified!", { description: "You have been upgraded to Tier 2." })
+        setShowNinModal(false)
+        setNinValue("")
+      },
+      onError: (err: any) => toast.error("Verification failed", { description: err.message })
+    })
+  }
+
+  const handleVerifyCac = () => {
+    if (!cacValue.startsWith("RC")) {
+      toast.error("Invalid RC Number", { description: "RC Number must start with 'RC'." })
+      return
+    }
+    verifyCacMutation.mutate(cacValue, {
+      onSuccess: () => {
+        toast.success("CAC Verified!", { description: "You have been upgraded to Tier 3." })
+        setShowCacModal(false)
+        setCacValue("")
+      },
+      onError: (err: any) => toast.error("Verification failed", { description: err.message })
+    })
   }
 
   const performBankSave = () => {
@@ -132,6 +200,15 @@ export default function SettingsPage() {
       performBankSave()
     }
     setPendingAction(null)
+  }
+
+  const handlePhoneOtpVerified = (otp: string) => {
+    // This is handled inside the modal now via its own verify mutation
+    // So we just need to refresh profile or close
+    setActiveTab("bank") // Switch back if we were verifying for bank
+    if (pendingAction === "phone_verification") {
+      // The modal already showed success toast
+    }
   }
 
   const handleToggleNotification = (key: string, value: boolean) => {
@@ -181,7 +258,18 @@ export default function SettingsPage() {
                     <div><label className="block text-sm font-medium text-[#B0B0B8] mb-2">Email Address</label><input type="email" value={profile?.email || ""} disabled className="w-full bg-[#2D2D3D]/50 text-[#B0B0B8] px-4 py-3 rounded cursor-not-allowed" /></div>
                     <div>
                       <label className="block text-sm font-medium text-[#B0B0B8] mb-2">Phone Number</label>
-                      <input type="tel" value={profileForm.phoneNumber} onChange={(e) => setProfileForm({ ...profileForm, phoneNumber: e.target.value })} className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded transition-all focus:outline-none" />
+                      <div className="relative">
+                        <input 
+                          type="tel" 
+                          value={profileForm.phoneNumber} 
+                          onChange={(e) => setProfileForm({ ...profileForm, phoneNumber: e.target.value })} 
+                          disabled={!originalPhoneNumber}
+                          className={`w-full ${!originalPhoneNumber ? "bg-[#2D2D3D]/50 text-[#B0B0B8] cursor-not-allowed" : "bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0]"} px-4 py-3 rounded transition-all focus:outline-none`} 
+                        />
+                        {!originalPhoneNumber && (
+                          <p className="text-[10px] text-[#641AE4] mt-1 italic">Verify phone number via Bank Account setup</p>
+                        )}
+                      </div>
                       {twoFactorEnabled && phoneNumberChanged && (
                         <p className="text-xs text-[#641AE4] mt-2">🔐 OTP verification required to change phone number</p>
                       )}
@@ -189,6 +277,60 @@ export default function SettingsPage() {
                   </div>
                   <motion.button onClick={handleSaveProfile} disabled={updateProfileMutation.isPending} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full mt-6 py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all disabled:opacity-50">{updateProfileMutation.isPending ? "Saving..." : "Save Changes"}</motion.button>
                 </div>
+
+                {/* Tier Status Section */}
+                <div className="p-6 bg-[#1E1E2B]/60 border border-[#2D2D3D] rounded-xl overflow-hidden relative">
+                  <div className="absolute top-0 right-0 p-4">
+                    <div className="px-3 py-1 bg-[#641AE4] text-white text-xs font-bold rounded-full shadow-lg">
+                      TIER {userTier}
+                    </div>
+                  </div>
+                  <h2 className="text-lg font-semibold text-[#F0F0F0] mb-6">Verification Tiers</h2>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {/* Tier 1 */}
+                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 1 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] opacity-60"}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-[#C8F55A]">TIER 1</span>
+                        {phoneVerified ? <CheckCircle className="w-4 h-4 text-[#C8F55A]" /> : <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />}
+                      </div>
+                      <h4 className="font-semibold text-[#F0F0F0] mb-1">Phone Verified</h4>
+                      <p className="text-xs text-[#B0B0B8] mb-3">Limit: ₦100,000 Payout</p>
+                      {!phoneVerified && (
+                        <button onClick={handleVerifyPhone} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Phone</button>
+                      )}
+                    </div>
+
+                    {/* Tier 2 */}
+                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] shadow-inner"}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-[#C8F55A]">TIER 2</span>
+                        {ninVerified ? <CheckCircle className="w-4 h-4 text-[#C8F55A]" /> : <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />}
+                      </div>
+                      <h4 className="font-semibold text-[#F0F0F0] mb-1">NIN Verified</h4>
+                      <p className="text-xs text-[#B0B0B8] mb-3">Limit: Up to $50,000</p>
+                      {!ninVerified && phoneVerified && (
+                        <button onClick={() => setShowNinModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify NIN</button>
+                      )}
+                      {!phoneVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 1 first</p>}
+                    </div>
+
+                    {/* Tier 3 */}
+                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 3 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] shadow-inner"}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-[#C8F55A]">TIER 3</span>
+                        {cacVerified ? <CheckCircle className="w-4 h-4 text-[#C8F55A]" /> : <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />}
+                      </div>
+                      <h4 className="font-semibold text-[#F0F0F0] mb-1">CAC Verified</h4>
+                      <p className="text-xs text-[#B0B0B8] mb-3">Limit: Unrestricted ($50k+)</p>
+                      {!cacVerified && ninVerified && (
+                        <button onClick={() => setShowCacModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify CAC</button>
+                      )}
+                      {!ninVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 2 first</p>}
+                    </div>
+                  </div>
+                </div>
+
                 <div className={`p-6 rounded-xl ${isKycVerified ? "bg-gradient-to-br from-[#C8F55A]/10 to-[#C8F55A]/5 border border-[#C8F55A]/30" : "bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30"}`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isKycVerified ? "bg-[#C8F55A]/20" : "bg-amber-500/20"}`}><CheckCircle className={`w-6 h-6 ${isKycVerified ? "text-[#C8F55A]" : "text-amber-500"}`} /></div>
@@ -313,12 +455,55 @@ export default function SettingsPage() {
       <OtpVerificationModal
         isOpen={showOtpModal}
         onClose={() => { setShowOtpModal(false); setPendingAction(null) }}
-        onVerified={handleOtpVerified}
-        title={pendingAction === "phone_number" ? "Verify Phone Change" : "Verify Bank Account Change"}
-        description="For your security, please verify this action"
+        onVerified={(otp) => {
+          if (pendingAction === "phone_verification") {
+            handlePhoneOtpVerified(otp!)
+          } else {
+            handleOtpVerified()
+          }
+        }}
+        onPhoneSubmit={(phone) => setProfileForm(prev => ({ ...prev, phoneNumber: phone }))}
+        title={pendingAction === "phone_number" ? "Verify Phone Change" : pendingAction === "phone_verification" ? "Verify Phone Number" : "Verify Bank Account Change"}
+        description={pendingAction === "phone_verification" ? "Enter the code sent to your phone" : "For your security, please verify this action"}
         email={profile?.email || ""}
-        actionType={pendingAction || "bank_account"}
+        phoneNumber={profile?.phoneNumber}
+        showPhoneInput={pendingAction === "phone_verification" && !profile?.phoneNumber}
+        actionType={pendingAction === "phone_verification" ? "phone_verification" : (pendingAction || "bank_account") as any}
       />
+
+      {/* NIN Modal */}
+      <AnimatePresence>
+        {showNinModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#1E1E2B] border-2 border-[#641AE4] rounded-2xl p-8 max-w-md w-full relative">
+              <button onClick={() => setShowNinModal(false)} className="absolute top-4 right-4 text-[#B0B0B8] hover:text-[#F0F0F0]"><X className="w-5 h-5" /></button>
+              <h3 className="text-2xl font-bold text-[#F0F0F0] mb-4 text-center">NIN Verification</h3>
+              <p className="text-[#B0B0B8] text-center mb-6">Enter your 11-digit National Identification Number to upgrade to Tier 2.</p>
+              <input type="text" maxLength={11} value={ninValue} onChange={(e) => setNinValue(e.target.value.replace(/\D/g, ""))} placeholder="01234567890" className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl mb-6 text-center text-xl tracking-widest outline-none" />
+              <button onClick={handleVerifyNin} disabled={verifyNinMutation.isPending || ninValue.length !== 11} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] flex items-center justify-center gap-2 disabled:opacity-50">
+                {verifyNinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify NIN"}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CAC Modal */}
+      <AnimatePresence>
+        {showCacModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#1E1E2B] border-2 border-[#641AE4] rounded-2xl p-8 max-w-md w-full relative">
+              <button onClick={() => setShowCacModal(false)} className="absolute top-4 right-4 text-[#B0B0B8] hover:text-[#F0F0F0]"><X className="w-5 h-5" /></button>
+              <h3 className="text-2xl font-bold text-[#F0F0F0] mb-4 text-center">CAC Verification</h3>
+              <p className="text-[#B0B0B8] text-center mb-6">Enter your RC Number to upgrade to Tier 3 and unlock unrestricted payouts.</p>
+              <input type="text" value={cacValue} onChange={(e) => setCacValue(e.target.value)} placeholder="RC1234567" className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl mb-6 text-center text-xl outline-none" />
+              <button onClick={handleVerifyCac} disabled={verifyCacMutation.isPending || !cacValue} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] flex items-center justify-center gap-2 disabled:opacity-50">
+                {verifyCacMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify CAC"}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { TRANSACTION_STATUS, KYC_STATUS } from "@/lib/constants"
 import { KycVerificationModal } from "@/components/kyc-verification-modal"
+import { OtpVerificationModal } from "@/components/otp-verification-modal"
 import { FloatingRateDock } from "@/components/floating-rate-dock"
 import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
@@ -27,8 +28,9 @@ const itemVariants = {
 }
 
 export default function ClientDashboardPage() {
-  const { data: dashboard, isLoading, error } = useClientDashboard()
+  const { data: dashboard, isLoading, error, refetch } = useClientDashboard()
   const [showKycModal, setShowKycModal] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
 
   // Loading state
   if (isLoading) {
@@ -59,6 +61,12 @@ export default function ClientDashboardPage() {
 
   const handleKycComplete = () => {
     setShowKycModal(false)
+    refetch()
+  }
+
+  const handlePhoneVerified = () => {
+    setShowOtpModal(false)
+    refetch()
   }
 
   return (
@@ -74,7 +82,7 @@ export default function ClientDashboardPage() {
 
       {/* Account Status Alerts */}
       <AnimatePresence>
-        {user.kycStatus !== "Verified" && (
+        {!user.cacVerified && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,12 +93,29 @@ export default function ClientDashboardPage() {
               <div className="flex items-start gap-4">
                 <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Complete Your Verification</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    {!user.phoneVerified ? "Verify Phone Number" : !user.ninVerified ? "Verify Identity (NIN)" : "Verify Business (CAC)"}
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Verify your identity to unlock full trading features and higher limits.
+                    {!user.phoneVerified 
+                      ? "Verify your phone number to unlock Tier 1 and start receiving payouts." 
+                      : !user.ninVerified 
+                        ? "Upgrade to Tier 2 by verifying your NIN to increase your limits to $50,000."
+                        : "Unlock unrestricted payouts by verifying your business registration (CAC)."}
                   </p>
-                  <button onClick={() => setShowKycModal(true)} className="gemex-button-primary">
-                    Verify Now
+                  <button 
+                    onClick={() => {
+                      if (!user.phoneVerified) {
+                        setShowOtpModal(true);
+                      } else if (!user.ninVerified) {
+                        setShowKycModal(true);
+                      } else {
+                        window.location.href = "/client/settings?tab=account&action=verify_cac";
+                      }
+                    }} 
+                    className="gemex-button-primary"
+                  >
+                    {!user.phoneVerified ? "Verify Phone" : !user.ninVerified ? "Verify Identity" : "Verify Business"}
                   </button>
                 </div>
               </div>
@@ -313,6 +338,19 @@ export default function ClientDashboardPage() {
 
       {/* KYC Verification Modal */}
       <KycVerificationModal isOpen={showKycModal} onClose={() => setShowKycModal(false)} onComplete={handleKycComplete} />
+
+      {/* Phone Verification Modal */}
+      <OtpVerificationModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        onVerified={handlePhoneVerified}
+        title="Verify Phone Number"
+        description="Verify your phone number to start receiving payouts."
+        email={user.email}
+        phoneNumber={user.phoneNumber}
+        actionType="phone_verification"
+        showPhoneInput={!user.phoneNumber}
+      />
     </motion.div>
   )
 }

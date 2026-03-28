@@ -2,18 +2,21 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, Shield, Loader2, X, RefreshCw } from "lucide-react"
+import { Mail, Phone, Shield, Loader2, X, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
-import { useSendOtp, useVerifyOtp } from "@/lib/hooks/use-user-settings"
+import { useSendOtp, useVerifyOtp, useSendPhoneOtp, useVerifyPhoneOtp } from "@/lib/hooks/use-user-settings"
 
 interface OtpVerificationModalProps {
   isOpen: boolean
   onClose: () => void
-  onVerified: () => void
+  onVerified: (otp?: string) => void
   title: string
   description: string
   email: string
-  actionType: "password" | "bank_account" | "phone_number" | "quote_rates" | "exchange_rates"
+  phoneNumber?: string
+  actionType: "password" | "bank_account" | "phone_number" | "quote_rates" | "exchange_rates" | "phone_verification"
+  showPhoneInput?: boolean
+  onPhoneSubmit?: (phone: string) => void
 }
 
 export function OtpVerificationModal({
@@ -23,16 +26,22 @@ export function OtpVerificationModal({
   title,
   description,
   email,
+  phoneNumber,
   actionType,
+  showPhoneInput = false,
+  onPhoneSubmit,
 }: OtpVerificationModalProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [error, setError] = useState("")
   const [countdown, setCountdown] = useState(0)
   const [otpSent, setOtpSent] = useState(false)
+  const [phoneValue, setPhoneValue] = useState("")
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const sendOtpMutation = useSendOtp()
   const verifyOtpMutation = useVerifyOtp()
+  const sendPhoneOtpMutation = useSendPhoneOtp()
+  const verifyPhoneOtpMutation = useVerifyPhoneOtp()
 
   // Reset state when modal opens
   useEffect(() => {
@@ -41,6 +50,7 @@ export function OtpVerificationModal({
       setError("")
       setOtpSent(false)
       setCountdown(0)
+      setPhoneValue(phoneNumber || "")
     }
   }, [isOpen])
 
@@ -52,7 +62,38 @@ export function OtpVerificationModal({
     }
   }, [countdown])
 
-  const handleSendOtp = () => {
+  const handleSendOtp = (phoneToUse?: string) => {
+    const targetPhone = phoneToUse || phoneValue || phoneNumber
+
+    if (actionType === "phone_verification") {
+      if (!targetPhone) {
+        toast.error("Phone number required")
+        return
+      }
+
+      // Ensure prefix
+      const formattedPhone = targetPhone.startsWith("+") ? targetPhone : `+234${targetPhone.replace(/^0/, "")}`
+
+      sendPhoneOtpMutation.mutate(
+        formattedPhone,
+        {
+          onSuccess: () => {
+            setOtpSent(true)
+            setCountdown(60)
+            toast.success("OTP sent! 📱", {
+              description: `Check your phone at ${maskPhone(formattedPhone)}`,
+            })
+            if (onPhoneSubmit) onPhoneSubmit(formattedPhone)
+            setTimeout(() => inputRefs.current[0]?.focus(), 100)
+          },
+          onError: (err: any) => {
+            toast.error("Failed to send OTP", { description: err.message || "Please try again later." })
+          },
+        }
+      )
+      return
+    }
+
     sendOtpMutation.mutate(
       { actionType },
       {
@@ -110,6 +151,25 @@ export function OtpVerificationModal({
   }
 
   const handleVerifyOtp = (code: string) => {
+    if (actionType === "phone_verification") {
+      const targetPhone = phoneValue || phoneNumber || ""
+      verifyPhoneOtpMutation.mutate(
+        { phoneNumber: targetPhone, otp: code },
+        {
+          onSuccess: () => {
+            toast.success("Phone verified! ✓")
+            onVerified(code)
+          },
+          onError: (err: any) => {
+            setError(err.message || "Invalid or expired code. Please try again.")
+            setOtp(["", "", "", "", "", ""])
+            inputRefs.current[0]?.focus()
+          },
+        }
+      )
+      return
+    }
+
     verifyOtpMutation.mutate(
       { code, actionType },
       {
@@ -117,7 +177,7 @@ export function OtpVerificationModal({
           toast.success("Verified! ✓", {
             description: "You can now proceed with the change.",
           })
-          onVerified()
+          onVerified(code)
         },
         onError: () => {
           setError("Invalid or expired code. Please try again.")
@@ -133,6 +193,13 @@ export function OtpVerificationModal({
     if (local.length <= 2) return email
     return `${local[0]}${"*".repeat(local.length - 2)}${local[local.length - 1]}@${domain}`
   }
+
+  const maskPhone = (phone: string) => {
+    if (phone.length <= 4) return phone
+    return `${phone.slice(0, 3)}${"*".repeat(phone.length - 7)}${phone.slice(-4)}`
+  }
+
+  const isPhone = actionType === "phone_verification"
 
   if (!isOpen) return null
 
@@ -172,43 +239,68 @@ export function OtpVerificationModal({
 
           {!otpSent ? (
             /* Send OTP Step */
-            <div className="space-y-6">
-              <div className="p-4 bg-[#2D2D3D]/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#641AE4]" />
-                  <div>
-                    <p className="text-sm text-[#B0B0B8]">We'll send a code to</p>
-                    <p className="font-medium text-[#F0F0F0]">{maskEmail(email)}</p>
+              <div className="space-y-6">
+                {showPhoneInput && !phoneNumber ? (
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium text-[#B0B0B8] mb-2">Phone Number</label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C8F55A] font-bold border-r border-[#2D2D3D] pr-3 mr-3">
+                        +234
+                      </div>
+                      <input
+                        type="tel"
+                        value={phoneValue.replace(/^\+234/, "")}
+                        onChange={(e) => setPhoneValue(`+234${e.target.value.replace(/\D/g, "").slice(0, 10)}`)}
+                        placeholder="8012345678"
+                        className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] pl-20 pr-4 py-3 rounded transition-all focus:outline-none"
+                      />
+                    </div>
+                    <p className="text-xs text-[#B0B0B8]">We'll send a 6-digit verification code to this number.</p>
                   </div>
-                </div>
-              </div>
-
-              <motion.button
-                onClick={handleSendOtp}
-                disabled={sendOtpMutation.isPending}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {sendOtpMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Sending...
-                  </>
                 ) : (
-                  <>
-                    <Mail className="w-5 h-5" />
-                    Send Verification Code
-                  </>
+                  <div className="p-4 bg-[#2D2D3D]/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {isPhone ? (
+                        <Phone className="w-5 h-5 text-[#641AE4]" />
+                      ) : (
+                        <Mail className="w-5 h-5 text-[#641AE4]" />
+                      )}
+                      <div>
+                        <p className="text-sm text-[#B0B0B8]">We'll send a code to</p>
+                        <p className="font-medium text-[#F0F0F0]">
+                          {isPhone ? maskPhone(phoneNumber || phoneValue) : maskEmail(email)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </motion.button>
-            </div>
+
+                <motion.button
+                  onClick={() => handleSendOtp()}
+                  disabled={sendOtpMutation.isPending || sendPhoneOtpMutation.isPending || (showPhoneInput && !phoneValue)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {sendOtpMutation.isPending || sendPhoneOtpMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      {isPhone ? <Phone className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+                      Send Verification Code
+                    </>
+                  )}
+                </motion.button>
+              </div>
           ) : (
             /* Enter OTP Step */
             <div className="space-y-6">
               <div className="p-4 bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-lg">
                 <p className="text-sm text-[#C8F55A] text-center">
-                  Code sent to {maskEmail(email)}
+                  Code sent to {isPhone ? maskPhone(phoneNumber || "") : maskEmail(email)}
                 </p>
               </div>
 
@@ -254,11 +346,11 @@ export function OtpVerificationModal({
                   </p>
                 ) : (
                   <button
-                    onClick={handleSendOtp}
-                    disabled={sendOtpMutation.isPending}
+                    onClick={() => handleSendOtp()}
+                    disabled={sendOtpMutation.isPending || sendPhoneOtpMutation.isPending}
                     className="text-sm text-[#641AE4] hover:text-[#C8F55A] transition-colors flex items-center gap-1 mx-auto disabled:opacity-50"
                   >
-                    <RefreshCw className={`w-4 h-4 ${sendOtpMutation.isPending ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`w-4 h-4 ${sendOtpMutation.isPending || sendPhoneOtpMutation.isPending ? "animate-spin" : ""}`} />
                     Resend code
                   </button>
                 )}
@@ -267,12 +359,12 @@ export function OtpVerificationModal({
               {/* Verify Button */}
               <motion.button
                 onClick={() => handleVerifyOtp(otp.join(""))}
-                disabled={verifyOtpMutation.isPending || otp.some((d) => !d)}
+                disabled={verifyOtpMutation.isPending || verifyPhoneOtpMutation.isPending || otp.some((d) => !d)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {verifyOtpMutation.isPending ? (
+                {verifyOtpMutation.isPending || verifyPhoneOtpMutation.isPending ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Verifying...

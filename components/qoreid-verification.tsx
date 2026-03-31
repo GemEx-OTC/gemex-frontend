@@ -6,38 +6,8 @@ import { Shield, AlertCircle, Loader2, CheckCircle, X, CreditCard, FileText, Car
 import * as kycApi from "@/lib/api/kyc"
 import type { DocumentType, QoreIdInitiateResponse } from "@/lib/api/kyc"
 
-interface QoreIDConfig {
-  clientId: string
-  flowId?: string
-  productCode: string
-  customerReference: string
-  applicantData: {
-    firstName: string
-    lastName: string
-    email: string
-    phoneNumber?: string
-  }
-  onSuccess: (response: QoreIDSuccessResponse) => void
-  onClose: () => void
-  onError: (error: QoreIDError) => void
-}
+import type { QoreIDSuccessResponse, QoreIDError, QoreIDConfig } from "@/lib/api/types"
 
-interface QoreIDSuccessResponse {
-  status: string
-  verificationId: string
-  data?: {
-    firstName?: string
-    lastName?: string
-    dateOfBirth?: string
-    documentNumber?: string
-    [key: string]: any
-  }
-}
-
-interface QoreIDError {
-  code: string
-  message: string
-}
 
 interface DocumentOption {
   id: DocumentType
@@ -54,13 +24,8 @@ interface QoreIDVerificationProps {
   onError?: (error: QoreIDError) => void
 }
 
-declare global {
-  interface Window {
-    QoreIDSDK?: {
-      initialize: (config: QoreIDConfig) => void
-    }
-  }
-}
+// Removed duplicate declare global as it is now in types.ts
+
 
 const DOCUMENT_OPTIONS: DocumentOption[] = [
   {
@@ -158,7 +123,7 @@ export function QoreIDVerification({
           email: config.applicantData.email,
           phoneNumber: config.applicantData.phoneNumber
         },
-        onSuccess: async (response) => {
+        onSuccess: async (response: QoreIDSuccessResponse) => {
           setLoading(false)
           setVerificationStarted(false)
           
@@ -181,7 +146,7 @@ export function QoreIDVerification({
           setVerificationStarted(false)
           setSelectedDocument(null)
         },
-        onError: async (err) => {
+        onError: async (err: QoreIDError) => {
           setLoading(false)
           setVerificationStarted(false)
           setError(err.message || "Verification failed. Please try again.")

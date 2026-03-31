@@ -8,6 +8,7 @@ import { AlertCircle, Info, ArrowRight, Check, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { createQuote } from "@/lib/api/quotes"
 import { getExchangeRates } from "@/lib/api/settings"
+import { useUserSettingsProfile } from "@/lib/hooks/use-user-settings"
 
 // Asset icons and brand colors
 const ASSET_CONFIG = {
@@ -42,6 +43,9 @@ const NETWORK_CONFIG = {
 } as const
 
 export default function TradeRequestPage() {
+  const { data: profile } = useUserSettingsProfile()
+  const userTier = profile?.tier || 1
+  
   const [step, setStep] = useState<"select" | "amount" | "submitted">("select")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -157,6 +161,20 @@ export default function TradeRequestPage() {
                 <p className="text-sm text-[#B0B0B8]">Choose the cryptocurrency and network for your bulk trade</p>
               </div>
 
+              {userTier < 3 && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-amber-500 mb-1">Tier 3 Verification Required</h3>
+                      <p className="text-xs text-[#B0B0B8]">
+                        Bulk quotes require Business (CAC) Verification. Please <a href="/client/settings" className="text-[#641AE4] underline">upgrade your account</a> in the settings to proceed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Crypto Asset Selection - Compact */}
               <div>
                 <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Cryptocurrency</label>
@@ -261,9 +279,10 @@ export default function TradeRequestPage() {
 
               <motion.button
                 onClick={() => setStep("amount")}
+                disabled={userTier < 3}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
               >
                 Continue
                 <ArrowRight className="w-4 h-4" />

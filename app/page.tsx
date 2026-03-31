@@ -34,7 +34,7 @@ export default function Home() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 100 },
+      transition: { duration: 0.4 },
     },
   }
 
@@ -43,7 +43,7 @@ export default function Home() {
       <div className="min-h-screen bg-[#1E1E2B] flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 border-2 border-[#641AE4] border-t-[#C8F55A] rounded-full"
         />
       </div>

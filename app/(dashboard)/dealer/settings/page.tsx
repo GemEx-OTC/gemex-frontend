@@ -10,8 +10,8 @@ import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
 import { OtpVerificationModal } from "@/components/settings/otp-verification-modal"
 import {
-  useProfile,
-  useUpdateProfile,
+  useUserSettingsProfile,
+  useUpdateUserSettingsProfile,
   useNotificationPreferences,
   useUpdateNotificationPreferences,
   useBankAccount,
@@ -33,13 +33,13 @@ export default function DealerSettingsPage() {
   const [originalPhoneNumber, setOriginalPhoneNumber] = useState("")
   const logoutMutation = useLogout()
 
-  const { data: profile, isLoading: profileLoading } = useProfile()
+  const { data: profile, isLoading: profileLoading } = useUserSettingsProfile()
   const { data: notificationPrefs } = useNotificationPreferences()
   const { data: bankAccountData } = useBankAccount()
   const { data: dealerRatesData, isLoading: ratesLoading } = useDealerRates()
   const { data: banksData, isLoading: banksLoading } = useBanks()
 
-  const updateProfileMutation = useUpdateProfile()
+  const updateProfileMutation = useUpdateUserSettingsProfile()
   const updateNotificationsMutation = useUpdateNotificationPreferences()
   const updateBankMutation = useUpdateBankAccount()
   const verifyBankMutation = useVerifyBankAccount()

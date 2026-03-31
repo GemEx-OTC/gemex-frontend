@@ -202,6 +202,7 @@ export interface UserDetails {
     bankName: string;
     accountNumber: string;
     accountName: string;
+    bankCode: string;
     isVerified: boolean;
   } | null;
   wallets: {

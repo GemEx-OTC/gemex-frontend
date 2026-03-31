@@ -13,8 +13,8 @@ import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
 import { OtpVerificationModal } from "@/components/settings/otp-verification-modal"
 import {
-  useProfile,
-  useUpdateProfile,
+  useUserSettingsProfile,
+  useUpdateUserSettingsProfile,
   useGlobalExchangeRates,
   useUpdateGlobalExchangeRates,
   useToggleTwoFactor,
@@ -31,8 +31,8 @@ export default function AdminSettingsPage() {
   const logoutMutation = useLogout()
   
   // Profile
-  const { data: profile, isLoading: profileLoading } = useProfile()
-  const updateProfileMutation = useUpdateProfile()
+  const { data: profile, isLoading: profileLoading } = useUserSettingsProfile()
+  const updateProfileMutation = useUpdateUserSettingsProfile()
   const [profileForm, setProfileForm] = useState({ fullName: "", phoneNumber: "" })
   
   // Exchange Rates

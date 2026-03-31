@@ -3,14 +3,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as userSettingsApi from '@/lib/api/user-settings';
 import type {
-  UpdateProfileInput,
-  ChangePasswordInput,
   NotificationPreferences,
   UpdateBankAccountInput,
   VerifyBankAccountInput,
   UpdateDealerRatesInput,
   UpdateExchangeRatesInput,
 } from '@/lib/api/user-settings';
+import { UpdateProfileInput, ChangePasswordInput } from '@/lib/api/types';
 
 // Query keys
 export const userSettingsKeys = {
@@ -26,7 +25,7 @@ export const userSettingsKeys = {
 
 // ============ PROFILE HOOKS ============
 
-export const useProfile = () => {
+export const useUserSettingsProfile = () => {
   return useQuery({
     queryKey: userSettingsKeys.profile(),
     queryFn: userSettingsApi.getProfile,
@@ -34,7 +33,7 @@ export const useProfile = () => {
   });
 };
 
-export const useUpdateProfile = () => {
+export const useUpdateUserSettingsProfile = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -45,7 +44,7 @@ export const useUpdateProfile = () => {
   });
 };
 
-export const useChangePassword = () => {
+export const useChangeUserSettingsPassword = () => {
   return useMutation({
     mutationFn: (data: ChangePasswordInput) => userSettingsApi.changePassword(data),
   });
@@ -203,10 +202,10 @@ export const useVerifyPhoneOtp = () => {
   });
 };
 
-export const useVerifyNin = () => {
+export const useVerifyIdentity = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (nin: string) => userSettingsApi.verifyNin(nin),
+    mutationFn: (data: { idType: string; idNumber: string }) => userSettingsApi.verifyIdentity(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
     },

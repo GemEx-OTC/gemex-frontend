@@ -23,13 +23,8 @@ interface DocumentOption {
   description: string
 }
 
-declare global {
-  interface Window {
-    QoreIDSDK?: {
-      initialize: (config: any) => void
-    }
-  }
-}
+// Removed duplicate declare global as it is now in types.ts
+
 
 const DOCUMENT_OPTIONS: DocumentOption[] = [
   { id: "nin", label: "NIN (National ID)", icon: <FileText className="w-6 h-6" />, productCode: "ng_nin", description: "National Identification Number" },

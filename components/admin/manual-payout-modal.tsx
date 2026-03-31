@@ -263,14 +263,15 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
   const selectedBank = Array.isArray(banks) ? banks.find(b => b.code === selectedBankCode) : undefined
 
   const stepConfig = {
-    amount: { title: "Set Amount", icon: DollarSign, progress: 33 },
-    bank: { title: "Select Bank", icon: Building2, progress: 66 },
-    confirm: { title: "Confirm Payout", icon: CheckCircle, progress: 90 },
+    amount: { title: "Set Amount", icon: DollarSign, progress: 20 },
+    bank: { title: "Select Bank", icon: Building2, progress: 40 },
+    verify: { title: "Verifying", icon: Loader2, progress: 60 },
+    confirm: { title: "Confirm Payout", icon: CheckCircle, progress: 80 },
     processing: { title: "Processing", icon: Loader2, progress: 95 },
     success: { title: "Success", icon: CheckCircle, progress: 100 },
   }
 
-  const currentStep = stepConfig[step]
+  const currentStep = stepConfig[step as Step]
 
   return (
     <AnimatePresence>

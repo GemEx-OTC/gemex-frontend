@@ -10,8 +10,8 @@ import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
 import { OtpVerificationModal } from "@/components/otp-verification-modal"
 import {
-  useProfile,
-  useUpdateProfile,
+  useUserSettingsProfile,
+  useUpdateUserSettingsProfile,
   useNotificationPreferences,
   useUpdateNotificationPreferences,
   useBankAccount,
@@ -23,7 +23,7 @@ import {
   useBanks,
   useSendPhoneOtp,
   useVerifyPhoneOtp,
-  useVerifyNin,
+  useVerifyIdentity,
   useVerifyCac
 } from "@/lib/hooks/use-user-settings"
 
@@ -33,19 +33,20 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("account")
   const [showOtpModal, setShowOtpModal] = useState(false)
   const [pendingAction, setPendingAction] = useState<"phone_number" | "bank_account" | "phone_verification" | null>(null)
-  const [showNinModal, setShowNinModal] = useState(false)
+  const [showIdModal, setShowIdModal] = useState(false)
   const [showCacModal, setShowCacModal] = useState(false)
-  const [ninValue, setNinValue] = useState("")
+  const [idType, setIdType] = useState<"nin" | "drivers_license" | "passport">("nin")
+  const [idValue, setIdValue] = useState("")
   const [cacValue, setCacValue] = useState("")
   const [originalPhoneNumber, setOriginalPhoneNumber] = useState("")
   const logoutMutation = useLogout()
 
-  const { data: profile, isLoading: profileLoading } = useProfile()
+  const { data: profile, isLoading: profileLoading } = useUserSettingsProfile()
   const { data: notificationPrefs } = useNotificationPreferences()
   const { data: bankAccountData } = useBankAccount()
   const { data: banksData, isLoading: banksLoading } = useBanks()
 
-  const updateProfileMutation = useUpdateProfile()
+  const updateProfileMutation = useUpdateUserSettingsProfile()
   const updateNotificationsMutation = useUpdateNotificationPreferences()
   const updateBankMutation = useUpdateBankAccount()
   const verifyBankMutation = useVerifyBankAccount()
@@ -55,7 +56,7 @@ export default function SettingsPage() {
   
   const sendPhoneOtpMutation = useSendPhoneOtp()
   const verifyPhoneOtpMutation = useVerifyPhoneOtp()
-  const verifyNinMutation = useVerifyNin()
+  const verifyIdentityMutation = useVerifyIdentity()
   const verifyCacMutation = useVerifyCac()
 
   const [profileForm, setProfileForm] = useState({ fullName: "", phoneNumber: "" })
@@ -152,16 +153,16 @@ export default function SettingsPage() {
     })
   }
 
-  const handleVerifyNin = () => {
-    if (ninValue.length !== 11) {
-      toast.error("Invalid NIN", { description: "NIN must be 11 digits." })
+  const handleVerifyIdentity = () => {
+    if (!idValue) {
+      toast.error("Required field", { description: "Please enter your ID number." })
       return
     }
-    verifyNinMutation.mutate(ninValue, {
+    verifyIdentityMutation.mutate({ idType, idNumber: idValue }, {
       onSuccess: () => {
-        toast.success("NIN Verified!", { description: "You have been upgraded to Tier 2." })
-        setShowNinModal(false)
-        setNinValue("")
+        toast.success("Identity Verified!", { description: "You have been upgraded to Tier 2." })
+        setShowIdModal(false)
+        setIdValue("")
       },
       onError: (err: any) => toast.error("Verification failed", { description: err.message })
     })
@@ -307,10 +308,10 @@ export default function SettingsPage() {
                         <span className="text-xs font-bold text-[#C8F55A]">TIER 2</span>
                         {ninVerified ? <CheckCircle className="w-4 h-4 text-[#C8F55A]" /> : <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />}
                       </div>
-                      <h4 className="font-semibold text-[#F0F0F0] mb-1">NIN Verified</h4>
+                      <h4 className="font-semibold text-[#F0F0F0] mb-1">Identity Verified</h4>
                       <p className="text-xs text-[#B0B0B8] mb-3">Limit: Up to $50,000</p>
                       {!ninVerified && phoneVerified && (
-                        <button onClick={() => setShowNinModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify NIN</button>
+                        <button onClick={() => setShowIdModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Identity</button>
                       )}
                       {!phoneVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 1 first</p>}
                     </div>
@@ -471,17 +472,41 @@ export default function SettingsPage() {
         actionType={pendingAction === "phone_verification" ? "phone_verification" : (pendingAction || "bank_account") as any}
       />
 
-      {/* NIN Modal */}
+      {/* Identity Modal */}
       <AnimatePresence>
-        {showNinModal && (
+        {showIdModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#1E1E2B] border-2 border-[#641AE4] rounded-2xl p-8 max-w-md w-full relative">
-              <button onClick={() => setShowNinModal(false)} className="absolute top-4 right-4 text-[#B0B0B8] hover:text-[#F0F0F0]"><X className="w-5 h-5" /></button>
-              <h3 className="text-2xl font-bold text-[#F0F0F0] mb-4 text-center">NIN Verification</h3>
-              <p className="text-[#B0B0B8] text-center mb-6">Enter your 11-digit National Identification Number to upgrade to Tier 2.</p>
-              <input type="text" maxLength={11} value={ninValue} onChange={(e) => setNinValue(e.target.value.replace(/\D/g, ""))} placeholder="01234567890" className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl mb-6 text-center text-xl tracking-widest outline-none" />
-              <button onClick={handleVerifyNin} disabled={verifyNinMutation.isPending || ninValue.length !== 11} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] flex items-center justify-center gap-2 disabled:opacity-50">
-                {verifyNinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify NIN"}
+              <button onClick={() => setShowIdModal(false)} className="absolute top-4 right-4 text-[#B0B0B8] hover:text-[#F0F0F0]"><X className="w-5 h-5" /></button>
+              <h3 className="text-2xl font-bold text-[#F0F0F0] mb-4 text-center">Identity Verification</h3>
+              <p className="text-[#B0B0B8] text-center mb-6">Verify your identity to upgrade to Tier 2.</p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#B0B0B8] mb-2">ID Type</label>
+                <select 
+                  value={idType}
+                  onChange={(e) => setIdType(e.target.value as any)}
+                  className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl outline-none appearance-none"
+                >
+                  <option value="nin">National ID Number (NIN)</option>
+                  <option value="drivers_license">Driver's License</option>
+                  <option value="passport">International Passport</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#B0B0B8] mb-2">ID Number</label>
+                <input 
+                  type="text" 
+                  value={idValue} 
+                  onChange={(e) => setIdValue(e.target.value)} 
+                  placeholder="Enter ID number" 
+                  className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl outline-none tracking-widest" 
+                />
+              </div>
+
+              <button onClick={handleVerifyIdentity} disabled={verifyIdentityMutation.isPending || !idValue} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] flex items-center justify-center gap-2 disabled:opacity-50">
+                {verifyIdentityMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify Identity"}
               </button>
             </motion.div>
           </div>

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, Lock, CheckCircle, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
-import { useChangePassword, useProfile, useVerifyPassword } from "@/lib/hooks/use-user-settings"
+import { useChangeUserSettingsPassword, useUserSettingsProfile, useVerifyPassword } from "@/lib/hooks/use-user-settings"
 import { OtpVerificationModal } from "./otp-verification-modal"
 
 interface PasswordRequirement {
@@ -30,8 +30,8 @@ export function ChangePasswordForm() {
     confirmPassword: "",
   })
 
-  const { data: profile } = useProfile()
-  const changePasswordMutation = useChangePassword()
+  const { data: profile } = useUserSettingsProfile()
+  const changePasswordMutation = useChangeUserSettingsPassword()
   const verifyPasswordMutation = useVerifyPassword()
 
   const allRequirementsMet = passwordRequirements.every((req) => req.test(form.newPassword))

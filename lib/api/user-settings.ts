@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { ApiResponse } from './types';
+import { ApiResponse, UpdateProfileInput, ChangePasswordInput } from './types';
 
 // Types
 export interface UserProfile {
@@ -44,16 +44,7 @@ export interface NotificationPreferences {
   priceAlerts?: boolean;
 }
 
-export interface UpdateProfileInput {
-  fullName?: string;
-  phoneNumber?: string;
-}
 
-export interface ChangePasswordInput {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
 
 export interface UpdateBankAccountInput {
   bankCode: string;
@@ -87,7 +78,7 @@ export interface UpdateDealerRatesInput {
   BTC_NGN?: number;
 }
 
-export interface ExchangeRates {
+export interface GlobalExchangeRates {
   USDT_NGN: number;
   USDC_NGN: number;
   BTC_USD: number;
@@ -185,8 +176,8 @@ export const getBanks = async (): Promise<Bank[]> => {
 
 // ============ ADMIN APIs ============
 
-export const getGlobalExchangeRates = async (): Promise<ExchangeRates> => {
-  const response = await apiClient.get<ApiResponse<ExchangeRates>>('/user-settings/admin/exchange-rates');
+export const getGlobalExchangeRates = async (): Promise<GlobalExchangeRates> => {
+  const response = await apiClient.get<ApiResponse<GlobalExchangeRates>>('/user-settings/admin/exchange-rates');
   return response.data.data;
 };
 
@@ -195,8 +186,8 @@ export const getBtcPriceInfo = async (): Promise<BtcPriceInfo> => {
   return response.data.data;
 };
 
-export const updateGlobalExchangeRates = async (data: UpdateExchangeRatesInput): Promise<ExchangeRates> => {
-  const response = await apiClient.put<ApiResponse<ExchangeRates>>('/user-settings/admin/exchange-rates', data);
+export const updateGlobalExchangeRates = async (data: UpdateExchangeRatesInput): Promise<GlobalExchangeRates> => {
+  const response = await apiClient.put<ApiResponse<GlobalExchangeRates>>('/user-settings/admin/exchange-rates', data);
   return response.data.data;
 };
 
@@ -261,8 +252,8 @@ export const verifyPhoneOtp = async (phoneNumber: string, otp: string): Promise<
 
 // ============ TIER VERIFICATION APIs ============
 
-export const verifyNin = async (nin: string): Promise<{ message: string; tier: number }> => {
-  const response = await apiClient.post<ApiResponse<{ message: string; tier: number }>>('/kyc/verify/nin', { nin });
+export const verifyIdentity = async (data: { idType: string; idNumber: string }): Promise<{ message: string; tier: number }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string; tier: number }>>('/kyc/verify/identity', data);
   return response.data.data;
 };
 

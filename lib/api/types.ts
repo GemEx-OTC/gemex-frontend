@@ -98,3 +98,44 @@ export interface ApiError {
     [key: string]: any;
   };
 }
+// QoreID SDK types
+export interface QoreIDSuccessResponse {
+  status: string;
+  verificationId: string;
+  data?: {
+    firstName?: string;
+    lastName?: string;
+    dateOfBirth?: string;
+    documentNumber?: string;
+    [key: string]: any;
+  };
+}
+
+export interface QoreIDError {
+  code: string;
+  message: string;
+}
+
+export interface QoreIDConfig {
+  clientId: string;
+  flowId?: string;
+  productCode: string;
+  customerReference: string;
+  applicantData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+  };
+  onSuccess: (response: QoreIDSuccessResponse) => void;
+  onClose: () => void;
+  onError: (error: QoreIDError) => void;
+}
+
+declare global {
+  interface Window {
+    QoreIDSDK?: {
+      initialize: (config: QoreIDConfig) => void;
+    };
+  }
+}

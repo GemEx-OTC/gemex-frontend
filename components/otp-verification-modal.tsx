@@ -79,7 +79,7 @@ export function OtpVerificationModal({
         {
           onSuccess: () => {
             setOtpSent(true)
-            setCountdown(60)
+            setCountdown(120)
             toast.success("OTP sent! 📱", {
               description: `Check your phone at ${maskPhone(formattedPhone)}`,
             })
@@ -87,6 +87,9 @@ export function OtpVerificationModal({
             setTimeout(() => inputRefs.current[0]?.focus(), 100)
           },
           onError: (err: any) => {
+            if (err.response?.data?.error?.code === 'TOO_MANY_REQUESTS') {
+              setCountdown(120) // Sync with backend rate limit
+            }
             toast.error("Failed to send OTP", { description: err.message || "Please try again later." })
           },
         }
@@ -99,7 +102,7 @@ export function OtpVerificationModal({
       {
         onSuccess: () => {
           setOtpSent(true)
-          setCountdown(60)
+          setCountdown(120)
           toast.success("OTP sent! 📧", {
             description: `Check your email at ${maskEmail(email)}`,
           })

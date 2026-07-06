@@ -6,6 +6,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { AlertProvider } from "@/components/alert"
 import { QueryProvider } from "@/lib/providers/query-provider"
 import { AuthProvider } from "@/lib/providers/auth-provider"
+import { SocketProvider } from "@/lib/providers/socket-provider"
+import { useRealtimeSync } from "@/lib/hooks"
 import { Toaster } from "sonner"
 import "./globals.css"
 
@@ -14,6 +16,11 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 
 // Note: Metadata export cannot be used in 'use client' components
 // This is a limitation of Next.js. Move metadata to a separate root layout file if needed.
+
+function RealtimeSyncManager() {
+  useRealtimeSync();
+  return null;
+}
 
 export default function RootLayout({
   children,
@@ -30,9 +37,12 @@ export default function RootLayout({
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}>
         <QueryProvider>
           <AuthProvider>
-            <AlertProvider>
-              {children}
-            </AlertProvider>
+            <SocketProvider>
+              <RealtimeSyncManager />
+              <AlertProvider>
+                {children}
+              </AlertProvider>
+            </SocketProvider>
           </AuthProvider>
         </QueryProvider>
         <Toaster 

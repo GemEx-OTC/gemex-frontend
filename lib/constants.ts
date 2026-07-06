@@ -7,9 +7,14 @@ export const CRYPTO_ASSETS = {
 } as const
 
 export const CRYPTO_NETWORKS = {
-  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
   BSC: { name: "BNB Smart Chain", chain: "BSC" },
+  BASE: { name: "Base Network", chain: "BASE" },
+  ETH: { name: "Ethereum Mainnet", chain: "ETH" },
+  POLYGON: { name: "Polygon Network", chain: "POLYGON" },
+  ARBITRUM: { name: "Arbitrum One", chain: "ARBITRUM" },
+  OPTIMISM: { name: "Optimism", chain: "OPTIMISM" },
   BTC: { name: "Bitcoin Network", chain: "BTC" },
+  TRC20: { name: "Tron (TRC20)", chain: "TRON" },
 } as const
 
 export const TRANSACTION_STATUS = {
@@ -148,4 +153,60 @@ export const NIGERIAN_BANKS = [
   { code: "215", name: "Unity Bank" },
   { code: "035", name: "Wema Bank" },
   { code: "057", name: "Zenith Bank" },
+] as const
+
+export const BUSINESS_CATEGORIES = [
+  {
+    group: "Professional & Technical Services",
+    items: [
+      { value: "it_technology", label: "IT & Technology" },
+      { value: "engineering", label: "Engineering" },
+      { value: "consultancy", label: "Consultancy" },
+      { value: "legal_accounting", label: "Legal & Accounting" },
+    ],
+  },
+  {
+    group: "General Commerce & Trade",
+    items: [
+      { value: "general_merchandise", label: "General Merchandise" },
+      { value: "general_contracts", label: "General Contracts" },
+      { value: "retail_wholesale", label: "Retail/Wholesale Trade" },
+      { value: "marketing_advertising", label: "Marketing & Advertising" },
+    ],
+  },
+  {
+    group: "Agriculture, Forestry & Fishing",
+    items: [
+      { value: "crop_production", label: "Crop Production" },
+      { value: "animal_husbandry", label: "Animal Husbandry" },
+      { value: "agro_allied", label: "Agro-Allied Services" },
+    ],
+  },
+  {
+    group: "Hospitality & Lifestyle",
+    items: [
+      { value: "food_beverages", label: "Food & Beverages" },
+      { value: "tourism", label: "Tourism" },
+      { value: "personal_services", label: "Personal Services" },
+    ],
+  },
+  {
+    group: "Construction & Real Estate",
+    items: [
+      { value: "building_civil", label: "Building & Civil Works" },
+      { value: "specialized_construction", label: "Specialized Construction" },
+      { value: "real_estate", label: "Real Estate" },
+    ],
+  },
+  {
+    group: "Manufacturing & Production",
+    items: [
+      { value: "food_production", label: "Food Production" },
+      { value: "industrial_goods", label: "Industrial Goods" },
+    ],
+  },
+  {
+    group: "Other",
+    items: [{ value: "other", label: "Other" }],
+  },
 ] as const

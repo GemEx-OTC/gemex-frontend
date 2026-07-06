@@ -7,3 +7,5 @@ export * from './use-trades';
 export * from './use-quotes';
 export * from './useNotifications';
 export * from './useMemos';
+export * from './useRealtimeSync';
+

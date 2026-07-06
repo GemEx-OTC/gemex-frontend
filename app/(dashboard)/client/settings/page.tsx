@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { ChangePasswordForm } from "@/components/settings/change-password-form"
 import { OtpVerificationModal } from "@/components/otp-verification-modal"
+import { BusinessVerificationModal } from "@/components/business-verification-modal"
 import {
   useUserSettingsProfile,
   useUpdateUserSettingsProfile,
@@ -37,8 +38,8 @@ export default function SettingsPage() {
   const [showCacModal, setShowCacModal] = useState(false)
   const [idType, setIdType] = useState<"nin" | "drivers_license" | "passport">("nin")
   const [idValue, setIdValue] = useState("")
-  const [cacValue, setCacValue] = useState("")
   const [originalPhoneNumber, setOriginalPhoneNumber] = useState("")
+  const [otpPreSent, setOtpPreSent] = useState(false)
   const logoutMutation = useLogout()
 
   const { data: profile, isLoading: profileLoading } = useUserSettingsProfile()
@@ -62,8 +63,10 @@ export default function SettingsPage() {
   const [profileForm, setProfileForm] = useState({ fullName: "", phoneNumber: "" })
   const [bankDetails, setBankDetails] = useState({ bankCode: "", bankName: "", accountNumber: "", accountName: "" })
   const [isVerified, setIsVerified] = useState(false)
+  const [isEditingBank, setIsEditingBank] = useState(false)
 
   const twoFactorEnabled = profile?.twoFactorEnabled || false
+  const hasSavedBank = !!bankAccountData?.accountNumber && bankAccountData?.isVerified
 
   useEffect(() => {
     if (profile) {
@@ -146,6 +149,7 @@ export default function SettingsPage() {
     }
     sendPhoneOtpMutation.mutate(profileForm.phoneNumber, {
       onSuccess: () => {
+        setOtpPreSent(true)
         setPendingAction("phone_verification")
         setShowOtpModal(true)
       },
@@ -167,28 +171,15 @@ export default function SettingsPage() {
       onError: (err: any) => toast.error("Verification failed", { description: err.message })
     })
   }
-
-  const handleVerifyCac = () => {
-    if (!cacValue.startsWith("RC")) {
-      toast.error("Invalid RC Number", { description: "RC Number must start with 'RC'." })
-      return
-    }
-    verifyCacMutation.mutate(cacValue, {
-      onSuccess: () => {
-        toast.success("CAC Verified!", { description: "You have been upgraded to Tier 3." })
-        setShowCacModal(false)
-        setCacValue("")
-      },
-      onError: (err: any) => toast.error("Verification failed", { description: err.message })
-    })
-  }
-
   const performBankSave = () => {
     updateBankMutation.mutate({
       bankCode: bankDetails.bankCode, bankName: bankDetails.bankName,
       accountNumber: bankDetails.accountNumber, accountName: bankDetails.accountName,
     }, {
-      onSuccess: () => toast.success("Bank account saved! 🏦", { description: "Your payout account has been updated." }),
+      onSuccess: () => {
+        toast.success("Bank account saved! 🏦", { description: "Your payout account has been updated." })
+        setIsEditingBank(false)
+      },
       onError: () => toast.error("Failed to save bank account", { description: "Please try again later." }),
     })
   }
@@ -204,13 +195,18 @@ export default function SettingsPage() {
   }
 
   const handlePhoneOtpVerified = (otp: string) => {
-    // This is handled inside the modal now via its own verify mutation
-    // So we just need to refresh profile or close
+    setShowOtpModal(false)
+    setPendingAction(null)
+    setOtpPreSent(false)
     setActiveTab("bank") // Switch back if we were verifying for bank
-    if (pendingAction === "phone_verification") {
-      // The modal already showed success toast
+
+    // If the user was trying to save their bank account but needed phone
+    // verification first, now go ahead and save it.
+    if (bankDetails.bankCode && bankDetails.accountNumber && bankDetails.accountName && isVerified) {
+      performBankSave()
     }
   }
+
 
   const handleToggleNotification = (key: string, value: boolean) => {
     updateNotificationsMutation.mutate({ [key]: value }, { onSuccess: () => toast.success(value ? "Notifications enabled" : "Notifications disabled") })
@@ -342,38 +338,122 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "bank" && (
-              <div className="p-6 bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border border-[#641AE4]/40 rounded-xl">
-                <div className="mb-4"><h2 className="text-lg font-semibold text-[#F0F0F0]">Naira Payout Account</h2><p className="text-sm text-[#B0B0B8] mt-1">Link your bank account to receive Naira payments</p></div>
-                {twoFactorEnabled && (
-                  <div className="mb-4 p-3 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg">
-                    <p className="text-sm text-[#D1D1D6]"><span className="text-[#D8B4FE] font-bold">🔐 2FA Enabled:</span> OTP verification required to save bank account changes.</p>
+              <div className="space-y-6">
+                {hasSavedBank && !isEditingBank ? (
+                  /* Linked Bank Account Premium Card */
+                  <div className="p-6 bg-gradient-to-br from-[#1E1E2B] to-[#2D2D3D] border border-[#C8F55A]/20 rounded-xl relative overflow-hidden shadow-xl shadow-black/30">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C8F55A]/5 rounded-full blur-3xl pointer-events-none" />
+                    
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C8F55A] bg-[#C8F55A]/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                          <CheckCircle className="w-3.5 h-3.5" /> Linked & Verified
+                        </span>
+                        <h3 className="text-xl font-bold text-[#F0F0F0] mt-3">{bankAccountData.bankName}</h3>
+                        <p className="text-xs text-[#B0B0B8] mt-1">Settlement Account</p>
+                      </div>
+                      <div className="p-3 bg-[#C8F55A]/10 rounded-xl">
+                        <CreditCard className="w-6 h-6 text-[#C8F55A]" />
+                      </div>
+                    </div>
+
+                    <div className="my-8">
+                      <p className="text-xs text-[#B0B0B8] uppercase tracking-widest font-mono">Account Number</p>
+                      <p className="text-2xl font-bold text-[#F0F0F0] tracking-wider font-mono mt-1">
+                        {bankAccountData.accountNumber.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3")}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[#2D2D3D]">
+                      <div>
+                        <p className="text-xs text-[#B0B0B8] uppercase tracking-wider font-mono">Account Holder</p>
+                        <p className="text-base font-semibold text-[#F0F0F0]">{bankAccountData.accountName}</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setBankDetails({
+                            bankCode: bankAccountData.bankCode || "",
+                            bankName: bankAccountData.bankName || "",
+                            accountNumber: bankAccountData.accountNumber || "",
+                            accountName: bankAccountData.accountName || ""
+                          })
+                          setIsVerified(true)
+                          setIsEditingBank(true)
+                        }}
+                        className="px-4 py-2 text-xs font-semibold text-[#F0F0F0] bg-[#641AE4]/20 border border-[#641AE4]/40 hover:bg-[#641AE4]/30 rounded-lg transition-all"
+                      >
+                        Change Bank Account
+                      </motion.button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Edit / Link Bank Form */
+                  <div className="p-6 bg-gradient-to-br from-[#641AE4]/20 to-[#9A24D2]/10 border border-[#641AE4]/40 rounded-xl">
+                    <div className="mb-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#F0F0F0]">
+                            {hasSavedBank ? "Update Payout Account" : "Naira Payout Account"}
+                          </h2>
+                          <p className="text-sm text-[#B0B0B8] mt-1">
+                            Link your bank account to receive Naira payments
+                          </p>
+                        </div>
+                        {hasSavedBank && (
+                          <button
+                            onClick={() => {
+                              setBankDetails({
+                                bankCode: bankAccountData.bankCode || "",
+                                bankName: bankAccountData.bankName || "",
+                                accountNumber: bankAccountData.accountNumber || "",
+                                accountName: bankAccountData.accountName || ""
+                              })
+                              setIsVerified(true)
+                              setIsEditingBank(false)
+                            }}
+                            className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {twoFactorEnabled && (
+                      <div className="mb-4 p-3 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg">
+                        <p className="text-sm text-[#D1D1D6]"><span className="text-[#D8B4FE] font-bold">🔐 2FA Enabled:</span> OTP verification required to save bank account changes.</p>
+                      </div>
+                    )}
+                    <div className="space-y-5 mt-6">
+                      <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Select Bank</label>
+                        <BankSelector
+                          banks={banksData}
+                          isLoading={banksLoading}
+                          value={bankDetails.bankCode}
+                          onChange={(code, name) => {
+                            setBankDetails((p) => ({ ...p, bankCode: code, bankName: name, accountName: "" }))
+                            setIsVerified(false)
+                            if (bankDetails.accountNumber.length === 10 && code) {
+                              verifyBankMutation.mutate(
+                                { bankCode: code, accountNumber: bankDetails.accountNumber },
+                                { onSuccess: (d) => { setBankDetails((p) => ({ ...p, accountName: d.accountName })); setIsVerified(true) } }
+                              )
+                            }
+                          }}
+                        />
+                      </div>
+                      <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Account Number</label>
+                        <div className="relative"><input type="text" value={bankDetails.accountNumber} onChange={(e) => handleAccountNumberChange(e.target.value)} placeholder="Enter 10-digit account number" maxLength={10} className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 pr-12 rounded transition-all focus:outline-none font-mono" />{verifyBankMutation.isPending && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="w-5 h-5 text-[#C8F55A] animate-spin" /></div>}</div></div>
+                      <AnimatePresence>
+                        {isVerified && bankDetails.accountName && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-lg"><div className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-[#C8F55A]" /><div><p className="text-sm text-[#B0B0B8]">Account Name</p><p className="font-semibold text-[#F0F0F0]">{bankDetails.accountName}</p></div></div></motion.div>}
+                      </AnimatePresence>
+                      {isVerified && <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onClick={handleSaveBankAccount} disabled={updateBankMutation.isPending} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50">{updateBankMutation.isPending ? "Saving..." : "Save Bank Account"}</motion.button>}
+                    </div>
                   </div>
                 )}
-                <div className="space-y-5 mt-6">
-                  <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Select Bank</label>
-                    <BankSelector
-                      banks={banksData}
-                      isLoading={banksLoading}
-                      value={bankDetails.bankCode}
-                      onChange={(code, name) => {
-                        setBankDetails((p) => ({ ...p, bankCode: code, bankName: name, accountName: "" }))
-                        setIsVerified(false)
-                        if (bankDetails.accountNumber.length === 10 && code) {
-                          verifyBankMutation.mutate(
-                            { bankCode: code, accountNumber: bankDetails.accountNumber },
-                            { onSuccess: (d) => { setBankDetails((p) => ({ ...p, accountName: d.accountName })); setIsVerified(true) } }
-                          )
-                        }
-                      }}
-                    />
-                  </div>
-                  <div><label className="block text-sm font-medium text-[#F0F0F0] mb-2">Account Number</label>
-                    <div className="relative"><input type="text" value={bankDetails.accountNumber} onChange={(e) => handleAccountNumberChange(e.target.value)} placeholder="Enter 10-digit account number" maxLength={10} className="w-full bg-[#2D2D3D] border-b-2 border-transparent focus:border-b-[#C8F55A] text-[#F0F0F0] px-4 py-3 pr-12 rounded transition-all focus:outline-none font-mono" />{verifyBankMutation.isPending && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="w-5 h-5 text-[#C8F55A] animate-spin" /></div>}</div></div>
-                  <AnimatePresence>
-                    {isVerified && bankDetails.accountName && <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-4 bg-[#C8F55A]/10 border border-[#C8F55A]/30 rounded-lg"><div className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-[#C8F55A]" /><div><p className="text-sm text-[#B0B0B8]">Account Name</p><p className="font-semibold text-[#F0F0F0]">{bankDetails.accountName}</p></div></div></motion.div>}
-                  </AnimatePresence>
-                  {isVerified && <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} onClick={handleSaveBankAccount} disabled={updateBankMutation.isPending} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:shadow-lg hover:shadow-[#C8F55A]/30 transition-all disabled:opacity-50">{updateBankMutation.isPending ? "Saving..." : "Save Bank Account"}</motion.button>}
-                </div>
+
+                {/* Auto Payout Section */}
                 <div className={`mt-6 p-5 border rounded-xl ${isKycVerified ? "bg-[#C8F55A]/5 border-[#C8F55A]/30" : "bg-[#1E1E2B]/80 border-[#2D2D3D]"}`}>
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isKycVerified ? "bg-[#C8F55A]/20" : "bg-[#2D2D3D]"}`}>{isKycVerified ? <Zap className="w-6 h-6 text-[#C8F55A]" /> : <Lock className="w-6 h-6 text-[#B0B0B8]" />}</div>
@@ -455,7 +535,7 @@ export default function SettingsPage() {
       {/* OTP Verification Modal */}
       <OtpVerificationModal
         isOpen={showOtpModal}
-        onClose={() => { setShowOtpModal(false); setPendingAction(null) }}
+        onClose={() => { setShowOtpModal(false); setPendingAction(null); setOtpPreSent(false) }}
         onVerified={(otp) => {
           if (pendingAction === "phone_verification") {
             handlePhoneOtpVerified(otp!)
@@ -470,6 +550,7 @@ export default function SettingsPage() {
         phoneNumber={profile?.phoneNumber}
         showPhoneInput={pendingAction === "phone_verification" && !profile?.phoneNumber}
         actionType={pendingAction === "phone_verification" ? "phone_verification" : (pendingAction || "bank_account") as any}
+        initialOtpSent={otpPreSent}
       />
 
       {/* Identity Modal */}
@@ -514,21 +595,13 @@ export default function SettingsPage() {
       </AnimatePresence>
 
       {/* CAC Modal */}
-      <AnimatePresence>
-        {showCacModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#1E1E2B] border-2 border-[#641AE4] rounded-2xl p-8 max-w-md w-full relative">
-              <button onClick={() => setShowCacModal(false)} className="absolute top-4 right-4 text-[#B0B0B8] hover:text-[#F0F0F0]"><X className="w-5 h-5" /></button>
-              <h3 className="text-2xl font-bold text-[#F0F0F0] mb-4 text-center">CAC Verification</h3>
-              <p className="text-[#B0B0B8] text-center mb-6">Enter your RC Number to upgrade to Tier 3 and unlock unrestricted payouts.</p>
-              <input type="text" value={cacValue} onChange={(e) => setCacValue(e.target.value)} placeholder="RC1234567" className="w-full bg-[#2D2D3D] border-2 border-transparent focus:border-[#C8F55A] text-[#F0F0F0] px-4 py-3 rounded-xl mb-6 text-center text-xl outline-none" />
-              <button onClick={handleVerifyCac} disabled={verifyCacMutation.isPending || !cacValue} className="w-full py-3 rounded-lg font-semibold text-[#1E1E2B] bg-[#C8F55A] flex items-center justify-center gap-2 disabled:opacity-50">
-                {verifyCacMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify CAC"}
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <BusinessVerificationModal
+        isOpen={showCacModal}
+        onClose={() => setShowCacModal(false)}
+        onVerified={() => {
+          toast.success("Business verification submitted successfully!")
+        }}
+      />
     </motion.div>
   )
 }

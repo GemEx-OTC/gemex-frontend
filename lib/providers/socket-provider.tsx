@@ -23,8 +23,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Only connect if user is authenticated and is a dealer or admin
-    if (isAuthenticated && user && ['dealer', 'admin'].includes(user.role)) {
+    // Only connect if user is authenticated
+    if (isAuthenticated && user) {
       const socketInstance = initSocket();
       setSocket(socketInstance);
 
@@ -55,7 +55,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         socketInstance.off('connect_error', handleError);
       };
     } else {
-      // Disconnect if user logs out or is not dealer/admin
+      // Disconnect if user logs out
       disconnectSocket();
       setSocket(null);
       setIsConnected(false);

@@ -17,6 +17,7 @@ interface OtpVerificationModalProps {
   actionType: "password" | "bank_account" | "phone_number" | "quote_rates" | "exchange_rates" | "phone_verification"
   showPhoneInput?: boolean
   onPhoneSubmit?: (phone: string) => void
+  initialOtpSent?: boolean
 }
 
 export function OtpVerificationModal({
@@ -30,6 +31,7 @@ export function OtpVerificationModal({
   actionType,
   showPhoneInput = false,
   onPhoneSubmit,
+  initialOtpSent = false,
 }: OtpVerificationModalProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
   const [error, setError] = useState("")
@@ -48,8 +50,8 @@ export function OtpVerificationModal({
     if (isOpen) {
       setOtp(["", "", "", "", "", ""])
       setError("")
-      setOtpSent(false)
-      setCountdown(0)
+      setOtpSent(initialOtpSent)
+      setCountdown(initialOtpSent ? 120 : 0)
       setPhoneValue(phoneNumber || "")
     }
   }, [isOpen])
@@ -71,8 +73,21 @@ export function OtpVerificationModal({
         return
       }
 
-      // Ensure prefix
-      const formattedPhone = targetPhone.startsWith("+") ? targetPhone : `+234${targetPhone.replace(/^0/, "")}`
+      // Normalize to international format without double-prefixing:
+      // - "+2349164..." → keep as-is
+      // - "2349164..."  → already has country code, just add +
+      // - "09164..."    → local format, replace leading 0 with +234
+      // - "9164..."     → bare number, prepend +234
+      let formattedPhone = targetPhone.replace(/\s+/g, '')
+      if (!formattedPhone.startsWith('+')) {
+        if (formattedPhone.startsWith('234')) {
+          formattedPhone = '+' + formattedPhone
+        } else if (formattedPhone.startsWith('0') && formattedPhone.length === 11) {
+          formattedPhone = '+234' + formattedPhone.substring(1)
+        } else {
+          formattedPhone = '+234' + formattedPhone.replace(/^0/, '')
+        }
+      }
 
       sendPhoneOtpMutation.mutate(
         formattedPhone,

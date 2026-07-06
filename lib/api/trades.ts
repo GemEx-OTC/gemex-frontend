@@ -55,6 +55,7 @@ export interface TradeStats {
 
 export interface GetTradesParams {
   status?: string;
+  quoteId?: string;
   startDate?: string;
   endDate?: string;
   page?: number;
@@ -66,6 +67,7 @@ export const getTrades = async (params: GetTradesParams = {}): Promise<TradesRes
   const queryParams = new URLSearchParams();
   
   if (params.status) queryParams.append('status', params.status);
+  if (params.quoteId) queryParams.append('quoteId', params.quoteId);
   if (params.startDate) queryParams.append('startDate', params.startDate);
   if (params.endDate) queryParams.append('endDate', params.endDate);
   if (params.page) queryParams.append('page', params.page.toString());

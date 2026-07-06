@@ -5,42 +5,68 @@ import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
 import { AlertCircle, Info, ArrowRight, Check, Loader2 } from "lucide-react"
-import Image from "next/image"
 import { createQuote } from "@/lib/api/quotes"
 import { getExchangeRates } from "@/lib/api/settings"
 import { useUserSettingsProfile } from "@/lib/hooks/use-user-settings"
+import { 
+  NetworkEthereum, 
+  NetworkBinanceSmartChain, 
+  NetworkBase, 
+  NetworkPolygon, 
+  NetworkArbitrumOne, 
+  NetworkOptimism,
+  NetworkTron,
+  NetworkBitcoin,
+  TokenUSDT,
+  TokenUSDC,
+  TokenBTC
+} from "@web3icons/react"
 
-// Asset icons and brand colors
-const ASSET_CONFIG = {
-  USDT: {
-    icon: "/icons/usdt.svg",
-    brandColor: "#26A17B",
-  },
-  BTC: {
-    icon: "/icons/btc.svg",
-    brandColor: "#F7931A",
-  },
-  USDC: {
-    icon: "/icons/usdc.svg",
-    brandColor: "#2775CA",
-  },
-} as const
+type AssetKey = keyof typeof CRYPTO_ASSETS
+type NetworkKey = keyof typeof CRYPTO_NETWORKS
 
-// Network/chain logos
-const NETWORK_CONFIG = {
-  TRC20: {
-    icon: "/icons/chains/tron.svg",
-    brandColor: "#FF060E",
-  },
-  BSC: {
-    icon: "/icons/chains/bnb.svg",
-    brandColor: "#F3BA2F",
-  },
-  BTC: {
-    icon: "/icons/btc.svg",
-    brandColor: "#F7931A",
-  },
-} as const
+// Helper to render network icons from @web3icons/react
+function NetworkIconComponent({ network, size = 24 }: { network: NetworkKey; size?: number }) {
+  switch (network) {
+    case "TRC20":
+      return <NetworkTron size={size} variant="branded" />
+    case "BSC":
+      return <NetworkBinanceSmartChain size={size} variant="branded" />
+    case "BASE":
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className="web3icons flex-shrink-0" style={{ display: 'block' }}>
+          <circle cx="12" cy="12" r="10" fill="#0052FF" />
+          <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" />
+        </svg>
+      )
+    case "ETH":
+      return <NetworkEthereum size={size} variant="branded" />
+    case "POLYGON":
+      return <NetworkPolygon size={size} variant="branded" />
+    case "ARBITRUM":
+      return <NetworkArbitrumOne size={size} variant="branded" />
+    case "OPTIMISM":
+      return <NetworkOptimism size={size} variant="branded" />
+    case "BTC":
+      return <NetworkBitcoin size={size} variant="branded" />
+    default:
+      return null
+  }
+}
+
+// Helper to render asset icons from @web3icons/react
+function TokenIconComponent({ asset, size = 24 }: { asset: AssetKey; size?: number }) {
+  switch (asset) {
+    case "USDT":
+      return <TokenUSDT size={size} variant="branded" />
+    case "USDC":
+      return <TokenUSDC size={size} variant="branded" />
+    case "BTC":
+      return <TokenBTC size={size} variant="branded" />
+    default:
+      return null
+  }
+}
 
 export default function TradeRequestPage() {
   const { data: profile } = useUserSettingsProfile()
@@ -50,8 +76,8 @@ export default function TradeRequestPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tradeData, setTradeData] = useState({
-    cryptoAsset: "USDT" as keyof typeof CRYPTO_ASSETS,
-    cryptoNetwork: "TRC20" as keyof typeof CRYPTO_NETWORKS,
+    cryptoAsset: "USDT" as AssetKey,
+    cryptoNetwork: "BSC" as NetworkKey,
     cryptoAmount: "50000",
   })
   const [systemRates, setSystemRates] = useState({
@@ -136,12 +162,12 @@ export default function TradeRequestPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-3"
+          className="mb-5 bg-slate-800/60 border border-slate-700 rounded-xl p-4"
         >
-          <div className="flex items-start gap-2">
-            <Info className="w-4 h-4 text-[#641AE4] flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-[#B0B0B8]">
-              <span className="font-medium text-[#F0F0F0]">Process: </span>
+          <div className="flex items-start gap-2.5">
+            <Info className="w-5 h-5 text-[#641AE4] flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-[#CBD5E1]">
+              <span className="font-semibold text-white">Process: </span>
               Submit request → Dealer quotes → Accept & send crypto → Receive Naira
             </div>
           </div>
@@ -154,11 +180,11 @@ export default function TradeRequestPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-5 md:p-6 space-y-5"
+              className="bg-[#1C1C28] border border-[#2D2D42] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl"
             >
               <div>
-                <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Select Asset & Network</h2>
-                <p className="text-sm text-[#B0B0B8]">Choose the cryptocurrency and network for your bulk trade</p>
+                <h2 className="text-2xl font-extrabold text-[#F8F9FA] mb-2">Select Asset & Network</h2>
+                <p className="text-base text-[#CBD5E1]">Choose the cryptocurrency and network for your bulk trade</p>
               </div>
 
               {userTier < 3 && (
@@ -177,99 +203,85 @@ export default function TradeRequestPage() {
 
               {/* Crypto Asset Selection - Compact */}
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Cryptocurrency</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(CRYPTO_ASSETS).map(([key, asset]) => {
-                    const config = ASSET_CONFIG[key as keyof typeof ASSET_CONFIG]
-                    const isSelected = tradeData.cryptoAsset === key
-                    return (
-                      <motion.button
-                        key={key}
-                        onClick={() => {
-                          setTradeData({
-                            ...tradeData,
-                            cryptoAsset: key as keyof typeof CRYPTO_ASSETS,
-                            cryptoNetwork: key === "BTC" ? "BTC" : "TRC20"
-                          })
-                        }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`relative p-3 rounded-lg text-center font-medium transition-all ${isSelected
-                          ? "bg-gradient-to-br from-[#641AE4] to-[#9A24D2] text-white shadow-lg shadow-[#641AE4]/20"
-                          : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D]/80 border border-[#2D2D3D]"
-                          }`}
-                      >
-                        <div className="flex flex-col items-center gap-2">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
-                            }`}>
-                            <Image
-                              src={config.icon}
-                              alt={`${asset.symbol} icon`}
-                              width={24}
-                              height={24}
-                              className="w-6 h-6"
-                            />
+                <label className="block text-base font-bold text-[#F8F9FA] mb-3">Cryptocurrency</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(CRYPTO_ASSETS)
+                    .filter(([key]) => key !== "BTC")
+                    .map(([key, asset]) => {
+                      const isSelected = tradeData.cryptoAsset === key
+                      return (
+                        <motion.button
+                          key={key}
+                          onClick={() => {
+                            setTradeData({
+                              ...tradeData,
+                              cryptoAsset: key as AssetKey,
+                              cryptoNetwork: "TRC20"
+                            })
+                          }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`relative p-5 rounded-xl text-center transition-all ${isSelected
+                            ? "bg-[#24243D] border-2 border-[#C8F55A] text-white shadow-xl shadow-black/30"
+                            : "bg-[#12121A] text-[#CBD5E1] hover:text-white hover:bg-[#242438]/60 border border-[#2D2D42]"
+                            }`}
+                        >
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#1A1A24] border border-[#2D2D42]">
+                              <TokenIconComponent asset={key as AssetKey} size={28} />
+                            </div>
+                            <div>
+                              <div className={`font-extrabold text-lg md:text-xl ${isSelected ? "text-[#C8F55A]" : "text-white"}`}>{asset.symbol}</div>
+                              <div className="text-xs md:text-sm text-[#cbd5e1] font-medium mt-0.5">{asset.name}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="font-bold text-sm">{asset.symbol}</div>
-                            <div className="text-[10px] opacity-70">{asset.name}</div>
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <motion.div
-                            layoutId="asset-check"
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8F55A] rounded-full flex items-center justify-center"
-                          >
-                            <Check className="w-3 h-3 text-[#1E1E2B]" />
-                          </motion.div>
-                        )}
-                      </motion.button>
-                    )
-                  })}
+                          {isSelected && (
+                            <motion.div
+                              layoutId="asset-check"
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-[#C8F55A] rounded-full flex items-center justify-center animate-pulse"
+                            >
+                              <Check className="w-3 h-3 text-[#1E1E2B]" />
+                            </motion.div>
+                          )}
+                        </motion.button>
+                      )
+                    })}
                 </div>
               </div>
 
-              {/* Network Selection - Compact */}
+              {/* Network Selection */}
               <div>
-                <label className="block text-sm font-medium text-[#F0F0F0] mb-2">Network</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label className="block text-base font-bold text-[#F8F9FA] mb-3">Network</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {Object.entries(CRYPTO_NETWORKS)
                     .filter(([key]) => {
                       if (tradeData.cryptoAsset === "BTC") return key === "BTC"
                       return key !== "BTC"
                     })
                     .map(([key, network]) => {
-                      const config = NETWORK_CONFIG[key as keyof typeof NETWORK_CONFIG]
                       const isSelected = tradeData.cryptoNetwork === key
                       return (
                         <motion.button
                           key={key}
                           onClick={() =>
-                            setTradeData({ ...tradeData, cryptoNetwork: key as keyof typeof CRYPTO_NETWORKS })
+                            setTradeData({ ...tradeData, cryptoNetwork: key as NetworkKey })
                           }
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`relative p-3 rounded-lg text-left transition-all flex items-center gap-2 ${isSelected
-                            ? "bg-[#641AE4] text-white shadow-md"
-                            : "bg-[#2D2D3D] text-[#B0B0B8] hover:text-[#F0F0F0] border border-[#2D2D3D]"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className={`relative p-4 rounded-xl text-left transition-all flex items-center gap-3 ${isSelected
+                            ? "bg-[#24243D] border-2 border-[#C8F55A] text-white shadow-md"
+                            : "bg-[#12121A] text-[#cbd5e1] hover:text-white hover:bg-[#242438]/60 border border-[#2D2D42]"
                             }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-white/20" : "bg-[#1E1E2B]"
-                            }`}>
-                            <Image
-                              src={config.icon}
-                              alt={`${network.name} icon`}
-                              width={18}
-                              height={18}
-                              className="w-[18px] h-[18px]"
-                            />
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#1A1A24] border border-[#2D2D42]">
+                            <NetworkIconComponent network={key as NetworkKey} size={22} />
                           </div>
-                          <div className="min-w-0">
-                            <div className="font-semibold text-xs truncate">{network.name}</div>
-                            <div className="text-[10px] opacity-70">{network.chain}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-sm text-white truncate">{network.name}</div>
+                            <div className="text-xs text-[#cbd5e1] font-medium mt-0.5">{network.chain}</div>
                           </div>
                           {isSelected && (
-                            <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                            <Check className="w-5 h-5 ml-auto flex-shrink-0 text-[#C8F55A] font-bold" />
                           )}
                         </motion.button>
                       )
@@ -282,10 +294,10 @@ export default function TradeRequestPage() {
                 disabled={userTier < 3}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                className="w-full py-4 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
               >
                 Continue
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </motion.button>
             </motion.div>
           )}
@@ -296,43 +308,33 @@ export default function TradeRequestPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-[#1E1E2B]/80 backdrop-blur-md border border-[#641AE4]/30 rounded-xl p-5 md:p-6 space-y-5"
+              className="bg-[#1C1C28] border border-[#2D2D42] rounded-2xl p-6 md:p-8 space-y-6 shadow-xl"
             >
               <div>
-                <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Enter Trade Amount</h2>
-                <p className="text-sm text-[#B0B0B8]">Specify how much {tradeData.cryptoAsset} you want to trade</p>
+                <h2 className="text-2xl font-extrabold text-[#F8F9FA] mb-2">Enter Trade Amount</h2>
+                <p className="text-base text-[#CBD5E1]">Specify how much {tradeData.cryptoAsset} you want to trade</p>
               </div>
 
               {/* Selected Asset/Network Summary */}
-              <div className="flex items-center gap-3 p-3 bg-[#2D2D3D]/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#1E1E2B] flex items-center justify-center">
-                    <Image
-                      src={ASSET_CONFIG[tradeData.cryptoAsset].icon}
-                      alt={tradeData.cryptoAsset}
-                      width={20}
-                      height={20}
-                    />
+              <div className="flex items-center gap-4 p-4 bg-[#12121A] border border-[#2D2D42] rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1A1A24] flex items-center justify-center border border-[#2D2D42]">
+                    <TokenIconComponent asset={tradeData.cryptoAsset} size={24} />
                   </div>
-                  <span className="font-semibold text-[#F0F0F0]">{tradeData.cryptoAsset}</span>
+                  <span className="font-bold text-base text-white">{tradeData.cryptoAsset}</span>
                 </div>
-                <span className="text-[#B0B0B8]">on</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#1E1E2B] flex items-center justify-center">
-                    <Image
-                      src={NETWORK_CONFIG[tradeData.cryptoNetwork].icon}
-                      alt={tradeData.cryptoNetwork}
-                      width={14}
-                      height={14}
-                    />
+                <span className="text-[#CBD5E1] text-sm">on</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#1A1A24] flex items-center justify-center border border-[#2D2D42]">
+                    <NetworkIconComponent network={tradeData.cryptoNetwork} size={18} />
                   </div>
-                  <span className="text-sm text-[#B0B0B8]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}</span>
+                  <span className="text-sm font-semibold text-[#CBD5E1]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}</span>
                 </div>
               </div>
 
               {/* Amount Input */}
-              <div className="bg-gradient-to-br from-[#2D2D3D]/80 to-[#2D2D3D]/40 border border-[#641AE4]/20 rounded-xl p-5">
-                <label className="block text-sm font-medium text-[#B0B0B8] mb-2">
+              <div className="bg-[#12121A] border border-[#2D2D42] rounded-xl p-6 shadow-inner">
+                <label className="block text-base font-bold text-[#cbd5e1] mb-3">
                   Amount ({tradeData.cryptoAsset})
                 </label>
                 <div className="relative">
@@ -343,21 +345,21 @@ export default function TradeRequestPage() {
                     onChange={(e) => setTradeData({ ...tradeData, cryptoAmount: e.target.value })}
                     placeholder="0.00"
                     min={minAmount}
-                    className="w-full bg-transparent border-none focus:ring-0 text-3xl md:text-4xl font-bold text-[#C8F55A] focus:outline-none placeholder-[#2D2D3D]"
+                    className="w-full bg-transparent border-none focus:ring-0 text-4xl md:text-5xl font-extrabold text-[#C8F55A] focus:outline-none placeholder-zinc-800"
                   />
                 </div>
-                <p className="text-xs text-[#B0B0B8] mt-1">
+                <p className="text-sm font-medium text-[#cbd5e1] mt-2">
                   Min: {minAmount.toLocaleString()} {tradeData.cryptoAsset}
                 </p>
 
-                <div className="mt-4 pt-4 border-t border-[#2D2D3D]">
+                <div className="mt-6 pt-5 border-t border-[#2D2D42]">
                   <div className="flex justify-between items-center">
-                    <span className="text-[#B0B0B8] text-sm">Estimated Naira</span>
-                    <span className="text-[#F0F0F0] font-bold text-xl">
+                    <span className="text-[#cbd5e1] text-base font-semibold">Estimated Naira</span>
+                    <span className="text-white font-extrabold text-2xl md:text-3xl">
                       ₦{estimatedNaira.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>
                   </div>
-                  <p className="text-[10px] text-[#B0B0B8] mt-1">
+                  <p className="text-sm text-[#cbd5e1] font-medium mt-2">
                     Rate: ₦{systemRate.toLocaleString()} per {tradeData.cryptoAsset} (indicative)
                   </p>
                 </div>
@@ -444,12 +446,7 @@ export default function TradeRequestPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-[#B0B0B8]">Amount</span>
                   <div className="flex items-center gap-2">
-                    <Image
-                      src={ASSET_CONFIG[tradeData.cryptoAsset].icon}
-                      alt={tradeData.cryptoAsset}
-                      width={16}
-                      height={16}
-                    />
+                    <TokenIconComponent asset={tradeData.cryptoAsset} size={16} />
                     <span className="text-[#F0F0F0] font-bold">
                       {tradeData.cryptoAmount} {tradeData.cryptoAsset}
                     </span>
@@ -458,12 +455,7 @@ export default function TradeRequestPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-[#B0B0B8]">Network</span>
                   <div className="flex items-center gap-2">
-                    <Image
-                      src={NETWORK_CONFIG[tradeData.cryptoNetwork].icon}
-                      alt={tradeData.cryptoNetwork}
-                      width={14}
-                      height={14}
-                    />
+                    <NetworkIconComponent network={tradeData.cryptoNetwork} size={14} />
                     <span className="text-sm text-[#F0F0F0]">
                       {CRYPTO_NETWORKS[tradeData.cryptoNetwork].name}
                     </span>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { 
@@ -14,328 +14,421 @@ import {
   ArrowRight,
   ShieldCheck,
   LayoutGrid,
-  Menu
+  Copy,
+  UserCheck
 } from "lucide-react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
+import { getSweepStats, getSweepHistory, triggerSweep, syncSweepStats } from "@/lib/api/admin"
 import { toast } from "sonner"
+import { copyToClipboard } from "@/lib/clipboard"
 
-// Types
-interface SweepStat {
-  network: string
-  asset: string
-  amount: number
-  count: number
-}
+const CopyButton = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false)
 
-interface SweepStatsResponse {
-  unsweptCount: number
-  stats: SweepStat[]
-}
-
-interface SweepHistoryItem {
-  id: string
-  address: string
-  asset: string
-  network: string
-  amount: number
-  txId: string
-  sweptAt: string
-}
-
-interface SweepHistoryResponse {
-  history: SweepHistoryItem[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const success = await copyToClipboard(text)
+    if (success) {
+      setCopied(true)
+      toast.success("Copied to clipboard")
+      setTimeout(() => setCopied(false), 2000)
+    } else {
+      toast.error("Failed to copy")
+    }
   }
-}
 
-// API functions
-const OTC_API_URL = process.env.NEXT_PUBLIC_OTC_API_URL || "http://localhost:4000"
-
-const getAuthHeaders = () => {
-  if (typeof window === "undefined") return {}
-  const token = localStorage.getItem("accessToken")
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  }
-}
-
-const fetchSweepStats = async (): Promise<SweepStatsResponse> => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/admin/sweep/stats`, {
-    headers: getAuthHeaders(),
-  })
-  if (!res.ok) throw new Error("Failed to fetch sweep stats")
-  const data = await res.json()
-  return data.data
-}
-
-const fetchSweepHistory = async (page = 1, limit = 50): Promise<SweepHistoryResponse> => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/admin/sweep/history?page=${page}&limit=${limit}`, {
-    headers: getAuthHeaders(),
-  })
-  if (!res.ok) throw new Error("Failed to fetch sweep history")
-  const data = await res.json()
-  return data.data
-}
-
-const triggerSweep = async () => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/admin/sweep/trigger`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  })
-  if (!res.ok) {
-    const errorData = await res.json()
-    throw new Error(errorData.message || "Failed to trigger sweep")
-  }
-  return res.json()
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1 rounded-md bg-muted hover:bg-muted-foreground/10 border border-border hover:border-emerald-500/50 transition-all group shrink-0"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+      ) : (
+        <Copy className="w-3 h-3 text-muted-foreground group-hover:text-emerald-500" />
+      )}
+    </button>
+  )
 }
 
 export default function SweepPage() {
+  const [stats, setStats] = useState<any>(null)
+  const [history, setHistory] = useState<any[]>([])
+  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const queryClient = useQueryClient()
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [sweeping, setSweeping] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ["sweep-stats"],
-    queryFn: fetchSweepStats,
-    refetchInterval: 30000,
-  })
+  const fetchData = useCallback(async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true)
+    else setLoading(true)
 
-  const { data: historyData, isLoading: historyLoading } = useQuery({
-    queryKey: ["sweep-history", page],
-    queryFn: () => fetchSweepHistory(page, 20),
-  })
+    try {
+      const [statsData, historyData] = await Promise.all([
+        getSweepStats(),
+        getSweepHistory({ page, limit: 20 })
+      ])
+      
+      setStats(statsData)
+      setHistory(historyData.history || [])
+      setTotal(historyData.pagination?.total || 0)
+    } catch (error) {
+      console.error("Failed to fetch sweep data:", error)
+      toast.error("Failed to load sweep data")
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [page])
 
-  const sweepMutation = useMutation({
-    mutationFn: triggerSweep,
-    onSuccess: () => {
-      toast.success("Sweep process initiated successfully")
-      queryClient.invalidateQueries({ queryKey: ["sweep-stats"] })
-      queryClient.invalidateQueries({ queryKey: ["sweep-history"] })
-    },
-    onError: (error: Error) => {
-      toast.error(error.message)
-    },
-  })
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
-  const history = historyData?.history || []
-  const total = historyData?.pagination?.total || 0
+  const handleTriggerSweep = async (network: string) => {
+    setSweeping(network)
+    try {
+      await triggerSweep(network)
+      toast.success(`${network} sweep process initiated`)
+      fetchData(true)
+    } catch (error: any) {
+      toast.error(error.message || `Failed to trigger ${network} sweep`)
+    } finally {
+      setSweeping(null)
+    }
+  }
+
+  const handleSync = async () => {
+    setIsSyncing(true)
+    try {
+      const result = await syncSweepStats()
+      toast.success(`Sync complete: Audited ${result.audited} wallets, reconciled ${result.reconciled} records.`)
+      fetchData(true)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sync with blockchain")
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-8">
-      <DashboardHeader 
-        title="Crypto Sweep Management" 
-        subtitle="Consolidate funds from deposit wallets to the revenue account"
-        action={{
-          label: "Refresh Stats",
-          onClick: () => refetchStats(),
-        }}
-      />
-
-      {/* Summary Section */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-blue-500/10 border-2 border-indigo-500/40 shadow-xl shadow-indigo-500/5"
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-10">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-foreground mb-2 tracking-tight">Crypto Sweep</h1>
+          <p className="text-muted-foreground font-medium text-sm">Manage and consolidate crypto funds from guest wallets</p>
+        </div>
+        <button
+          onClick={() => fetchData(true)}
+          disabled={refreshing}
+          className="p-3 rounded-2xl bg-card border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 transition-all active:scale-95 disabled:opacity-50"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 rounded-2xl bg-indigo-500/20">
-              <Database className="w-6 h-6 text-indigo-500" />
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-500/60">Total Unswept</span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-4xl font-black text-foreground">
-              {statsLoading ? "..." : stats?.unsweptCount || 0}
-            </h3>
-            <p className="text-sm text-muted-foreground font-medium">Unique transactions awaiting sweep</p>
-          </div>
-        </motion.div>
+          <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="p-6 rounded-3xl bg-card border border-border shadow-xl md:col-span-1 lg:col-span-2 overflow-hidden relative group"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <LayoutGrid className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="font-bold text-lg">Unswept Assets</h3>
-            </div>
-            
-            <button
-              onClick={() => sweepMutation.mutate()}
-              disabled={sweepMutation.isPending || !stats || stats.unsweptCount === 0}
-              className="px-6 py-2.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-semibold animate-pulse">Syncing sweep data...</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-primary/5 to-card border-2 border-indigo-500/25 relative overflow-hidden group shadow-lg"
             >
-              {sweepMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Zap className="w-4 h-4 fill-current" />
-              )}
-              Trigger Batch Sweep
-            </button>
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Database className="w-24 h-24 text-indigo-500" />
+              </div>
+              <div className="relative">
+                <p className="text-xs font-black uppercase text-indigo-500/80 tracking-[0.2em] mb-4">Total Awaiting</p>
+                <h3 className="text-5xl font-black text-foreground mb-2">
+                  {stats?.unsweptCount || 0}
+                </h3>
+                <p className="text-sm text-indigo-500/70 font-semibold">Pending blockchain consolidations</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-8 rounded-[2rem] bg-card border border-border shadow-lg md:col-span-1 lg:col-span-2 flex flex-col justify-between"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                    <LayoutGrid className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-lg text-foreground">Pending Assets</h3>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={handleSync}
+                    disabled={isSyncing || !stats}
+                    className="px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground border border-border font-bold text-xs hover:bg-secondary/80 transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                    Sync
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('BSC')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-black text-xs shadow-xl shadow-amber-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'BSC' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep BSC
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('TRC20')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-red-500 text-white font-black text-xs shadow-xl shadow-red-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'TRC20' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep Tron
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {stats?.stats && Object.keys(stats.stats).length > 0 ? (
+                  Object.entries(stats.stats).map(([key, stat]: [string, any], i) => (
+                    <div key={i} className="p-4 rounded-2xl bg-muted/40 border border-border/60 hover:border-primary/30 transition-colors group">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{key.split('-')[0]}</span>
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xl font-black text-foreground leading-none mb-1">{stat.amount.toFixed(4)}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{key.split('-')[1]} • {stat.count} TX</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-6 flex items-center justify-center text-muted-foreground gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    <p className="font-bold text-sm">All vaults are empty!</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {statsLoading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-20 rounded-2xl bg-muted/50 animate-pulse" />
-              ))
-            ) : stats?.stats && stats.stats.length > 0 ? (
-              stats.stats.map((stat, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-muted/30 border border-border/50 group-hover:border-primary/20 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black text-muted-foreground uppercase">{stat.network}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">{stat.count} TXs</span>
+          {stats?.wallets && stats.wallets.length > 0 && (
+            <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-lg">
+              <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <UserCheck className="w-5 h-5 text-emerald-500" />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-lg font-bold leading-tight">{stat.amount.toFixed(4)}</span>
-                    <span className="text-xs font-medium text-muted-foreground">{stat.asset}</span>
-                  </div>
+                  <h2 className="text-xl font-black text-foreground tracking-tight">Wallets Awaiting Sweep</h2>
                 </div>
-              ))
+                <div className="px-3 py-1 rounded-xl bg-muted border border-border">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    <span className="text-emerald-500 font-extrabold">{stats.wallets.length}</span> WALLETS
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-muted/20">
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Merchant / Type</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Network</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Hot Wallet</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {stats.wallets.map((wallet: any, idx: number) => (
+                      <motion.tr
+                        key={wallet.transactionId + '-' + idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="hover:bg-muted/30 transition-all group"
+                      >
+                        <td className="px-8 py-5">
+                          <div className="flex flex-col">
+                            <span className="font-black text-foreground text-sm">{wallet.merchantName}</span>
+                            <span className={`text-[10px] font-black uppercase ${wallet.accountType === 'enterprise' ? 'text-amber-500' : 'text-blue-500'}`}>
+                              {wallet.accountType || 'Merchant'} • {wallet.transactionCount} TX
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                           <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center font-black text-[10px] text-foreground group-hover:border-primary/30 transition-colors">
+                              {wallet.asset.substring(0, 3)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-black text-foreground text-xs whitespace-nowrap">{wallet.asset}</span>
+                              <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{wallet.network}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                           <div className="flex items-center gap-2">
+                            <div className="p-1 rounded-lg bg-muted border border-border">
+                              <Database className="w-3 h-3 text-muted-foreground" />
+                            </div>
+                            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400/90 truncate max-w-[200px]">
+                              {wallet.hotWallet}
+                            </span>
+                            <CopyButton text={wallet.hotWallet} />
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-sm font-black text-foreground mb-1">
+                              {wallet.amount.toFixed(6)}
+                            </span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+                              {formatDistanceToNow(new Date(wallet.createdAt), { addSuffix: true })}
+                            </span>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-lg">
+            <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <History className="w-5 h-5 text-amber-500" />
+                </div>
+                <h2 className="text-xl font-black text-foreground tracking-tight">Audit Trail</h2>
+              </div>
+              <div className="px-3 py-1 rounded-xl bg-muted border border-border">
+                <span className="text-xs font-bold text-muted-foreground">
+                  <span className="text-amber-500 font-extrabold">{total}</span> COMPLETED SWEEPS
+                </span>
+              </div>
+            </div>
+
+            {history.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 grayscale opacity-40">
+                <Zap className="w-16 h-16 text-muted-foreground mb-6" />
+                <p className="text-lg font-bold text-muted-foreground">No history found</p>
+              </div>
             ) : (
-              <div className="col-span-full py-8 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                <CheckCircle2 className="w-8 h-8 mb-2" />
-                <p className="font-bold">Everything swept!</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-muted/20">
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Asset Network</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Transaction Details</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Blockchain ID</th>
+                      <th className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Completion</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {history.map((item, idx) => (
+                      <motion.tr
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="hover:bg-muted/30 transition-all group"
+                      >
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center font-black text-xs text-foreground group-hover:border-primary/30 transition-colors">
+                              {item.asset.substring(0, 3)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-black text-foreground text-sm">{item.asset}</span>
+                              <span className={`text-[10px] font-black uppercase ${item.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{item.network}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="flex flex-col">
+                            <span className="font-black text-foreground text-base mb-1">{item.amount.toFixed(6)}</span>
+                            <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+                              <span className="truncate max-w-[150px]">{item.address}</span>
+                              <CopyButton text={item.address} />
+                              <ArrowRight className="w-3 h-3 text-emerald-500" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/10">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                            </div>
+                            <span className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors cursor-pointer truncate max-w-[200px]">
+                              {item.txId}
+                            </span>
+                            <CopyButton text={item.txId} />
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-sm font-black text-foreground mb-1">
+                              {formatDistanceToNow(new Date(item.sweptAt), { addSuffix: true })}
+                            </span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+                              {new Date(item.sweptAt).toLocaleString()}
+                            </span>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {total > 20 && (
+              <div className="px-8 py-6 border-t border-border flex items-center justify-between bg-muted/10">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                  Page <span className="text-foreground font-black">{page}</span> of {Math.ceil(total / 20)}
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={page * 20 >= total}
+                    className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        </motion.div>
-      </div>
-
-      {/* History Table */}
-      <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-2xl">
-        <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/20">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-orange-500/10">
-              <History className="w-5 h-5 text-orange-500" />
-            </div>
-            <h2 className="text-xl font-black text-foreground">Sweep History</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-muted-foreground px-3 py-1 rounded-full bg-muted">
-              {total} Total Sweeps
-            </span>
-          </div>
-        </div>
-
-        {historyLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            <p className="text-sm font-bold text-muted-foreground animate-pulse">Loading sweep logs...</p>
-          </div>
-        ) : history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center grayscale opacity-60">
-            <div className="w-20 h-20 rounded-3xl bg-muted flex items-center justify-center mb-6">
-              <Zap className="w-10 h-10 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-bold mb-1">No sweep history yet</h3>
-            <p className="text-sm text-muted-foreground max-w-xs">Once you trigger a sweep process, the logs will appear here.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/30">
-                  <th className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Asset & Network</th>
-                  <th className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Amount & Address</th>
-                  <th className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Transaction ID</th>
-                  <th className="px-8 py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground text-right">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {history.map((item, idx) => (
-                  <motion.tr
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className="hover:bg-muted/40 transition-colors group"
-                  >
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center font-black text-xs">
-                          {item.asset.substring(0, 3)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-sm">{item.asset}</span>
-                          <span className="text-[10px] font-black text-muted-foreground uppercase">{item.network}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col">
-                        <span className="font-black text-foreground">{item.amount.toFixed(6)}</span>
-                        <div className="flex items-center gap-1.5 opacity-50 text-[10px] font-mono group-hover:opacity-100 transition-opacity">
-                          <span className="truncate max-w-[120px]">{item.address}</span>
-                          <ArrowRight className="w-2 h-2" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/5 items-center justify-center flex">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                        </div>
-                        <span className="text-xs font-mono text-muted-foreground truncate max-w-[180px]">
-                          {item.txId}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="text-sm font-bold text-foreground">
-                          {formatDistanceToNow(new Date(item.sweptAt), { addSuffix: true })}
-                        </span>
-                        <span className="text-[10px] font-medium text-muted-foreground">
-                          {new Date(item.sweptAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {total > 20 && (
-          <div className="px-8 py-6 border-t border-border flex items-center justify-between bg-muted/10">
-            <p className="text-sm font-medium text-muted-foreground">
-              Showing <span className="text-foreground font-bold">{((page - 1) * 20) + 1}</span> - <span className="text-foreground font-bold">{Math.min(page * 20, total)}</span> of <span className="text-foreground font-bold">{total}</span> entries
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-5 py-2 rounded-xl text-sm font-bold bg-muted hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page * 20 >= total}
-                className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </motion.div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as userSettingsApi from '@/lib/api/user-settings';
+import { dashboardKeys } from '@/lib/hooks/use-dashboard';
 import type {
   NotificationPreferences,
   UpdateBankAccountInput,
@@ -197,7 +198,10 @@ export const useVerifyPhoneOtp = () => {
   return useMutation({
     mutationFn: (data: { phoneNumber: string; otp: string }) => userSettingsApi.verifyPhoneOtp(data.phoneNumber, data.otp),
     onSuccess: () => {
+      // Invalidate both the settings profile and the dashboard so
+      // user.phoneVerified is immediately reflected everywhere.
       queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.client() });
     },
   });
 };
@@ -215,7 +219,7 @@ export const useVerifyIdentity = () => {
 export const useVerifyCac = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (rcNumber: string) => userSettingsApi.verifyCac(rcNumber),
+    mutationFn: (data: FormData) => userSettingsApi.verifyCac(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userSettingsKeys.profile() });
     },

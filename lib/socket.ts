@@ -19,7 +19,7 @@ export const initSocket = (): Socket => {
     auth: {
       token: accessToken,
     },
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,

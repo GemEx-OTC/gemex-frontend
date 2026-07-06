@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
+import { apiClient } from "@/lib/api/client"
 
 // Types
 interface LiquidityBalance {
@@ -48,42 +49,22 @@ interface LiquidityStats {
   pendingCount: number
 }
 
-// API functions
-const OTC_API_URL = process.env.NEXT_PUBLIC_OTC_API_URL || "http://localhost:4000"
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("accessToken")
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  }
-}
-
+// API functions using REST client
 const fetchBalance = async (): Promise<LiquidityBalance> => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/balance`, {
-    headers: getAuthHeaders(),
-  })
-  if (!res.ok) throw new Error("Failed to fetch balance")
-  const data = await res.json()
-  return data.data
+  const res = await apiClient.get("/liquidity/balance")
+  return res.data.data
 }
 
 const fetchDisbursements = async (page = 1, limit = 10): Promise<{ disbursements: Disbursement[], pagination: { total: number } }> => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/disbursements?page=${page}&limit=${limit}`, {
-    headers: getAuthHeaders(),
+  const res = await apiClient.get("/liquidity/disbursements", {
+    params: { page, limit }
   })
-  if (!res.ok) throw new Error("Failed to fetch disbursements")
-  const data = await res.json()
-  return data.data
+  return res.data.data
 }
 
 const fetchStats = async (): Promise<LiquidityStats> => {
-  const res = await fetch(`${OTC_API_URL}/api/v1/liquidity/stats`, {
-    headers: getAuthHeaders(),
-  })
-  if (!res.ok) throw new Error("Failed to fetch stats")
-  const data = await res.json()
-  return data.data
+  const res = await apiClient.get("/liquidity/stats")
+  return res.data.data
 }
 
 const formatCurrency = (amount: number) => {

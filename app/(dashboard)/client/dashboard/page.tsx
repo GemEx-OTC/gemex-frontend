@@ -10,6 +10,29 @@ import { FloatingRateDock } from "@/components/floating-rate-dock"
 import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
 import { Clock, Shield, AlertCircle } from "lucide-react"
+import Image from "next/image"
+
+const ASSET_CONFIG = {
+  USDT: { 
+    icon: "/icons/usdt.svg", 
+    gradient: "from-emerald-500/20 to-green-500/10",
+    border: "border-emerald-500/30",
+    color: "text-emerald-400"
+  },
+  BTC: { 
+    icon: "/icons/btc.svg", 
+    gradient: "from-orange-500/20 to-amber-500/10",
+    border: "border-orange-500/30",
+    color: "text-orange-400"
+  },
+  USDC: { 
+    icon: "/icons/usdc.svg", 
+    gradient: "from-blue-500/20 to-cyan-500/10",
+    border: "border-blue-500/30",
+    color: "text-blue-400"
+  },
+} as const
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -263,8 +286,22 @@ export default function ClientDashboardPage() {
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold text-white">
-                        {tx.cryptoAsset === "BTC" ? "₿" : tx.cryptoAsset === "USDT" ? "₮" : "$"}
+                      <div className={`w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center font-bold text-white p-2 ${
+                        ASSET_CONFIG[tx.cryptoAsset as keyof typeof ASSET_CONFIG] 
+                          ? `bg-gradient-to-br ${ASSET_CONFIG[tx.cryptoAsset as keyof typeof ASSET_CONFIG].gradient} ${ASSET_CONFIG[tx.cryptoAsset as keyof typeof ASSET_CONFIG].border} border-2`
+                          : "bg-gradient-to-br from-primary to-accent"
+                      }`}>
+                        {ASSET_CONFIG[tx.cryptoAsset as keyof typeof ASSET_CONFIG] ? (
+                          <Image
+                            src={ASSET_CONFIG[tx.cryptoAsset as keyof typeof ASSET_CONFIG].icon}
+                            alt={tx.cryptoAsset}
+                            width={22}
+                            height={22}
+                            className="object-contain"
+                          />
+                        ) : (
+                          tx.cryptoAsset === "BTC" ? "₿" : tx.cryptoAsset === "USDT" ? "₮" : "$"
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">

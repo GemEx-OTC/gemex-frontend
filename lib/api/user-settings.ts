@@ -257,7 +257,23 @@ export const verifyIdentity = async (data: { idType: string; idNumber: string })
   return response.data.data;
 };
 
-export const verifyCac = async (rcNumber: string): Promise<{ message: string; tier: number }> => {
-  const response = await apiClient.post<ApiResponse<{ message: string; tier: number }>>('/kyc/verify/cac', { rcNumber });
+export interface VerifyCacResponse {
+  message: string;
+  tier?: number;
+  status: string;
+  jobId: string;
+}
+
+export const verifyCac = async (data: FormData): Promise<VerifyCacResponse> => {
+  const response = await apiClient.post<ApiResponse<VerifyCacResponse>>('/kyc/verify/cac', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data.data;
+};
+
+export const getKycStatus = async (jobId: string): Promise<{ status: string; tier?: number; message?: string }> => {
+  const response = await apiClient.get<ApiResponse<{ status: string; tier?: number; message?: string }>>(`/kyc/status/${jobId}`);
   return response.data.data;
 };

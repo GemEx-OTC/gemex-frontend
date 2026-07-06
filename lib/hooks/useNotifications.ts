@@ -8,6 +8,8 @@ import type {
   NotificationStats,
   NotificationType 
 } from '@/lib/api/notifications';
+import { toast } from 'sonner';
+import { useSocketContext } from '@/lib/providers/socket-provider';
 
 interface UseNotificationsOptions {
   autoFetch?: boolean;
@@ -174,6 +176,28 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       return () => clearInterval(interval);
     }
   }, [pollInterval, refreshUnreadCount]);
+
+  // Real-time notifications via WebSockets
+  const { socket } = useSocketContext();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (data: { notification: Notification }) => {
+      const { notification } = data;
+      setNotifications(prev => [notification, ...prev]);
+      setUnreadCount(prev => prev + 1);
+      toast(notification.title, {
+        description: notification.message,
+      });
+    };
+
+    socket.on('notification:new', handleNewNotification);
+
+    return () => {
+      socket.off('notification:new', handleNewNotification);
+    };
+  }, [socket]);
 
   return {
     notifications,

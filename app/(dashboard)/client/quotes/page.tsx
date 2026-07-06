@@ -8,6 +8,8 @@ import { CRYPTO_ASSETS, CRYPTO_NETWORKS } from "@/lib/constants"
 import { Clock, CheckCircle, XCircle, AlertCircle, ArrowRight, TrendingUp, TrendingDown, Timer, X, Copy, Check, ExternalLink, Wallet, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { getQuotes, acceptQuote, cancelQuote, type Quote, type QuoteStatus, type AcceptQuoteResponse } from "@/lib/api/quotes"
+import { getTrades } from "@/lib/api/trades"
+import { useSocketContext } from "@/lib/providers/socket-provider"
 
 // Asset icons
 const ASSET_CONFIG = {
@@ -28,7 +30,7 @@ type ModalStep = "accept" | "deposit" | "confirmed"
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   Pending: { label: "Awaiting Quote", color: "text-blue-400", bg: "bg-blue-500/20", icon: Clock },
   Quoted: { label: "Quote Ready", color: "text-[#C8F55A]", bg: "bg-[#C8F55A]/20", icon: CheckCircle },
-  Accepted: { label: "Completed", color: "text-emerald-400", bg: "bg-emerald-500/20", icon: CheckCircle },
+  Accepted: { label: "Accepted", color: "text-purple-400", bg: "bg-purple-500/20", icon: Clock },
   Expired: { label: "Expired", color: "text-gray-400", bg: "bg-gray-500/20", icon: Clock },
   Rejected: { label: "Rejected", color: "text-red-400", bg: "bg-red-500/20", icon: XCircle },
   Canceled: { label: "Canceled", color: "text-gray-400", bg: "bg-gray-500/20", icon: XCircle },
@@ -46,6 +48,7 @@ export default function ClientQuotesPage() {
   const [processing, setProcessing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { socket } = useSocketContext()
 
   // Fetch quotes
   const fetchQuotes = useCallback(async () => {
@@ -68,6 +71,33 @@ export default function ClientQuotesPage() {
   useEffect(() => {
     fetchQuotes()
   }, [fetchQuotes])
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleQuoteUpdate = (data: { quoteId: string; quote: Quote }) => {
+      fetchQuotes();
+    };
+
+    const handleTradeUpdate = (data: { tradeId: string; trade: any }) => {
+      fetchQuotes();
+
+      if (showModal && tradeData && tradeData.transactionId === data.trade.transactionId) {
+        setTradeData(data.trade);
+        if (data.trade.status === "CryptoConfirmed") {
+          setModalStep("confirmed");
+        }
+      }
+    };
+
+    socket.on('quote:updated', handleQuoteUpdate);
+    socket.on('trade:updated', handleTradeUpdate);
+
+    return () => {
+      socket.off('quote:updated', handleQuoteUpdate);
+      socket.off('trade:updated', handleTradeUpdate);
+    };
+  }, [socket, fetchQuotes, showModal, tradeData]);
 
   const quotedCount = quotes.filter(q => q.status === "Quoted").length
   const pendingCount = quotes.filter(q => q.status === "Pending").length
@@ -312,7 +342,7 @@ export default function ClientQuotesPage() {
 
                     {/* Right: Amount */}
                     <div className="text-right">
-                      {quote.status === "Quoted" && quote.firmNairaAmount ? (
+                      {quote.firmNairaAmount ? (
                         <>
                           <div className="font-bold text-lg text-[#C8F55A]">
                             ₦{quote.firmNairaAmount.toLocaleString()}
@@ -388,6 +418,89 @@ export default function ClientQuotesPage() {
                         >
                           Cancel
                         </motion.button>
+                      </div>
+                    </div>
+                  )}
+                  {/* Accepted Status */}
+                  {quote.status === "Accepted" && (
+                    <div className="mt-3 pt-3 border-t border-[#2D2D3D]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-[#B0B0B8]">
+                          {(!quote.trade || quote.trade.status === "AwaitingDeposit") ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                              <span>Trade created. Please send your crypto deposit.</span>
+                            </>
+                          ) : quote.trade.status === "CryptoConfirmed" ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                              <span className="text-blue-400 font-medium">Deposit confirmed. Awaiting payout approval.</span>
+                            </>
+                          ) : quote.trade.status === "PayoutPending" ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                              <span className="text-purple-400 font-medium">Payout pending. Naira transfer in progress.</span>
+                            </>
+                          ) : quote.trade.status === "Settled" ? (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                              <span className="text-emerald-400 font-medium">Trade completed. Naira payout sent.</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-2 h-2 rounded-full bg-red-400" />
+                              <span className="text-red-400 font-medium">Trade failed: {quote.trade.failureReason || "Transaction failed"}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {(!quote.trade || ["AwaitingDeposit", "CryptoConfirmed"].includes(quote.trade.status)) && (
+                          <motion.button
+                            onClick={async () => {
+                              setProcessing(true);
+                              try {
+                                if (quote.trade) {
+                                  setTradeData(quote.trade as any);
+                                  setModalStep(quote.trade.status === "CryptoConfirmed" ? "confirmed" : "deposit");
+                                  setSelectedQuote(quote);
+                                  setShowModal(true);
+                                } else {
+                                  const res = await getTrades({ quoteId: quote._id });
+                                  if (res.transactions.length > 0) {
+                                    setTradeData(res.transactions[0] as any);
+                                    setModalStep(res.transactions[0].status === "CryptoConfirmed" ? "confirmed" : "deposit");
+                                    setSelectedQuote(quote);
+                                    setShowModal(true);
+                                  } else {
+                                    setError("Could not find the associated trade transaction.");
+                                  }
+                                }
+                              } catch (err: any) {
+                                setError(err.message || "Failed to retrieve deposit address.");
+                              } finally {
+                                setProcessing(false);
+                              }
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-1.5 rounded-lg text-sm font-semibold text-[#1E1E2B] bg-[#C8F55A] hover:opacity-90 transition-all flex items-center gap-1"
+                          >
+                            <span>{quote.trade?.status === "CryptoConfirmed" ? "View Trade Status" : "View Deposit Address"}</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.button>
+                        )}
+
+                        {quote.trade && ["PayoutPending", "Settled", "Failed"].includes(quote.trade.status) && (
+                          <motion.button
+                            onClick={() => router.push("/client/history")}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-1.5 rounded-lg text-sm font-semibold text-[#C8F55A] border border-[#C8F55A]/30 bg-[#C8F55A]/10 hover:bg-[#C8F55A]/20 transition-all flex items-center gap-1"
+                          >
+                            <span>View in History</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -622,12 +735,40 @@ export default function ClientQuotesPage() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4"
+                      className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+                        tradeData.status === "Settled"
+                          ? "bg-emerald-500/20"
+                          : ["CryptoConfirmed", "PayoutPending"].includes(tradeData.status)
+                          ? "bg-blue-500/20"
+                          : "bg-amber-500/20"
+                      }`}
                     >
-                      <CheckCircle className="w-8 h-8 text-emerald-400" />
+                      {tradeData.status === "Settled" ? (
+                        <CheckCircle className="w-8 h-8 text-emerald-400" />
+                      ) : ["CryptoConfirmed", "PayoutPending"].includes(tradeData.status) ? (
+                        <CheckCircle className="w-8 h-8 text-blue-400" />
+                      ) : (
+                        <Clock className="w-8 h-8 text-amber-400" />
+                      )}
                     </motion.div>
-                    <h3 className="text-xl font-bold text-[#F0F0F0] mb-2">Deposit Submitted!</h3>
-                    <p className="text-sm text-[#B0B0B8]">We're monitoring the blockchain for your transaction.</p>
+                    <h3 className="text-xl font-bold text-[#F0F0F0] mb-2">
+                      {tradeData.status === "Settled"
+                        ? "Payout Completed!"
+                        : tradeData.status === "PayoutPending"
+                        ? "Payout in Progress!"
+                        : tradeData.status === "CryptoConfirmed"
+                        ? "Deposit Confirmed!"
+                        : "Deposit Submitted!"}
+                    </h3>
+                    <p className="text-sm text-[#B0B0B8]">
+                      {tradeData.status === "Settled"
+                        ? "Naira payout has been successfully sent to your bank account."
+                        : tradeData.status === "PayoutPending"
+                        ? "Naira transfer to your bank account is currently being processed."
+                        : tradeData.status === "CryptoConfirmed"
+                        ? "Your deposit was detected and confirmed. Payout is being processed."
+                        : "We're monitoring the blockchain for your transaction."}
+                    </p>
                   </div>
 
                   <div className="bg-[#2D2D3D]/50 rounded-xl p-4 mb-6 space-y-3">
@@ -641,7 +782,7 @@ export default function ClientQuotesPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-[#B0B0B8]">Network</span>
-                      <span className="text-[#F0F0F0]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork]?.name || tradeData.cryptoNetwork}</span>
+                      <span className="text-[#F0F0F0]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork as keyof typeof CRYPTO_NETWORKS]?.name || tradeData.cryptoNetwork}</span>
                     </div>
                     <div className="flex justify-between text-sm pt-3 border-t border-[#2D2D3D]">
                       <span className="text-[#B0B0B8]">You'll Receive</span>
@@ -650,19 +791,33 @@ export default function ClientQuotesPage() {
                   </div>
 
                   <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-lg p-4 mb-6">
-                    <h4 className="font-semibold text-[#F0F0F0] mb-2">What happens next?</h4>
+                    <h4 className="font-semibold text-[#F0F0F0] mb-2">Trade Progress</h4>
                     <ul className="text-sm text-[#B0B0B8] space-y-2">
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#641AE4]">1.</span>
-                        <span>We detect your deposit on the blockchain</span>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className={`w-4 h-4 ${tradeData.status !== "AwaitingDeposit" ? "text-emerald-400" : "text-[#B0B0B8]"}`} />
+                        <span className={tradeData.status !== "AwaitingDeposit" ? "text-[#F0F0F0]" : ""}>Deposit detected on the blockchain</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#641AE4]">2.</span>
-                        <span>Transaction is confirmed (usually 1-3 mins)</span>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className={`w-4 h-4 ${tradeData.status !== "AwaitingDeposit" ? "text-emerald-400" : "text-[#B0B0B8]"}`} />
+                        <span className={tradeData.status !== "AwaitingDeposit" ? "text-[#F0F0F0]" : ""}>Transaction confirmed</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-[#641AE4]">3.</span>
-                        <span>Naira is sent to your bank account</span>
+                      <li className="flex items-center gap-2">
+                        {tradeData.status === "Settled" ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        ) : tradeData.status === "PayoutPending" ? (
+                          <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                        ) : tradeData.status === "CryptoConfirmed" ? (
+                          <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-[#B0B0B8]" />
+                        )}
+                        <span className={tradeData.status === "Settled" ? "text-emerald-400 font-medium" : ["CryptoConfirmed", "PayoutPending"].includes(tradeData.status) ? "text-[#F0F0F0]" : ""}>
+                          {tradeData.status === "Settled"
+                            ? "Naira sent to your bank account"
+                            : tradeData.status === "PayoutPending"
+                            ? "Naira transfer in progress"
+                            : "Waiting for payout approval"}
+                        </span>
                       </li>
                     </ul>
                   </div>

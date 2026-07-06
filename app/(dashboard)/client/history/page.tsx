@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
+import Image from "next/image"
+
 import { useTrades, useTradeStats } from "@/lib/hooks/use-trades"
 import { TRANSACTION_STATUS } from "@/lib/constants"
 import { 
@@ -65,12 +67,13 @@ const getStatusIcon = (status: string) => {
 
 const getCryptoConfig = (asset: string) => {
   switch (asset) {
-    case 'BTC': return { color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/30', icon: '₿', gradient: 'from-orange-500/20 to-amber-500/10' }
-    case 'USDT': return { color: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/30', icon: '₮', gradient: 'from-emerald-500/20 to-green-500/10' }
-    case 'USDC': return { color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30', icon: '$', gradient: 'from-blue-500/20 to-cyan-500/10' }
-    default: return { color: 'text-gray-400', bg: 'bg-gray-500/20', border: 'border-gray-500/30', icon: '?', gradient: 'from-gray-500/20 to-slate-500/10' }
+    case 'BTC': return { color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/30', icon: '₿', logo: '/icons/btc.svg', gradient: 'from-orange-500/20 to-amber-500/10' }
+    case 'USDT': return { color: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/30', icon: '₮', logo: '/icons/usdt.svg', gradient: 'from-emerald-500/20 to-green-500/10' }
+    case 'USDC': return { color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30', icon: '$', logo: '/icons/usdc.svg', gradient: 'from-blue-500/20 to-cyan-500/10' }
+    default: return { color: 'text-gray-400', bg: 'bg-gray-500/20', border: 'border-gray-500/30', icon: '?', logo: null, gradient: 'from-gray-500/20 to-slate-500/10' }
   }
 }
+
 
 const getStatusGradient = (status: string) => {
   switch (status) {
@@ -251,8 +254,18 @@ export default function HistoryPage() {
                       {/* Header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cryptoConfig.gradient} ${cryptoConfig.border} border-2 flex items-center justify-center`}>
-                            <span className={`text-xl font-bold ${cryptoConfig.color}`}>{cryptoConfig.icon}</span>
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cryptoConfig.gradient} ${cryptoConfig.border} border-2 flex items-center justify-center p-2.5`}>
+                            {cryptoConfig.logo ? (
+                              <Image
+                                src={cryptoConfig.logo}
+                                alt={trade.cryptoAsset}
+                                width={26}
+                                height={26}
+                                className="object-contain"
+                              />
+                            ) : (
+                              <span className={`text-xl font-bold ${cryptoConfig.color}`}>{cryptoConfig.icon}</span>
+                            )}
                           </div>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">

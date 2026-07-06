@@ -3,27 +3,80 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Copy, Check, AlertCircle, Info, Loader2, Wallet } from "lucide-react"
-import Image from "next/image"
+import { Copy, Check, AlertCircle, Info, Loader2, Wallet, QrCode } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMyWallets } from "@/lib/hooks/use-wallets"
+import { QRCodeSVG } from "qrcode.react"
+import { 
+  NetworkEthereum, 
+  NetworkBinanceSmartChain, 
+  NetworkBase, 
+  NetworkPolygon, 
+  NetworkArbitrumOne, 
+  NetworkOptimism,
+  NetworkTron,
+  NetworkBitcoin,
+  TokenUSDT,
+  TokenUSDC,
+  TokenBTC
+} from "@web3icons/react"
 
-type NetworkKey = "TRC20" | "BSC" | "BTC"
+type NetworkKey = "TRC20" | "BSC" | "BASE" | "ETH" | "POLYGON" | "ARBITRUM" | "OPTIMISM"
 
-const NETWORK_INFO: Record<NetworkKey, { name: string; chain: string; assets: string[]; logo: string }> = {
-  TRC20: { name: "TRC20", chain: "Tron", assets: ["USDT"], logo: "/icons/chains/tron.svg" },
-  BSC: { name: "BEP20", chain: "BNB Smart Chain", assets: ["USDT", "USDC"], logo: "/icons/chains/bnb.svg" },
-  BTC: { name: "Bitcoin", chain: "Bitcoin", assets: ["BTC"], logo: "/icons/btc.svg" },
+const NETWORK_INFO: Record<NetworkKey, { name: string; chain: string; assets: string[] }> = {
+  BSC: { name: "BEP20", chain: "BNB Smart Chain", assets: ["USDT", "USDC"] },
+  BASE: { name: "Base", chain: "Base Network", assets: ["USDT", "USDC"] },
+  ETH: { name: "ERC20", chain: "Ethereum Mainnet", assets: ["USDT", "USDC"] },
+  POLYGON: { name: "Polygon ERC20", chain: "Polygon Network", assets: ["USDT", "USDC"] },
+  ARBITRUM: { name: "Arbitrum ERC20", chain: "Arbitrum One Network", assets: ["USDT", "USDC"] },
+  OPTIMISM: { name: "Optimism ERC20", chain: "Optimism Network", assets: ["USDT", "USDC"] },
+  TRC20: { name: "TRC20", chain: "Tron", assets: ["USDT"] },
 }
 
-const ASSET_ICONS: Record<string, string> = {
-  USDT: "/icons/usdt.svg",
-  USDC: "/icons/usdc.svg",
-  BTC: "/icons/btc.svg",
+const EVM_NETWORKS = ["BSC", "BASE", "ETH", "POLYGON", "ARBITRUM", "OPTIMISM"]
+
+// Helper to render network icons from @web3icons/react
+export function NetworkIconComponent({ network, size = 24 }: { network: NetworkKey; size?: number }) {
+  switch (network) {
+    case "TRC20":
+      return <NetworkTron size={size} variant="branded" />
+    case "BSC":
+      return <NetworkBinanceSmartChain size={size} variant="branded" />
+    case "BASE":
+      return (
+        <svg viewBox="0 0 24 24" width={size} height={size} className="web3icons flex-shrink-0" style={{ display: 'block' }}>
+          <circle cx="12" cy="12" r="10" fill="#0052FF" />
+          <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" />
+        </svg>
+      )
+    case "ETH":
+      return <NetworkEthereum size={size} variant="branded" />
+    case "POLYGON":
+      return <NetworkPolygon size={size} variant="branded" />
+    case "ARBITRUM":
+      return <NetworkArbitrumOne size={size} variant="branded" />
+    case "OPTIMISM":
+      return <NetworkOptimism size={size} variant="branded" />
+  }
+}
+
+// Helper to render asset icons from @web3icons/react
+export function TokenIconComponent({ asset, size = 24 }: { asset: string; size?: number }) {
+  switch (asset) {
+    case "USDT":
+      return <TokenUSDT size={size} variant="branded" />
+    case "USDC":
+      return <TokenUSDC size={size} variant="branded" />
+    case "BTC":
+      return <TokenBTC size={size} variant="branded" />
+    default:
+      return null
+  }
 }
 
 export default function AdminWalletPage() {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [activeQrModal, setActiveQrModal] = useState<{ address: string; network: NetworkKey } | null>(null)
   const { data: walletsData, isLoading, error } = useMyWallets()
 
   const handleCopy = async (address: string, network: string) => {
@@ -67,25 +120,35 @@ export default function AdminWalletPage() {
     )
   }
 
-  const wallets = walletsData?.wallets || []
+  const rawWallets = walletsData?.wallets || []
+  const sharedEvmAddress = rawWallets.find(w => EVM_NETWORKS.includes(w.network))?.address || ""
+
+  const wallets = Object.keys(NETWORK_INFO).map(net => {
+    const existing = rawWallets.find(w => w.network === net)
+    if (existing) return existing
+    if (EVM_NETWORKS.includes(net) && sharedEvmAddress) {
+      return { network: net, address: sharedEvmAddress }
+    }
+    return { network: net, address: "" }
+  })
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-      <DashboardHeader title="Admin Wallet" subtitle="Your deposit addresses for receiving crypto" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="space-y-6">
+      <DashboardHeader title="Admin Wallet" subtitle="Your platform deposit addresses for receiving customer deposits" />
 
       {/* Info Banner */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }} 
         animate={{ opacity: 1, y: 0 }} 
-        className="mb-8 p-5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl flex items-start gap-4"
+        className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-start gap-4"
       >
-        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+          <Info className="w-5 h-5 text-blue-500" />
         </div>
         <div>
-          <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">Admin Deposit Addresses</h3>
-          <p className="text-blue-700 dark:text-blue-300 text-sm">
-            These are your unique wallet addresses for receiving crypto deposits. Use the correct network when sending funds.
+          <h3 className="font-bold text-foreground mb-1 text-sm">System Pool Wallets</h3>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            These addresses receive user fund transfers when processing OTC trades. All EVM networks (BEP20, Base, ERC20, Polygon, Arbitrum, Optimism) resolve to a single shared Ethereum-compatible keypair, which simplifies sweep administration.
           </p>
         </div>
       </motion.div>
@@ -97,66 +160,88 @@ export default function AdminWalletPage() {
           const wallet = wallets.find(w => w.network === network)
           const address = wallet?.address || ""
           const hasAddress = !!address
+          const isEvm = EVM_NETWORKS.includes(network)
 
           return (
             <motion.div
               key={network}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`p-6 rounded-2xl border-2 transition-all ${
+              transition={{ delay: index * 0.05 }}
+              className={`p-6 rounded-2xl border transition-all flex flex-col justify-between ${
                 hasAddress 
-                  ? "bg-card border-border hover:border-primary/40 hover:shadow-lg" 
-                  : "bg-card/50 border-border/50 opacity-60"
+                  ? "bg-card border-border hover:border-primary/30 hover:shadow-md" 
+                  : "bg-card/50 border-border/50 opacity-55"
               }`}
             >
-              {/* Header */}
-              <div className="flex items-center gap-4 mb-5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center p-3">
-                  <Image src={info.logo} alt={info.name} width={32} height={32} className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-foreground text-lg">{info.name}</h3>
-                  <p className="text-sm text-muted-foreground">{info.chain}</p>
-                </div>
-              </div>
-
-              {/* Supported Assets */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs text-muted-foreground">Supports:</span>
-                <div className="flex items-center gap-1">
-                  {info.assets.map(asset => (
-                    <div key={asset} className="flex items-center gap-1 px-2 py-1 bg-muted rounded-full">
-                      <Image src={ASSET_ICONS[asset]} alt={asset} width={14} height={14} className="w-3.5 h-3.5" />
-                      <span className="text-xs font-medium text-foreground">{asset}</span>
+              <div>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                      <NetworkIconComponent network={network} size={24} />
                     </div>
-                  ))}
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-foreground text-base">{info.name}</h4>
+                        {isEvm && (
+                          <span className="px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[9px] font-extrabold tracking-wider uppercase">
+                            EVM
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{info.chain}</p>
+                    </div>
+                  </div>
+                  
+                  {hasAddress && (
+                    <button 
+                      onClick={() => setActiveQrModal({ address, network })}
+                      className="p-2 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+                      title="Show QR Code"
+                    >
+                      <QrCode className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Supported Assets */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Supports:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {info.assets.map(asset => (
+                      <div key={asset} className="flex items-center gap-1 px-2 py-0.5 bg-muted rounded-md border border-border">
+                        <TokenIconComponent asset={asset} size={12} />
+                        <span className="text-[10px] font-bold text-foreground">{asset}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {/* Address */}
               {hasAddress ? (
-                <>
-                  <div className="p-3 bg-muted rounded-lg font-mono text-xs break-all text-foreground mb-4 border border-border">
+                <div className="space-y-3 mt-2">
+                  <div className="p-3 bg-muted/70 rounded-xl font-mono text-[11px] break-all text-foreground border border-border">
                     {address}
                   </div>
-                  <motion.button
-                    onClick={() => handleCopy(address, network)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full px-4 py-3 rounded-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
-                  >
-                    {copiedAddress === network ? (
-                      <><Check className="w-4 h-4" /> Copied!</>
-                    ) : (
-                      <><Copy className="w-4 h-4" /> Copy Address</>
-                    )}
-                  </motion.button>
-                </>
+                  <div className="grid grid-cols-1">
+                    <button
+                      onClick={() => handleCopy(address, network)}
+                      className="w-full py-2.5 rounded-xl font-semibold bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 text-xs transition-all active:scale-[0.98]"
+                    >
+                      {copiedAddress === network ? (
+                        <><Check className="w-3.5 h-3.5" /> Copied!</>
+                      ) : (
+                        <><Copy className="w-3.5 h-3.5" /> Copy Address</>
+                      )}
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
-                  <Wallet className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Address not available</p>
+                <div className="p-4 bg-muted/40 rounded-xl text-center mt-2">
+                  <Wallet className="w-6 h-6 text-muted-foreground mx-auto mb-1.5" />
+                  <p className="text-xs text-muted-foreground">Address not provisioned</p>
                 </div>
               )}
             </motion.div>
@@ -164,25 +249,69 @@ export default function AdminWalletPage() {
         })}
       </div>
 
-      {/* Warning */}
+      {/* Warning Alert */}
       <motion.div 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
-        transition={{ delay: 0.4 }}
-        className="mt-8 p-5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl"
+        transition={{ delay: 0.3 }}
+        className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-4"
       >
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">Important</h4>
-            <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
-              <li>• Always verify the network matches your source wallet</li>
-              <li>• Sending to the wrong network may result in permanent loss</li>
-              <li>• Double-check the address before confirming any transaction</li>
-            </ul>
-          </div>
+        <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-1 text-sm">Security Advisory</h4>
+          <ul className="list-disc list-inside text-xs text-amber-800 dark:text-amber-300 space-y-1 leading-relaxed">
+            <li>Deposits sent to incorrect network addresses cannot be automatically swept by the system.</li>
+            <li>Before conducting sweeps, ensure you have sufficient native gas in the master pool wallets.</li>
+          </ul>
         </div>
       </motion.div>
+
+      {/* QR Code Modal */}
+      <AnimatePresence>
+        {activeQrModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActiveQrModal(null)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-3xl p-8 max-w-sm w-full text-center space-y-6 shadow-2xl relative"
+            >
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-2">
+                  <NetworkIconComponent network={activeQrModal.network} size={20} />
+                  <span className="font-extrabold text-foreground text-sm">
+                    {NETWORK_INFO[activeQrModal.network].name} QR Code
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setActiveQrModal(null)}
+                  className="text-muted-foreground hover:text-foreground text-xs font-bold"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="p-4 bg-white rounded-2xl shadow-lg inline-flex items-center justify-center">
+                <QRCodeSVG value={activeQrModal.address} size={180} level="H" includeMargin={false} fgColor="#000000" bgColor="#ffffff" />
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Address</span>
+                <p className="p-3 bg-muted rounded-xl font-mono text-xs break-all border border-border text-foreground select-all">
+                  {activeQrModal.address}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

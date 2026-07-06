@@ -3,7 +3,7 @@ import { ApiResponse } from './types';
 
 // Quote Types
 export type CryptoAsset = 'USDT' | 'BTC' | 'USDC';
-export type CryptoNetwork = 'TRC20' | 'BSC' | 'BTC';
+export type CryptoNetwork = 'TRC20' | 'BSC' | 'BASE' | 'ETH' | 'POLYGON' | 'ARBITRUM' | 'OPTIMISM' | 'BTC';
 export type QuoteStatus = 'Pending' | 'Quoted' | 'Accepted' | 'Expired' | 'Rejected' | 'Canceled';
 
 export interface Quote {
@@ -29,6 +29,15 @@ export interface Quote {
   expiresAt?: string;
   status: QuoteStatus;
   rejectionReason?: string;
+  trade?: {
+    _id: string;
+    transactionId: string;
+    status: string;
+    depositAddress: string;
+    cryptoTxId?: string;
+    nairaAmount: number;
+    failureReason?: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

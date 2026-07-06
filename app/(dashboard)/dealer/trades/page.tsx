@@ -234,7 +234,7 @@ export default function DealerTradesPage() {
                 {filteredTrades.map((trade, idx) => {
                   const statusInfo = TRANSACTION_STATUS[trade.status as keyof typeof TRANSACTION_STATUS]
                   const cryptoConfig = getCryptoConfig(trade.cryptoAsset)
-                  const canTriggerPayout = trade.status === 'CryptoConfirmed'
+                  const canTriggerPayout = trade.status === 'CryptoConfirmed' || trade.status === 'Failed'
                   
                   return (
                     <motion.div
@@ -306,10 +306,20 @@ export default function DealerTradesPage() {
                             whileTap={{ scale: 0.99 }}
                             onClick={() => handleTriggerPayout(trade._id)}
                             disabled={triggerPayout.isPending}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-lg disabled:opacity-50"
+                            className={`flex items-center gap-2 px-6 py-2.5 text-white font-semibold rounded-lg disabled:opacity-50 ${
+                              trade.status === 'Failed'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-600'
+                                : 'bg-gradient-to-r from-emerald-500 to-green-600'
+                            }`}
                           >
-                            {triggerPayout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
-                            Initiate Payout
+                            {triggerPayout.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : trade.status === 'Failed' ? (
+                              <RefreshCw className="w-4 h-4" />
+                            ) : (
+                              <ArrowUpRight className="w-4 h-4" />
+                            )}
+                            {trade.status === 'Failed' ? 'Retry Payout' : 'Initiate Payout'}
                           </motion.button>
                         </div>
                       )}

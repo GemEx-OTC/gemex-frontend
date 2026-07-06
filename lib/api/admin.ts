@@ -569,3 +569,28 @@ export const initiateManualPayout = async (data: ManualPayoutInput): Promise<Man
   const response = await apiClient.post<ApiResponse<ManualPayoutResponse>>(`/admin/trades/${data.tradeId}/manual-payout`, data);
   return response.data.data;
 };
+
+// Sweep management
+export const getSweepStats = async (): Promise<any> => {
+  const response = await apiClient.get<ApiResponse<any>>('/admin/sweep/stats');
+  return response.data.data;
+};
+
+export const triggerSweep = async (network?: string): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/trigger', { network });
+  return response.data.data;
+};
+
+export const syncSweepStats = async (): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/admin/sweep/sync');
+  return response.data.data;
+};
+
+export const getSweepHistory = async (params?: { page?: number; limit?: number }): Promise<any> => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.append('page', params.page.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  const query = searchParams.toString();
+  const response = await apiClient.get<ApiResponse<any>>(`/admin/sweep/history${query ? `?${query}` : ''}`);
+  return response.data.data;
+};

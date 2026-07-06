@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft, Send } from "lucide-react"
+import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft, Send, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import { getAdminTrades, type AdminTrade } from "@/lib/api/admin"
 import { ManualPayoutModal } from "@/components/admin/manual-payout-modal"
@@ -231,15 +231,23 @@ export default function AdminTradesPage() {
                         <div className="text-xs text-[#B0B0B8]">{new Date(trade.createdAt).toLocaleDateString()}</div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {trade.status === "CryptoConfirmed" && (
+                        {(trade.status === "CryptoConfirmed" || trade.status === "Failed") && (
                           <motion.button
                             onClick={() => handleInitiatePayout(trade)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#641AE4] text-white hover:bg-[#5014b8] transition-all flex items-center gap-1.5 mx-auto"
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all flex items-center gap-1.5 mx-auto ${
+                              trade.status === "Failed"
+                                ? "bg-amber-600 hover:bg-amber-700"
+                                : "bg-[#641AE4] hover:bg-[#5014b8]"
+                            }`}
                           >
-                            <Send className="w-3.5 h-3.5" />
-                            Approve Payout
+                            {trade.status === "Failed" ? (
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            ) : (
+                              <Send className="w-3.5 h-3.5" />
+                            )}
+                            {trade.status === "Failed" ? "Retry Payout" : "Approve Payout"}
                           </motion.button>
                         )}
                       </td>

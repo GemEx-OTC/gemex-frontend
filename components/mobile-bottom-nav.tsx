@@ -17,13 +17,13 @@ const roleNavItems = {
     { name: "Quotes", href: "/client/quotes", icon: FileText },
     { name: "History", href: "/client/history", icon: LayoutDashboard },
     { name: "Alerts", href: "/client/notifications", icon: Bell },
-    { name: "Wallet", href: "/client/wallet", icon: Wallet },
+    { name: "Deposit", href: "/client/wallet", icon: Wallet },
   ],
   dealer: [
     { name: "Home", href: "/dealer/dashboard", icon: Home },
     { name: "Quotes", href: "/dealer/quotes", icon: FileText },
     { name: "Trades", href: "/dealer/trades", icon: Briefcase },
-    { name: "Wallet", href: "/dealer/wallet", icon: Wallet },
+    { name: "Deposit", href: "/dealer/wallet", icon: Wallet },
   ],
   admin: [
     { name: "Home", href: "/admin/dashboard", icon: Home },

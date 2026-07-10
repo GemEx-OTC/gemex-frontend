@@ -22,7 +22,7 @@ import {
   TokenBTC
 } from "@web3icons/react"
 
-type NetworkKey = "TRC20" | "BSC" | "BASE" | "ETH" | "POLYGON" | "ARBITRUM" | "OPTIMISM"
+type NetworkKey = "TRC20" | "BSC" | "BASE" | "ETH" | "POLYGON" | "ARBITRUM" | "OPTIMISM" | "BTC"
 type AssetKey = keyof typeof CRYPTO_ASSETS
 
 const NETWORK_INFO: Record<NetworkKey, { assets: string[]; fees: string; speed: string }> = {
@@ -33,6 +33,7 @@ const NETWORK_INFO: Record<NetworkKey, { assets: string[]; fees: string; speed: 
   ARBITRUM: { assets: ["USDT", "USDC"], fees: "Very Low", speed: "~1 min" },
   OPTIMISM: { assets: ["USDT", "USDC"], fees: "Very Low", speed: "~1 min" },
   TRC20: { assets: ["USDT"], fees: "Very Low", speed: "~1 min" },
+  BTC: { assets: ["BTC"], fees: "Medium", speed: "~10 mins" },
 }
 
 const EVM_NETWORKS: NetworkKey[] = ["BSC", "BASE", "ETH", "POLYGON", "ARBITRUM", "OPTIMISM"]
@@ -59,6 +60,8 @@ export function NetworkIconComponent({ network, size = 24 }: { network: NetworkK
       return <NetworkArbitrumOne size={size} variant="branded" />
     case "OPTIMISM":
       return <NetworkOptimism size={size} variant="branded" />
+    case "BTC":
+      return <NetworkBitcoin size={size} variant="branded" />
   }
 }
 
@@ -83,6 +86,7 @@ const getNetworksForAsset = (asset: AssetKey): NetworkKey[] => {
 // Helper to generate EIP-681 URI for EVM token transfer or TRON address
 function getQrCodeValue(network: NetworkKey, asset: AssetKey, address: string): string {
   if (!address) return ""
+  if (network === "BTC") return `bitcoin:${address}`
 
   const isTest = process.env.NODE_ENV !== "production" || 
     (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.includes("ngrok")))
@@ -182,7 +186,7 @@ function WalletPreparationModal({ isOpen, isCreating }: { isOpen: boolean; isCre
             
             <p className="text-muted-foreground mb-6">
               {isCreating 
-                ? "We are setting up your secure TRON & EVM deposit addresses. This is a one-time process and will only take a moment..."
+                ? "We are setting up your secure TRON, EVM & Bitcoin deposit addresses. This is a one-time process and will only take a moment..."
                 : "Fetching your secure wallet addresses..."
               }
             </p>
@@ -201,7 +205,7 @@ function WalletPreparationModal({ isOpen, isCreating }: { isOpen: boolean; isCre
               >
                 <div className="flex items-center gap-2 text-secondary text-sm justify-center">
                   <Sparkles className="w-4 h-4" />
-                  <span>Setting up Tron & EVM wallets</span>
+                  <span>Setting up Tron, EVM & Bitcoin wallets</span>
                 </div>
               </motion.div>
             )}
@@ -284,7 +288,7 @@ export default function ClientWalletPage() {
   const handleAssetSelect = (asset: AssetKey) => {
     setSelectedAsset(asset)
     if (asset === "BTC") {
-      setSelectedNetwork(null)
+      setSelectedNetwork("BTC")
       setCurrentStep(3)
       return
     }
@@ -361,7 +365,7 @@ export default function ClientWalletPage() {
             {currentStep === 1 && (
               <div className="grid gap-3">
                 {(Object.keys(CRYPTO_ASSETS) as AssetKey[]).map(asset => {
-                  const isComingSoon = asset === "BTC"
+                  const isComingSoon = false
                   return (
                     <button
                       key={asset}
@@ -375,11 +379,6 @@ export default function ClientWalletPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h4 className="font-bold text-foreground text-lg">{CRYPTO_ASSETS[asset].symbol}</h4>
-                            {isComingSoon && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[9px] font-extrabold tracking-wide uppercase">
-                                Coming Soon
-                              </span>
-                            )}
                           </div>
                           <p className="text-xs text-muted-foreground">{CRYPTO_ASSETS[asset].name}</p>
                         </div>
@@ -436,95 +435,67 @@ export default function ClientWalletPage() {
 
             {/* Step 3: Mobile Address & details */}
             {currentStep === 3 && (
-              selectedAsset === "BTC" ? (
+              selectedNetwork && currentAddress && (
                 <div className="space-y-4">
-                  <div className="p-8 bg-card border border-border rounded-2xl text-center space-y-6">
-                    <div className="w-20 h-20 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center animate-pulse">
-                      <TokenIconComponent asset="BTC" size={48} />
+                  <div className="p-6 bg-card border border-border rounded-2xl text-center space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <TokenIconComponent asset={selectedAsset} size={24} />
+                        <span className="font-extrabold text-foreground">{selectedAsset}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-full text-xs font-semibold text-foreground">
+                        <NetworkIconComponent network={selectedNetwork} size={14} />
+                        <span>{CRYPTO_NETWORKS[selectedNetwork].name}</span>
+                      </div>
                     </div>
+
+                    {/* QR Code Container */}
+                    <div className="w-44 h-44 mx-auto p-3 bg-white rounded-xl shadow-md flex items-center justify-center">
+                      <QRCodeSVG value={qrCodeValue} size={152} level="Q" includeMargin={false} fgColor="#000000" bgColor="#ffffff" />
+                    </div>
+
                     <div className="space-y-2">
-                      <h4 className="text-xl font-bold text-foreground">Bitcoin Coming Soon</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        We are currently integrating native Bitcoin (BTC) deposits. High-volume BTC trades can still be processed manually.
-                      </p>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Your Deposit Address</span>
+                      <div className="p-3 bg-muted rounded-xl font-mono text-xs break-all text-foreground border border-border">{currentAddress}</div>
                     </div>
-                    <a
-                      href="mailto:support@gemotc.com"
-                      className="w-full py-3.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-black flex items-center justify-center gap-2 text-sm shadow-md transition-all"
+
+                    <button
+                      onClick={() => handleCopy(currentAddress, selectedNetwork)}
+                      className="w-full py-3.5 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 flex items-center justify-center gap-2 text-sm shadow-md active:scale-[0.98] transition-all"
                     >
-                      Contact OTC Desk
-                    </a>
+                      {copiedAddress === selectedNetwork ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Address</>}
+                    </button>
                   </div>
+
+                  {/* Shared EVM alert for mobile */}
+                  {isEvmSelected && evmSharedNetworks.length > 0 && (
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                      <Layers className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="font-bold text-blue-900 dark:text-blue-100 text-xs mb-1">Shared EVM Address</h5>
+                        <p className="text-[11px] text-blue-700 dark:text-blue-300">
+                          This address is identical across all EVM chains. You can send deposits to it on: <span className="font-semibold">{evmSharedNetworks.map(n => CRYPTO_NETWORKS[n].name).join(", ")}</span>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs space-y-1 text-amber-700 dark:text-amber-300">
+                      <p className="font-bold text-amber-900 dark:text-amber-100">Important Warning</p>
+                      <p>• Only send {selectedAsset} to this specific address.</p>
+                      <p>• Ensure network matches your sending platform.</p>
+                    </div>
+                  </div>
+
                   <button
                     onClick={() => { setCurrentStep(1); }}
                     className="w-full py-3 rounded-xl border border-border bg-card text-foreground font-semibold text-sm hover:bg-muted/50"
                   >
-                    Back to Assets
+                    Start Over
                   </button>
                 </div>
-              ) : (
-                selectedNetwork && currentAddress && (
-                  <div className="space-y-4">
-                    <div className="p-6 bg-card border border-border rounded-2xl text-center space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <TokenIconComponent asset={selectedAsset} size={24} />
-                          <span className="font-extrabold text-foreground">{selectedAsset}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-full text-xs font-semibold text-foreground">
-                          <NetworkIconComponent network={selectedNetwork} size={14} />
-                          <span>{CRYPTO_NETWORKS[selectedNetwork].name}</span>
-                        </div>
-                      </div>
-
-                      {/* QR Code Container */}
-                      <div className="w-44 h-44 mx-auto p-3 bg-white rounded-xl shadow-md flex items-center justify-center">
-                        <QRCodeSVG value={qrCodeValue} size={152} level="Q" includeMargin={false} fgColor="#000000" bgColor="#ffffff" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Your Deposit Address</span>
-                        <div className="p-3 bg-muted rounded-xl font-mono text-xs break-all text-foreground border border-border">{currentAddress}</div>
-                      </div>
-
-                      <button
-                        onClick={() => handleCopy(currentAddress, selectedNetwork)}
-                        className="w-full py-3.5 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 flex items-center justify-center gap-2 text-sm shadow-md active:scale-[0.98] transition-all"
-                      >
-                        {copiedAddress === selectedNetwork ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Address</>}
-                      </button>
-                    </div>
-
-                    {/* Shared EVM alert for mobile */}
-                    {isEvmSelected && evmSharedNetworks.length > 0 && (
-                      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
-                        <Layers className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h5 className="font-bold text-blue-900 dark:text-blue-100 text-xs mb-1">Shared EVM Address</h5>
-                          <p className="text-[11px] text-blue-700 dark:text-blue-300">
-                            This address is identical across all EVM chains. You can send deposits to it on: <span className="font-semibold">{evmSharedNetworks.map(n => CRYPTO_NETWORKS[n].name).join(", ")}</span>.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-xs space-y-1 text-amber-700 dark:text-amber-300">
-                        <p className="font-bold text-amber-900 dark:text-amber-100">Important Warning</p>
-                        <p>• Only send {selectedAsset} to this specific address.</p>
-                        <p>• Ensure network matches your sending platform.</p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => { setCurrentStep(1); }}
-                      className="w-full py-3 rounded-xl border border-border bg-card text-foreground font-semibold text-sm hover:bg-muted/50"
-                    >
-                      Start Over
-                    </button>
-                  </div>
-                )
               )
             )}
           </motion.div>
@@ -543,7 +514,7 @@ export default function ClientWalletPage() {
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(CRYPTO_ASSETS) as AssetKey[]).map(asset => {
                 const isActive = selectedAsset === asset
-                const isComingSoon = asset === "BTC"
+                const isComingSoon = false
                 return (
                   <button
                     key={asset}
@@ -554,11 +525,6 @@ export default function ClientWalletPage() {
                         : "bg-card border-border hover:border-border/80 hover:bg-muted/30 text-muted-foreground"
                     }`}
                   >
-                    {isComingSoon && (
-                      <span className="absolute top-1 right-1 px-1 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[8px] font-extrabold tracking-wide uppercase animate-pulse">
-                        Soon
-                      </span>
-                    )}
                     <TokenIconComponent asset={asset} size={28} />
                     <span className="text-sm font-semibold">{CRYPTO_ASSETS[asset].symbol}</span>
                     {isActive && (
@@ -637,39 +603,7 @@ export default function ClientWalletPage() {
         {/* Column 2: Right Address Panel */}
         <div className="col-span-7">
           <AnimatePresence mode="wait">
-            {selectedAsset === "BTC" ? (
-              <motion.div
-                key="btc-coming-soon"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-card border border-border rounded-3xl p-12 shadow-xl text-center space-y-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[450px]"
-              >
-                {/* Background decorative glows */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-                
-                <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center p-4 shadow-inner relative z-10 animate-pulse">
-                  <TokenIconComponent asset="BTC" size={56} />
-                </div>
-
-                <div className="space-y-3 max-w-md relative z-10">
-                  <h3 className="text-3xl font-black text-foreground">Bitcoin Support Coming Soon</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    We are currently integrating native Bitcoin (BTC) deposit addresses into our unified OTC platform. 
-                    In the meantime, you can process manual high-volume BTC transactions directly via our OTC desk.
-                  </p>
-                </div>
-
-                <div className="flex gap-4 w-full max-w-sm relative z-10">
-                  <a
-                    href="mailto:support@gemotc.com"
-                    className="flex-1 py-4 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-black text-center text-sm shadow-lg hover:shadow-amber-500/15 transition-all duration-200"
-                  >
-                    Contact OTC Desk
-                  </a>
-                </div>
-              </motion.div>
-            ) : selectedAsset && selectedNetwork && currentAddress ? (
+            {selectedAsset && selectedNetwork && currentAddress ? (
               <motion.div
                 key={`${selectedAsset}-${selectedNetwork}`}
                 initial={{ opacity: 0, y: 15 }}

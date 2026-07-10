@@ -50,7 +50,7 @@ const roleMenus: Record<string, MenuItem[]> = {
     { name: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
     { name: "My Quotes", href: "/client/quotes", icon: ClipboardList },
     { name: "History", href: "/client/history", icon: History },
-    { name: "Wallet", href: "/client/wallet", icon: Wallet },
+    { name: "Deposit", href: "/client/wallet", icon: Wallet },
     { name: "Notifications", href: "/client/notifications", icon: Bell },
     { name: "Settings", href: "/client/settings", icon: Settings },
   ],
@@ -58,7 +58,7 @@ const roleMenus: Record<string, MenuItem[]> = {
     { name: "Dashboard", href: "/dealer/dashboard", icon: LayoutDashboard },
     { name: "Quote Queue", href: "/dealer/quotes", icon: ClipboardList },
     { name: "Trades", href: "/dealer/trades", icon: Briefcase },
-    { name: "Wallet", href: "/dealer/wallet", icon: Wallet },
+    { name: "Deposit", href: "/dealer/wallet", icon: Wallet },
     { name: "Reports", href: "/dealer/reports", icon: BarChart3 },
     { name: "Notifications", href: "/dealer/notifications", icon: Bell },
     { name: "Settings", href: "/dealer/settings", icon: Settings },
@@ -96,7 +96,7 @@ const adminMenuGroups: MenuGroup[] = [
 ]
 
 const adminGeneralItems: MenuItem[] = [
-  { name: "Wallet", href: "/admin/wallet", icon: Wallet },
+  { name: "Deposit", href: "/admin/wallet", icon: Wallet },
   { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ]

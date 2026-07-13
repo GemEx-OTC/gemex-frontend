@@ -77,6 +77,8 @@ export interface AcceptQuoteResponse {
     rate: number;
     nairaAmount: number;
     status: string;
+    cryptoTxId?: string;
+    cryptoTxHash?: string;
   };
 }
 

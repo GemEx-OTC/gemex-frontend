@@ -26,8 +26,9 @@ export interface Trade {
   payoutBankCode: string;
   payoutAccountNumber: string;
   payoutAccountName: string;
-  status: 'AwaitingDeposit' | 'CryptoConfirmed' | 'PayoutPending' | 'Settled' | 'Failed';
+  status: 'AwaitingDeposit' | 'CryptoMempool' | 'CryptoConfirmed' | 'PayoutPending' | 'Settled' | 'Failed';
   cryptoTxHash?: string;
+  cryptoTxId?: string;
   fiatTxRef?: string;
   depositConfirmedAt?: string;
   payoutInitiatedAt?: string;

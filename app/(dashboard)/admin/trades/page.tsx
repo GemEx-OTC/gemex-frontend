@@ -15,10 +15,11 @@ const ASSET_CONFIG = {
   USDC: { icon: "/icons/usdc.svg" },
 } as const
 
-type TradeStatus = "AwaitingDeposit" | "CryptoConfirmed" | "PayoutPending" | "Settled" | "Failed"
+type TradeStatus = "AwaitingDeposit" | "CryptoMempool" | "CryptoConfirmed" | "PayoutPending" | "Settled" | "Failed"
 
 const STATUS_CONFIG: Record<TradeStatus, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   AwaitingDeposit: { label: "Awaiting Deposit", color: "text-amber-400", bg: "bg-amber-500/20", icon: Wallet },
+  CryptoMempool: { label: "Incoming (Pending)", color: "text-amber-400 animate-pulse", bg: "bg-amber-500/10", icon: Clock },
   CryptoConfirmed: { label: "Crypto Confirmed", color: "text-blue-400", bg: "bg-blue-500/20", icon: CheckCircle },
   PayoutPending: { label: "Payout Pending", color: "text-purple-400", bg: "bg-purple-500/20", icon: CreditCard },
   Settled: { label: "Settled", color: "text-emerald-400", bg: "bg-emerald-500/20", icon: CheckCircle },
@@ -81,7 +82,7 @@ export default function AdminTradesPage() {
   // Calculate totals
   const totalVolume = trades.reduce((sum, t) => sum + t.nairaAmount, 0)
   const settledCount = trades.filter(t => t.status === "Settled").length
-  const pendingCount = trades.filter(t => ["AwaitingDeposit", "CryptoConfirmed", "PayoutPending"].includes(t.status)).length
+  const pendingCount = trades.filter(t => ["AwaitingDeposit", "CryptoMempool", "CryptoConfirmed", "PayoutPending"].includes(t.status)).length
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
@@ -129,6 +130,7 @@ export default function AdminTradesPage() {
         {[
           { value: "all", label: "All" },
           { value: "AwaitingDeposit", label: "Awaiting Deposit" },
+          { value: "CryptoMempool", label: "Pending Confirmation" },
           { value: "CryptoConfirmed", label: "Crypto Confirmed" },
           { value: "PayoutPending", label: "Payout Pending" },
           { value: "Settled", label: "Settled" },

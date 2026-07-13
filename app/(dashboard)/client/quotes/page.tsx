@@ -25,6 +25,46 @@ const NETWORK_CONFIG = {
   BTC: { icon: "/icons/btc.svg" },
 } as const
 
+const getExplorerLink = (txId: string, network: string): string => {
+  const isTest = process.env.NODE_ENV !== 'production';
+  switch (network) {
+    case 'BTC':
+      return isTest 
+        ? `https://blockstream.info/testnet/tx/${txId}` 
+        : `https://blockstream.info/tx/${txId}`;
+    case 'BSC':
+      return isTest 
+        ? `https://testnet.bscscan.com/tx/${txId}` 
+        : `https://bscscan.com/tx/${txId}`;
+    case 'ETH':
+      return isTest 
+        ? `https://sepolia.etherscan.io/tx/${txId}` 
+        : `https://etherscan.io/tx/${txId}`;
+    case 'BASE':
+      return isTest 
+        ? `https://sepolia.basescan.org/tx/${txId}` 
+        : `https://basescan.org/tx/${txId}`;
+    case 'POLYGON':
+      return isTest 
+        ? `https://amoy.polygonscan.com/tx/${txId}` 
+        : `https://polygonscan.com/tx/${txId}`;
+    case 'ARBITRUM':
+      return isTest 
+        ? `https://sepolia.arbiscan.io/tx/${txId}` 
+        : `https://arbiscan.io/tx/${txId}`;
+    case 'OPTIMISM':
+      return isTest 
+        ? `https://sepolia-optimism.etherscan.io/tx/${txId}` 
+        : `https://optimistic.etherscan.io/tx/${txId}`;
+    case 'TRON':
+    case 'TRC20':
+    default:
+      return isTest 
+        ? `https://shasta.tronscan.org/#/transaction/${txId}` 
+        : `https://tronscan.org/#/transaction/${txId}`;
+  }
+}
+
 type ModalStep = "accept" | "deposit" | "confirmed"
 
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; color: string; bg: string; icon: typeof Clock }> = {
@@ -747,6 +787,8 @@ export default function ClientQuotesPage() {
                         <CheckCircle className="w-8 h-8 text-emerald-400" />
                       ) : ["CryptoConfirmed", "PayoutPending"].includes(tradeData.status) ? (
                         <CheckCircle className="w-8 h-8 text-blue-400" />
+                      ) : tradeData.status === "CryptoMempool" ? (
+                        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
                       ) : (
                         <Clock className="w-8 h-8 text-amber-400" />
                       )}
@@ -758,6 +800,8 @@ export default function ClientQuotesPage() {
                         ? "Payout in Progress!"
                         : tradeData.status === "CryptoConfirmed"
                         ? "Deposit Confirmed!"
+                        : tradeData.status === "CryptoMempool"
+                        ? "Incoming Deposit (Pending)!"
                         : "Deposit Submitted!"}
                     </h3>
                     <p className="text-sm text-[#B0B0B8]">
@@ -767,6 +811,8 @@ export default function ClientQuotesPage() {
                         ? "Naira transfer to your bank account is currently being processed."
                         : tradeData.status === "CryptoConfirmed"
                         ? "Your deposit was detected and confirmed. Payout is being processed."
+                        : tradeData.status === "CryptoMempool"
+                        ? "Incoming Bitcoin deposit detected on the blockchain, waiting for confirmation."
                         : "We're monitoring the blockchain for your transaction."}
                     </p>
                   </div>
@@ -784,6 +830,20 @@ export default function ClientQuotesPage() {
                       <span className="text-[#B0B0B8]">Network</span>
                       <span className="text-[#F0F0F0]">{CRYPTO_NETWORKS[tradeData.cryptoNetwork as keyof typeof CRYPTO_NETWORKS]?.name || tradeData.cryptoNetwork}</span>
                     </div>
+                    {tradeData.cryptoTxId && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#B0B0B8]">Blockchain Link</span>
+                        <a 
+                          href={getExplorerLink(tradeData.cryptoTxId, tradeData.cryptoNetwork)} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-[#C8F55A] hover:underline font-mono inline-flex items-center gap-1 text-xs"
+                        >
+                          {tradeData.cryptoTxId.slice(0, 10)}...{tradeData.cryptoTxId.slice(-6)}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm pt-3 border-t border-[#2D2D3D]">
                       <span className="text-[#B0B0B8]">You'll Receive</span>
                       <span className="text-[#C8F55A] font-bold">₦{tradeData.nairaAmount?.toLocaleString()}</span>
@@ -798,8 +858,8 @@ export default function ClientQuotesPage() {
                         <span className={tradeData.status !== "AwaitingDeposit" ? "text-[#F0F0F0]" : ""}>Deposit detected on the blockchain</span>
                       </li>
                       <li className="flex items-center gap-2">
-                        <CheckCircle className={`w-4 h-4 ${tradeData.status !== "AwaitingDeposit" ? "text-emerald-400" : "text-[#B0B0B8]"}`} />
-                        <span className={tradeData.status !== "AwaitingDeposit" ? "text-[#F0F0F0]" : ""}>Transaction confirmed</span>
+                        <CheckCircle className={`w-4 h-4 ${!["AwaitingDeposit", "CryptoMempool"].includes(tradeData.status) ? "text-emerald-400" : "text-[#B0B0B8]"}`} />
+                        <span className={!["AwaitingDeposit", "CryptoMempool"].includes(tradeData.status) ? "text-[#F0F0F0]" : ""}>Transaction confirmed</span>
                       </li>
                       <li className="flex items-center gap-2">
                         {tradeData.status === "Settled" ? (

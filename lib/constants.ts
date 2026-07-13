@@ -30,6 +30,12 @@ export const TRANSACTION_STATUS = {
     bg: "bg-amber-600/90 dark:bg-amber-700/90",
     description: "Waiting for crypto deposit",
   },
+  CryptoMempool: {
+    label: "Incoming (Pending)",
+    color: "text-amber-100 dark:text-amber-200 animate-pulse",
+    bg: "bg-amber-500/90 dark:bg-amber-500/80",
+    description: "Deposit detected on blockchain, pending confirmation",
+  },
   CryptoConfirmed: {
     label: "Payment Approval Pending",
     color: "text-blue-100 dark:text-blue-200",

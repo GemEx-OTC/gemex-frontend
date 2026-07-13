@@ -52,6 +52,46 @@ const formatCrypto = (amount: number, asset: string) => {
   return `${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: decimals })} ${asset}`
 }
 
+const getExplorerLink = (txId: string, network: string): string => {
+  const isTest = process.env.NODE_ENV !== 'production';
+  switch (network) {
+    case 'BTC':
+      return isTest 
+        ? `https://blockstream.info/testnet/tx/${txId}` 
+        : `https://blockstream.info/tx/${txId}`;
+    case 'BSC':
+      return isTest 
+        ? `https://testnet.bscscan.com/tx/${txId}` 
+        : `https://bscscan.com/tx/${txId}`;
+    case 'ETH':
+      return isTest 
+        ? `https://sepolia.etherscan.io/tx/${txId}` 
+        : `https://etherscan.io/tx/${txId}`;
+    case 'BASE':
+      return isTest 
+        ? `https://sepolia.basescan.org/tx/${txId}` 
+        : `https://basescan.org/tx/${txId}`;
+    case 'POLYGON':
+      return isTest 
+        ? `https://amoy.polygonscan.com/tx/${txId}` 
+        : `https://polygonscan.com/tx/${txId}`;
+    case 'ARBITRUM':
+      return isTest 
+        ? `https://sepolia.arbiscan.io/tx/${txId}` 
+        : `https://arbiscan.io/tx/${txId}`;
+    case 'OPTIMISM':
+      return isTest 
+        ? `https://sepolia-optimism.etherscan.io/tx/${txId}` 
+        : `https://optimistic.etherscan.io/tx/${txId}`;
+    case 'TRON':
+    case 'TRC20':
+    default:
+      return isTest 
+        ? `https://shasta.tronscan.org/#/transaction/${txId}` 
+        : `https://tronscan.org/#/transaction/${txId}`;
+  }
+}
+
 const getStatusIcon = (status: string) => {
   switch (status) {
     case 'Settled': return <CheckCircle2 className="w-4 h-4" />
@@ -71,7 +111,7 @@ const getCryptoConfig = (asset: string) => {
   }
 }
 
-type StatusFilter = 'all' | 'AwaitingDeposit' | 'CryptoConfirmed' | 'PayoutPending' | 'Settled' | 'Failed'
+type StatusFilter = 'all' | 'AwaitingDeposit' | 'CryptoMempool' | 'CryptoConfirmed' | 'PayoutPending' | 'Settled' | 'Failed'
 
 export default function DealerTradesPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -168,6 +208,7 @@ export default function DealerTradesPage() {
                 { value: 'all', label: 'All' },
                 { value: 'CryptoConfirmed', label: 'Ready for Payout' },
                 { value: 'PayoutPending', label: 'Payout Pending' },
+                { value: 'CryptoMempool', label: 'Pending Confirmation' },
                 { value: 'AwaitingDeposit', label: 'Awaiting Deposit' },
                 { value: 'Settled', label: 'Settled' },
                 { value: 'Failed', label: 'Failed' },
@@ -324,11 +365,11 @@ export default function DealerTradesPage() {
                         </div>
                       )}
                       
-                      {trade.cryptoTxHash && (
+                      {(trade.cryptoTxId || trade.cryptoTxHash) && (
                         <div className="mt-3 pt-3 border-t border-border/50">
                           <span className="text-xs text-muted-foreground">TX Hash: </span>
-                          <a href={`https://tronscan.org/#/transaction/${trade.cryptoTxHash}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-mono inline-flex items-center gap-1">
-                            {trade.cryptoTxHash.slice(0, 16)}...{trade.cryptoTxHash.slice(-8)}
+                          <a href={getExplorerLink((trade.cryptoTxId || trade.cryptoTxHash)!, trade.cryptoNetwork)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-mono inline-flex items-center gap-1">
+                            {(trade.cryptoTxId || trade.cryptoTxHash)!.slice(0, 16)}...{(trade.cryptoTxId || trade.cryptoTxHash)!.slice(-8)}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         </div>

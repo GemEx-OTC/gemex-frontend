@@ -103,6 +103,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { originId: notificationId } }));
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to mark notification as read');
       throw err;
@@ -120,6 +123,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         )
       );
       setUnreadCount(prev => Math.max(0, prev - result.markedCount));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { originIds: notificationIds } }));
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to mark notifications as read');
       throw err;
@@ -136,6 +142,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         })
       );
       setUnreadCount(0);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { allRead: true } }));
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to mark all notifications as read');
       throw err;
@@ -149,6 +158,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
       if (notification && !notification.channels.inApp.readAt) {
         setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { deletedId: notificationId } }));
       }
     } catch (err: any) {
       setError(err.message || 'Failed to delete notification');
@@ -166,6 +178,25 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       fetchNotifications();
     }
   }, [autoFetch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Listen for global notification updates from other instances of this hook
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleGlobalUpdate = () => {
+      // Re-fetch notifications or unread count to stay in sync
+      if (autoFetch) {
+        fetchNotifications();
+      } else {
+        refreshUnreadCount();
+      }
+    };
+
+    window.addEventListener('notifications-updated', handleGlobalUpdate);
+    return () => {
+      window.removeEventListener('notifications-updated', handleGlobalUpdate);
+    };
+  }, [autoFetch, fetchNotifications, refreshUnreadCount]);
 
   // Polling for new notifications
   useEffect(() => {
@@ -190,6 +221,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       toast(notification.title, {
         description: notification.message,
       });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { newNotification: notification } }));
+      }
     };
 
     socket.on('notification:new', handleNewNotification);

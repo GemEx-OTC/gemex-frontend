@@ -204,6 +204,19 @@ export default function SweepPage() {
                     )}
                     Sweep Tron
                   </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('BTC')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-orange-500 text-white font-black text-xs shadow-xl shadow-orange-500/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'BTC' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep BTC
+                  </button>
                 </div>
               </div>
 
@@ -281,7 +294,7 @@ export default function SweepPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-foreground text-xs whitespace-nowrap">{wallet.asset}</span>
-                              <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{wallet.network}</span>
+                              <span className={`text-[10px] font-black uppercase ${wallet.network === 'BSC' ? 'text-yellow-500' : ['BTC', 'BTCTEST'].includes(wallet.network) ? 'text-orange-500' : 'text-red-500'}`}>{wallet.network}</span>
                             </div>
                           </div>
                         </td>
@@ -361,7 +374,7 @@ export default function SweepPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-black text-foreground text-sm">{item.asset}</span>
-                              <span className={`text-[10px] font-black uppercase ${item.network === 'BSC' ? 'text-yellow-500' : 'text-red-500'}`}>{item.network}</span>
+                              <span className={`text-[10px] font-black uppercase ${item.network === 'BSC' ? 'text-yellow-500' : ['BTC', 'BTCTEST'].includes(item.network) ? 'text-orange-500' : 'text-red-500'}`}>{item.network}</span>
                             </div>
                           </div>
                         </td>

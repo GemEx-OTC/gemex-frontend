@@ -52,6 +52,35 @@ const CopyButton = ({ text }: { text: string }) => {
   )
 }
 
+const getExplorerUrl = (network: string, txId: string) => {
+  if (!txId) return ""
+  const net = network.toUpperCase()
+  switch (net) {
+    case "BSC":
+      return `https://bscscan.com/tx/${txId}`
+    case "TRC20":
+    case "TRON":
+      return `https://tronscan.org/#/transaction/${txId}`
+    case "BTC":
+      return `https://www.blockchain.com/explorer/transactions/btc/${txId}`
+    case "BTCTEST":
+      return `https://www.blockchain.com/explorer/transactions/btc-testnet/${txId}`
+    case "ETH":
+    case "ERC20":
+      return `https://etherscan.io/tx/${txId}`
+    case "BASE":
+      return `https://basescan.org/tx/${txId}`
+    case "POLYGON":
+      return `https://polygonscan.com/tx/${txId}`
+    case "ARBITRUM":
+      return `https://arbiscan.io/tx/${txId}`
+    case "OPTIMISM":
+      return `https://optimistic.etherscan.io/tx/${txId}`
+    default:
+      return ""
+  }
+}
+
 export default function SweepPage() {
   const [stats, setStats] = useState<any>(null)
   const [history, setHistory] = useState<any[]>([])
@@ -216,6 +245,71 @@ export default function SweepPage() {
                       <Zap className="w-3.5 h-3.5 fill-current" />
                     )}
                     Sweep BTC
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('ETH')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-slate-700 text-white font-black text-xs shadow-xl shadow-slate-700/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'ETH' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep ETH
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('BASE')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs shadow-xl shadow-blue-600/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'BASE' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep Base
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('POLYGON')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-purple-600 text-white font-black text-xs shadow-xl shadow-purple-600/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'POLYGON' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep Polygon
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('ARBITRUM')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-cyan-600 text-white font-black text-xs shadow-xl shadow-cyan-600/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'ARBITRUM' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep Arbitrum
+                  </button>
+
+                  <button
+                    onClick={() => handleTriggerSweep('OPTIMISM')}
+                    disabled={!!sweeping || !stats}
+                    className="px-6 py-2.5 rounded-xl bg-rose-600 text-white font-black text-xs shadow-xl shadow-rose-600/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none flex items-center gap-2"
+                  >
+                    {sweeping === 'OPTIMISM' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                    )}
+                    Sweep Optimism
                   </button>
                 </div>
               </div>
@@ -393,9 +487,20 @@ export default function SweepPage() {
                             <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/10">
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             </div>
-                            <span className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors cursor-pointer truncate max-w-[200px]">
-                              {item.txId}
-                            </span>
+                            {getExplorerUrl(item.network, item.txId) ? (
+                              <a
+                                href={getExplorerUrl(item.network, item.txId)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-mono text-muted-foreground hover:text-emerald-500 hover:underline transition-colors cursor-pointer truncate max-w-[200px]"
+                              >
+                                {item.txId}
+                              </a>
+                            ) : (
+                              <span className="text-xs font-mono text-muted-foreground truncate max-w-[200px]">
+                                {item.txId}
+                              </span>
+                            )}
                             <CopyButton text={item.txId} />
                           </div>
                         </td>

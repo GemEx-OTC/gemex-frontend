@@ -53,7 +53,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             <div className="space-y-6">
               <h1 className="text-4xl xl:text-5xl font-bold text-[#F0F0F0] leading-tight">
-                Professional OTC Trading,{" "}
+                Institutional OTC Trading,{" "}
                 <span className="bg-gradient-to-r from-[#641AE4] to-[#C8F55A] bg-clip-text text-transparent">
                   Simplified
                 </span>

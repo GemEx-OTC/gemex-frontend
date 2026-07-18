@@ -32,7 +32,21 @@ export default function RootLayout({
       <head>
         <title>GemOTC - OTC Trading Desk</title>
         <meta name="description" content="GemOTC: Professional OTC Desk for seamless crypto and fiat trading" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        
+        {/* PWA / Add to Home Screen Metadata */}
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#12121e" />
+        
+        {/* Apple PWA Support */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="GemOTC" />
+        
+        {/* Icons */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}>
         <QueryProvider>

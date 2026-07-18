@@ -198,7 +198,12 @@ export default function AdminQuotesPage() {
                             />
                           )}
                           <div>
-                            <div className="font-semibold text-[#F0F0F0]">{quote.cryptoAmount.toLocaleString()} {quote.cryptoAsset}</div>
+                            <div className="font-semibold text-[#F0F0F0]">
+                              {quote.cryptoAsset.toUpperCase() === "BTC"
+                                ? quote.cryptoAmount.toFixed(8)
+                                : quote.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}{" "}
+                              {quote.cryptoAsset}
+                            </div>
                             <div className="text-xs text-[#B0B0B8]">{quote.cryptoNetwork}</div>
                           </div>
                         </div>

@@ -366,7 +366,9 @@ export default function ClientQuotesPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-[#F0F0F0]">
-                            {quote.cryptoAmount.toLocaleString()} {quote.cryptoAsset}
+                            {quote.cryptoAsset.toUpperCase() === "BTC"
+                              ? quote.cryptoAmount.toFixed(8)
+                              : quote.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} {quote.cryptoAsset}
                           </span>
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
                             {statusConfig.label}
@@ -612,7 +614,12 @@ export default function ClientQuotesPage() {
                         )}
                       </div>
                       <div>
-                        <div className="font-bold text-[#F0F0F0]">{selectedQuote.cryptoAmount.toLocaleString()} {selectedQuote.cryptoAsset}</div>
+                        <div className="font-bold text-[#F0F0F0]">
+                          {selectedQuote.cryptoAsset.toUpperCase() === "BTC"
+                            ? selectedQuote.cryptoAmount.toFixed(8)
+                            : selectedQuote.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}{" "}
+                          {selectedQuote.cryptoAsset}
+                        </div>
                         <div className="text-sm text-[#B0B0B8]">{CRYPTO_NETWORKS[selectedQuote.cryptoNetwork]?.name || selectedQuote.cryptoNetwork}</div>
                       </div>
                     </div>
@@ -699,7 +706,12 @@ export default function ClientQuotesPage() {
                         </div>
                         <div>
                           <div className="text-sm text-[#B0B0B8]">Send exactly</div>
-                          <div className="font-bold text-amber-400 text-xl">{tradeData.cryptoAmount.toLocaleString()} {tradeData.cryptoAsset}</div>
+                          <div className="font-bold text-amber-400 text-xl">
+                            {tradeData.cryptoAsset.toUpperCase() === "BTC"
+                              ? tradeData.cryptoAmount.toFixed(8)
+                              : tradeData.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}{" "}
+                            {tradeData.cryptoAsset}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-[#B0B0B8]">
@@ -824,7 +836,12 @@ export default function ClientQuotesPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-[#B0B0B8]">Amount</span>
-                      <span className="text-[#F0F0F0] font-semibold">{tradeData.cryptoAmount.toLocaleString()} {tradeData.cryptoAsset}</span>
+                      <span className="text-[#F0F0F0] font-semibold">
+                        {tradeData.cryptoAsset.toUpperCase() === "BTC"
+                          ? tradeData.cryptoAmount.toFixed(8)
+                          : tradeData.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}{" "}
+                        {tradeData.cryptoAsset}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-[#B0B0B8]">Network</span>

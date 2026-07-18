@@ -51,8 +51,10 @@ const formatNaira = (amount: number) => {
 }
 
 const formatCrypto = (amount: number, asset: string) => {
-  const decimals = asset === 'BTC' ? 8 : 2
-  return `${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: decimals })} ${asset}`
+  if (asset === 'BTC') {
+    return `${amount.toFixed(8)} ${asset}`
+  }
+  return `${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${asset}`
 }
 
 const getExplorerLink = (txId: string, network: string): string => {

@@ -211,7 +211,9 @@ export default function AdminTradesPage() {
                             />
                           )}
                           <span className="font-semibold text-[#F0F0F0]">
-                            {trade.cryptoAmount.toLocaleString()} {trade.cryptoAsset}
+                            {trade.cryptoAsset.toUpperCase() === "BTC"
+                              ? trade.cryptoAmount.toFixed(8)
+                              : trade.cryptoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} {trade.cryptoAsset}
                           </span>
                         </div>
                       </td>

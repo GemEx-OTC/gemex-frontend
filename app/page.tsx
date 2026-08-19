@@ -41,6 +41,7 @@ import {
   Activity,
   Sliders,
   Check,
+  Code2,
 } from "lucide-react"
 
 // Floating Particle Component
@@ -189,12 +190,9 @@ const FAQItem = ({ question, answer, isOpen, onClick }: { question: string; answ
 
 export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
-  const [tradeVolume, setTradeVolume] = useState<number>(50000)
   const [showFloatingCTA, setShowFloatingCTA] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [calcSide, setCalcSide] = useState<"buy" | "sell">("sell")
-  const [calcAsset, setCalcAsset] = useState<"USDT" | "USDC" | "BTC" | "ETH">("USDT")
   
   const heroRef = useRef<HTMLElement>(null)
 
@@ -227,30 +225,26 @@ export default function Home() {
 
   const faqData = [
     {
-      question: "What is GemOTC and how does it differ from standard exchanges?",
-      answer: "GemOTC is an institutional-grade Over-The-Counter (OTC) liquidity desk. Unlike order-book retail exchanges where large trades experience heavy slippage and price impact, GemOTC guarantees direct custom rate execution, deep liquidity, zero slippage, and instant bank or multi-chain settlement."
+      question: "What is GemOTC and how does it work?",
+      answer: "GemOTC is a premier Over-The-Counter (OTC) liquidity desk powered by GemRails. We enable both individual users and verified businesses to trade crypto with fair market rates, deep liquidity, zero hidden fees, and rapid bank settlement."
     },
     {
-      question: "Which cryptocurrencies and fiat currencies are supported?",
-      answer: "We support major crypto assets including USDT, USDC, BTC, and ETH across Ethereum, BNB Chain, Polygon, Arbitrum, and Tron. For fiat settlement, we specialize in high-speed Nigerian Naira (NGN) bank transfers as well as USD wire settlements."
-    },
-    {
-      question: "How fast is trade settlement?",
-      answer: "Most OTC trades settle in under 3 minutes upon blockchain deposit confirmation. NGN bank transfers are processed automatically via automated banking rails."
+      question: "Which cryptocurrencies are supported?",
+      answer: "We support USDT, USDC, and BTC. All trades are settled fast and securely."
     },
     {
       question: "What are the trade limits on GemOTC?",
-      answer: "GemOTC caters to high-volume individual traders, crypto merchants, and institutional funds. Our minimum OTC trade size starts at $1,000 equivalent, with no maximum cap for fully verified institutional accounts."
+      answer: "Our desk supports trade limits starting from a minimum of $1 for regular users up to $50,000+ for Verified Businesses."
     },
     {
-      question: "How is security handled for deposits and Sweepers?",
-      answer: "GemOTC utilizes non-custodial smart contract sweeper vaults and bank-grade HSM security. Funds are routed directly into audited multisig liquidity pools with automated AML/KYC verification."
+      question: "How fast is trade settlement?",
+      answer: "Most trades settle in under 3 minutes upon deposit confirmation. Automated banking rails deliver Naira settlements straight to your designated bank account."
+    },
+    {
+      question: "How is security handled?",
+      answer: "GemOTC provides bank-grade security, encrypted infrastructure, and full compliance procedures so your transactions remain 100% safe and secure."
     },
   ]
-
-  // Estimated zero-slippage savings based on volume
-  const estimatedSavings = Math.round(tradeVolume * 0.018)
-  const estimatedSettleTime = tradeVolume > 100000 ? "< 3 mins" : "< 90 secs"
 
   return (
     <div className="min-h-screen bg-[#1a1a24] text-[#f8f9fa] overflow-x-hidden selection:bg-[#a855f7]/30 selection:text-white">
@@ -275,8 +269,11 @@ export default function Home() {
                 <Image src="/images/gemex-20logo.png" alt="GemOTC Logo" width={28} height={28} className="object-contain" />
               </motion.div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                  GemOTC <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">Desk</span>
+                <span className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                  GemOTC Desk
+                  <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-[#a855f7]/20 text-[#a855f7] border border-[#a855f7]/30">
+                    Powered by GemRails
+                  </span>
                 </span>
               </div>
             </Link>
@@ -289,10 +286,6 @@ export default function Home() {
               </Link>
               <Link href="#how-it-works" className="text-gray-300 hover:text-white transition-colors relative group py-1">
                 How It Works
-                <motion.span className="absolute bottom-0 left-0 h-0.5 bg-[#a855f7]" initial={{ width: 0 }} whileHover={{ width: "100%" }} transition={{ duration: 0.2 }} />
-              </Link>
-              <Link href="#calculator" className="text-gray-300 hover:text-white transition-colors relative group py-1">
-                Calculator
                 <motion.span className="absolute bottom-0 left-0 h-0.5 bg-[#a855f7]" initial={{ width: 0 }} whileHover={{ width: "100%" }} transition={{ duration: 0.2 }} />
               </Link>
               <Link href="#faq" className="text-gray-300 hover:text-white transition-colors relative group py-1">
@@ -349,9 +342,6 @@ export default function Home() {
                 <Link href="#how-it-works" className="block text-gray-300 hover:text-white text-base py-2" onClick={() => setMobileMenuOpen(false)}>
                   How It Works
                 </Link>
-                <Link href="#calculator" className="block text-gray-300 hover:text-white text-base py-2" onClick={() => setMobileMenuOpen(false)}>
-                  Calculator
-                </Link>
                 <Link href="#faq" className="block text-gray-300 hover:text-white text-base py-2" onClick={() => setMobileMenuOpen(false)}>
                   FAQ
                 </Link>
@@ -406,7 +396,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              {/* Badge */}
+              {/* Powered By Badge */}
               <motion.span
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/30 text-[#a855f7] text-xs sm:text-sm font-semibold mb-8 backdrop-blur-md shadow-lg shadow-[#a855f7]/5"
                 animate={{ boxShadow: ["0 0 0px rgba(168,85,247,0)", "0 0 25px rgba(168,85,247,0.35)", "0 0 0px rgba(168,85,247,0)"] }}
@@ -418,7 +408,7 @@ export default function Home() {
                 >
                   <Zap className="w-4 h-4 text-[#84cc16]" />
                 </motion.div>
-                Institutional OTC Desk & Instant Liquidity
+                Powered by GemRails — Professional OTC Desk
               </motion.span>
 
               {/* Main Headline */}
@@ -444,9 +434,8 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                Trade high-volume crypto and fiat with{" "}
-                <span className="text-[#a855f7] font-semibold">zero market slippage</span>, institutional liquidity pools, and{" "}
-                <span className="text-[#84cc16] font-semibold">instant bank settlement</span>.
+                Trade <span className="text-[#a855f7] font-semibold">USDT, USDC & BTC</span> with{" "}
+                <span className="text-[#84cc16] font-semibold">fair rates</span>, deep liquidity, and bank-grade settlement. From $1 for regular users to $50,000+ for verified businesses.
               </motion.p>
 
               {/* Action Buttons */}
@@ -493,7 +482,7 @@ export default function Home() {
                 {[
                   { icon: DollarSign, value: 500, prefix: "$", suffix: "M+", label: "Volume Processed" },
                   { icon: Clock, value: 3, suffix: " min", label: "Avg. Settlement" },
-                  { icon: Shield, value: 99, suffix: ".99%", label: "Uptime & Reliability" },
+                  { icon: Shield, value: 100, prefix: "", suffix: "%", label: "Bank-Grade Security" },
                 ].map((stat, idx) => (
                   <motion.div
                     key={idx}
@@ -539,11 +528,11 @@ export default function Home() {
           {[...Array(3)].map((_, idx) => (
             <div key={idx} className="flex gap-16 items-center">
               {[
-                { label: "24/7 OTC Concierge", value: "Active", icon: Headphones },
-                { label: "Execution Slippage", value: "0.00%", icon: TrendingUp },
-                { label: "AML & KYC Compliance", value: "Verified", icon: Shield },
-                { label: "Multi-Chain Sweepers", value: "Automated", icon: Zap },
-                { label: "Fiat Settlement Rails", value: "Instant NGN/USD", icon: Banknote },
+                { label: "Platform", value: "Powered by GemRails", icon: Zap },
+                { label: "Supported Assets", value: "USDT • USDC • BTC", icon: TrendingUp },
+                { label: "Security", value: "Bank-Grade Security", icon: Shield },
+                { label: "Rate Policy", value: "Fair & Transparent Rates", icon: RefreshCw },
+                { label: "Settlement Rails", value: "Instant Bank Payouts", icon: Banknote },
               ].map((stat, i) => (
                 <div key={i} className="flex items-center gap-3 text-sm text-gray-300 font-medium">
                   <stat.icon className="w-4 h-4 text-[#84cc16]" />
@@ -569,10 +558,10 @@ export default function Home() {
               <Rocket className="w-3.5 h-3.5 text-[#84cc16]" /> Streamlined Workflow
             </span>
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-4">
-              How OTC Liquidity Works
+              How GemOTC Works
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto text-base sm:text-lg">
-              Execute high-volume crypto and fiat exchanges in four seamless steps.
+              Execute crypto trades seamlessly from $1 up to $50,000+ for verified businesses.
             </p>
           </motion.div>
 
@@ -581,10 +570,10 @@ export default function Home() {
             <div className="hidden lg:block absolute top-1/2 left-10 right-10 h-0.5 bg-gradient-to-r from-transparent via-[#a855f7]/40 to-transparent -translate-y-1/2 z-0" />
 
             {[
-              { step: 1, icon: Building2, title: "1. Register & Verify", desc: "Fast-track corporate or individual KYC verification for immediate OTC access.", color: "from-[#a855f7] to-[#7e22ce]" },
-              { step: 2, icon: RefreshCw, title: "2. Request OTC Quote", desc: "Lock in live guaranteed exchange rates with zero market slippage.", color: "from-[#7e22ce] to-[#3b82f6]" },
-              { step: 3, icon: ArrowRightLeft, title: "3. Secure Deposit", desc: "Transfer crypto or fiat to designated segregated sweeper addresses.", color: "from-[#3b82f6] to-[#06b6d4]" },
-              { step: 4, icon: CheckCircle, title: "4. Instant Payout", desc: "Receive automated payouts directly to your corporate bank account or wallet.", color: "from-[#06b6d4] to-[#84cc16]" },
+              { step: 1, icon: Building2, title: "1. Register & Verify", desc: "Quick verification starting from $1 for regular users or $50,000 for verified businesses.", color: "from-[#a855f7] to-[#7e22ce]" },
+              { step: 2, icon: RefreshCw, title: "2. Check Fair Rates", desc: "View real-time, competitive, and fair market exchange rates with zero hidden markups.", color: "from-[#7e22ce] to-[#3b82f6]" },
+              { step: 3, icon: ArrowRightLeft, title: "3. Secure Deposit", desc: "Transfer USDT, USDC, or BTC to our bank-grade secure transaction system.", color: "from-[#3b82f6] to-[#06b6d4]" },
+              { step: 4, icon: CheckCircle, title: "4. Instant Payout", desc: "Receive automated settlements directly into your bank account.", color: "from-[#06b6d4] to-[#84cc16]" },
             ].map((item, idx) => (
               <TiltCard key={item.step} className="relative z-10">
                 <motion.div
@@ -637,10 +626,10 @@ export default function Home() {
                 <div className="flex items-center justify-between border-b border-[#374151] pb-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-white font-bold text-base">Live OTC Desk Rate</span>
+                    <span className="text-white font-bold text-base">Fair Rate Execution</span>
                   </div>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#a855f7]/20 text-[#a855f7] font-semibold border border-[#a855f7]/30">
-                    Guaranteed Rate
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#84cc16]/20 text-[#84cc16] font-semibold border border-[#84cc16]/30">
+                    Transparent Rate
                   </span>
                 </div>
 
@@ -672,7 +661,7 @@ export default function Home() {
                   <div className="bg-[#a855f7]/10 p-4 rounded-2xl border border-[#a855f7]/30 flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-[#84cc16] flex-shrink-0" />
                     <div className="text-xs text-gray-300">
-                      <span className="font-semibold text-white">Zero Slippage Locked:</span> Trade will execute precisely at ₦1,650/USDT without market impact.
+                      <span className="font-semibold text-white">Fair Market Pricing:</span> Trades executed transparently with zero hidden markups.
                     </div>
                   </div>
                 </div>
@@ -686,21 +675,21 @@ export default function Home() {
               viewport={{ once: true }}
             >
               <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/30 text-[#a855f7] text-xs font-semibold uppercase tracking-wider mb-4">
-                <Shield className="w-4 h-4 text-[#84cc16]" /> Zero Slippage Engine
+                <Shield className="w-4 h-4 text-[#84cc16]" /> Bank-Grade Security
               </span>
               <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-6 leading-tight">
-                Institutional Rates with Guaranteed Execution
+                Fair Rates & Instant Bank Settlement
               </h2>
               <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-                When trading large volumes on order books, order slippage can burn up to 3-5% of your total funds. GemOTC locks your custom quote upfront, ensuring 100% full value delivery.
+                GemOTC delivers transparent, highly competitive rates for USDT, USDC, and BTC. Whether you're trading $1 as a regular user or $50,000+ as a verified business, we process your payout quickly and securely.
               </p>
               
               <div className="space-y-4">
                 {[
-                  "Lock in fixed rates before sending any funds",
-                  "Non-custodial smart contract sweeper verification",
-                  "Direct bank settlement in minutes with full reference tracking",
-                  "Dedicated 24/7 OTC account representative for high volume traders",
+                  "Fair market exchange rates without hidden fees",
+                  "Support for USDT, USDC, and Bitcoin (BTC)",
+                  "Bank-grade security & encrypted transaction infrastructure",
+                  "Flexible trade limits: $1 minimum for users, $50,000+ for verified businesses",
                 ].map((feature, idx) => (
                   <motion.div
                     key={idx}
@@ -735,10 +724,10 @@ export default function Home() {
               <Star className="w-4 h-4 text-[#84cc16]" /> Core Capabilities
             </span>
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-4">
-              Built for Professional Traders & Funds
+              Built for Users & Verified Businesses
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto text-base sm:text-lg">
-              Everything required to execute large-scale digital asset transactions seamlessly.
+              Everything required to execute digital asset transactions safely and efficiently.
             </p>
           </motion.div>
 
@@ -747,38 +736,38 @@ export default function Home() {
               {
                 icon: Layers,
                 title: "Deep Liquidity Pools",
-                desc: "Direct access to tier-1 liquidity providers ensuring zero price slippage regardless of order size.",
-                tag: "Zero Slippage"
+                desc: "Access deep liquidity for seamless crypto-to-fiat transactions.",
+                tag: "High Volume"
               },
               {
                 icon: RefreshCw,
-                title: "Real-Time Rate Engine",
-                desc: "Live stream of competitive institutional rates updated every second across crypto and fiat pairs.",
-                tag: "Sub-Second Updates"
+                title: "Real-Time Fair Rates",
+                desc: "Transparent and fair rates updated live for USDT, USDC, and BTC.",
+                tag: "Live Fair Rates"
               },
               {
                 icon: Globe,
-                title: "Multi-Asset Coverage",
-                desc: "Trade USDT, USDC, BTC, and ETH with direct settlement into NGN bank accounts or USD wires.",
-                tag: "Multi-Chain"
+                title: "Supported Assets",
+                desc: "Trade top tier digital assets: USDT, USDC, and BTC with instant bank payout.",
+                tag: "USDT • USDC • BTC"
               },
               {
                 icon: Lock,
-                title: "Sweeper Contract Security",
-                desc: "Audited smart contract sweepers automatically move and verify deposits with bank-grade safety.",
-                tag: "Smart Sweepers"
+                title: "Bank-Grade Security",
+                desc: "Enterprise-grade protection and compliance standards to keep your assets safe.",
+                tag: "Bank-Grade"
               },
               {
-                icon: Sliders,
+                icon: Code2,
                 title: "API & Webhook Integrations",
-                desc: "Automate your OTC operations with full REST API and real-time webhook transaction notifications.",
-                tag: "Developer Ready"
+                desc: "Automate your OTC operations with developer APIs and webhooks.",
+                tag: "Coming Soon"
               },
               {
                 icon: Headphones,
-                title: "24/7 VIP Concierge",
-                desc: "Personal desk manager assigned to assist with custom quotes, large block trades, and verification.",
-                tag: "Dedicated Support"
+                title: "24/7 Desk Support",
+                desc: "Dedicated desk representatives to assist verified business accounts and traders.",
+                tag: "24/7 Support"
               },
             ].map((card, idx) => (
               <motion.div
@@ -795,7 +784,11 @@ export default function Home() {
                     <div className="w-14 h-14 rounded-2xl bg-[#a855f7]/15 border border-[#a855f7]/30 flex items-center justify-center">
                       <card.icon className="w-7 h-7 text-[#a855f7]" />
                     </div>
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#1a1a24] text-gray-300 border border-[#374151]">
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                      card.tag === "Coming Soon"
+                        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                        : "bg-[#1a1a24] text-gray-300 border-[#374151]"
+                    }`}>
                       {card.tag}
                     </span>
                   </div>
@@ -807,85 +800,6 @@ export default function Home() {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ========== INTERACTIVE CALCULATOR SECTION ========== */}
-      <section id="calculator" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#242438]/30 border-y border-[#2d2d42] relative">
-        <div className="max-w-5xl mx-auto bg-[#242438] border border-[#374151] rounded-3xl p-8 sm:p-12 shadow-2xl">
-          <div className="text-center mb-10">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#84cc16] text-xs font-semibold uppercase tracking-wider mb-3">
-              <Sliders className="w-4 h-4" /> Settlement Simulator
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Estimate Your OTC Execution
-            </h2>
-            <p className="text-gray-400 text-sm sm:text-base mt-2">
-              See how much you save with zero slippage execution on GemOTC.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            {/* Controls */}
-            <div className="space-y-6">
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-                  Trade Volume (USD): <span className="text-white font-bold">${tradeVolume.toLocaleString()}</span>
-                </label>
-                <input
-                  type="range"
-                  min="5000"
-                  max="500000"
-                  step="5000"
-                  value={tradeVolume}
-                  onChange={(e) => setTradeVolume(Number(e.target.value))}
-                  className="w-full h-2.5 bg-[#1a1a24] rounded-lg appearance-none cursor-pointer accent-[#a855f7]"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-2 font-medium">
-                  <span>$5,000</span>
-                  <span>$250,000</span>
-                  <span>$500,000+</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-                  Select Asset
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["USDT", "USDC", "BTC", "ETH"] as const).map((asset) => (
-                    <button
-                      key={asset}
-                      onClick={() => setCalcAsset(asset)}
-                      className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                        calcAsset === asset
-                          ? "bg-[#a855f7] text-white border-[#a855f7] shadow-md shadow-[#a855f7]/20"
-                          : "bg-[#1a1a24] text-gray-400 border-[#374151] hover:text-white"
-                      }`}
-                    >
-                      {asset}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Results Display */}
-            <div className="bg-[#1a1a24] rounded-2xl p-6 border border-[#374151] space-y-5">
-              <div className="flex justify-between items-center pb-4 border-b border-[#2d2d42]">
-                <span className="text-sm text-gray-400">Guaranteed Slippage</span>
-                <span className="text-base font-bold text-[#84cc16]">0.00%</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-[#2d2d42]">
-                <span className="text-sm text-gray-400">Estimated Slippage Savings</span>
-                <span className="text-base font-bold text-purple-300">${estimatedSavings.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">Est. Settlement Time</span>
-                <span className="text-base font-bold text-white">{estimatedSettleTime}</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -938,8 +852,8 @@ export default function Home() {
                 <Sparkles className="w-5 h-5 text-[#a855f7]" />
               </div>
               <div>
-                <div className="text-white font-bold text-sm">Ready to Trade OTC?</div>
-                <div className="text-gray-400 text-xs">Zero slippage & instant bank payout</div>
+                <div className="text-white font-bold text-sm">Ready to Trade on GemOTC?</div>
+                <div className="text-gray-400 text-xs">Fair rates & instant bank payout</div>
               </div>
             </div>
             <Link
@@ -964,7 +878,7 @@ export default function Home() {
               <span className="text-xl font-bold text-white">GemOTC Desk</span>
             </Link>
             <p className="text-gray-400 text-xs leading-relaxed">
-              Institutional crypto & fiat OTC liquidity desk providing zero slippage execution, instant settlement, and bank-grade security.
+              GemOTC Desk is powered by GemRails, providing fair rates, instant bank settlement, and bank-grade security for USDT, USDC, and BTC.
             </p>
           </div>
 
@@ -974,7 +888,7 @@ export default function Home() {
             <ul className="space-y-2.5 text-xs">
               <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
               <li><Link href="#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
-              <li><Link href="#calculator" className="hover:text-white transition-colors">Rate Calculator</Link></li>
+              <li><Link href="#faq" className="hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/auth/login" className="hover:text-white transition-colors">Client Portal</Link></li>
             </ul>
           </div>
@@ -985,7 +899,7 @@ export default function Home() {
             <ul className="space-y-2.5 text-xs">
               <li><span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span></li>
               <li><span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span></li>
-              <li><span className="hover:text-white cursor-pointer transition-colors">AML & KYC Policy</span></li>
+              <li><span className="hover:text-white cursor-pointer transition-colors">Compliance Guidelines</span></li>
               <li><span className="hover:text-white cursor-pointer transition-colors">Risk Disclosure</span></li>
             </ul>
           </div>
@@ -1009,7 +923,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 border-t border-[#2d2d42]/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-          <div>© {new Date().getFullYear()} GemOTC Desk. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} GemOTC Desk (Powered by GemRails). All rights reserved.</div>
           <div className="flex gap-6">
             <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
             <span className="hover:text-white cursor-pointer transition-colors">Terms</span>

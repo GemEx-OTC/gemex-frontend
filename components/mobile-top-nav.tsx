@@ -59,16 +59,20 @@ export function MobileTopNav({ role, unreadCount = 0 }: MobileTopNavProps) {
       >
         <div className="flex items-center justify-between px-4 py-3">
           {/* Logo */}
-          <Link href={`/${role}/dashboard`} className="flex items-center">
-            <div className="relative w-24 h-8">
+          <Link href={`/${role}/dashboard`} className="flex items-center gap-2.5">
+            <div className="w-8 h-8 relative flex items-center justify-center bg-card rounded-lg border border-primary/30 shadow-sm">
               <Image
-                src="/images/mainlogo_type.svg"
-                alt="GemOTC"
-                fill
+                src="/images/gemex-20logo.png"
+                alt="GemOTC Logo"
+                width={22}
+                height={22}
                 className="object-contain"
                 priority
               />
             </div>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              GemOTC
+            </span>
           </Link>
 
           {/* Right side actions */}

@@ -1,12 +1,18 @@
+import Image from "next/image"
+
 export function GemOTCLogo({ size = 40 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Crescent moon */}
-      <path d="M 50 50 Q 30 100 50 150 Q 90 150 110 120 Q 90 100 110 80 Q 90 50 50 50 Z" fill="#641AE4" />
-      {/* Star */}
-      <g transform="translate(140, 70)">
-        <path d="M 0 -15 L 4 -4 L 15 -2 L 8 5 L 10 16 L 0 11 L -10 16 L -8 5 L -15 -2 L -4 -4 Z" fill="#641AE4" />
-      </g>
-    </svg>
+    <div 
+      className="relative flex items-center justify-center bg-card rounded-xl border border-primary/30 shadow-md flex-shrink-0"
+      style={{ width: size, height: size }}
+    >
+      <Image 
+        src="/images/gemex-20logo.png" 
+        alt="GemOTC Logo" 
+        width={Math.round(size * 0.7)} 
+        height={Math.round(size * 0.7)} 
+        className="object-contain" 
+      />
+    </div>
   )
 }

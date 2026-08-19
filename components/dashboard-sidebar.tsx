@@ -245,15 +245,21 @@ export function DashboardSidebar({ role, currentPath }: SidebarProps) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-sidebar-border flex items-center justify-center">
-            <div className="relative w-full h-14">
-              <Image
-                src="/images/mainlogo_type.svg"
-                alt="GemOTC"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
+            <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <div className="w-10 h-10 relative flex items-center justify-center bg-[#242438] rounded-xl border border-primary/30 shadow-lg shadow-primary/10">
+                <Image
+                  src="/images/gemex-20logo.png"
+                  alt="GemOTC Logo"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-sidebar-foreground">
+                GemOTC
+              </span>
+            </Link>
           </div>
 
           {/* Navigation */}

@@ -41,9 +41,11 @@ export default function LoginPage() {
       return
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     // Call the API
     loginMutation.mutate(
-      { email, password },
+      { email: normalizedEmail, password },
       {
         onSuccess: () => {
           toast.success("Login successful!")

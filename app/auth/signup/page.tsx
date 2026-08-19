@@ -76,8 +76,10 @@ export default function SignupPage() {
       return
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     registerMutation.mutate(
-      { fullName, email, password },
+      { fullName, email: normalizedEmail, password },
       {
         onSuccess: () => {
           toast.success("Account created! Please verify your email.")
@@ -124,8 +126,9 @@ export default function SignupPage() {
       toast.error("Please enter the complete 6-digit code.")
       return
     }
+    const normalizedEmail = email.toLowerCase().trim()
     verifyEmailMutation.mutate(
-      { email, otp: otpValue },
+      { email: normalizedEmail, otp: otpValue },
       {
         onSuccess: () => {
           toast.success("Email verified successfully!")
@@ -142,8 +145,9 @@ export default function SignupPage() {
     setResendTimer(60)
     setCanResend(false)
     setOtp(["", "", "", "", "", ""])
+    const normalizedEmail = email.toLowerCase().trim()
     resendOtpMutation.mutate(
-      { email },
+      { email: normalizedEmail },
       {
         onSuccess: () => {
           toast.success("Verification code sent!")

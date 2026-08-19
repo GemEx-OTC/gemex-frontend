@@ -80,8 +80,9 @@ function VerifyEmailContent() {
       toast.error("Email is required. Please go back to login.")
       return
     }
+    const normalizedEmail = email.toLowerCase().trim()
     verifyEmailMutation.mutate(
-      { email, otp: otpValue },
+      { email: normalizedEmail, otp: otpValue },
       {
         onSuccess: () => {
           toast.success("Email verified successfully!")
@@ -98,8 +99,9 @@ function VerifyEmailContent() {
     setResendTimer(60)
     setCanResend(false)
     setOtp(["", "", "", "", "", ""])
+    const normalizedEmail = email.toLowerCase().trim()
     resendOtpMutation.mutate(
-      { email },
+      { email: normalizedEmail },
       {
         onSuccess: () => {
           toast.success("Verification code sent!")

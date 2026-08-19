@@ -31,8 +31,10 @@ export default function ForgotPasswordPage() {
       return
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     forgotPasswordMutation.mutate(
-      { email },
+      { email: normalizedEmail },
       {
         onSuccess: () => {
           toast.success("Reset link sent! Check your email.")

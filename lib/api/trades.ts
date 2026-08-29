@@ -33,6 +33,11 @@ export interface Trade {
   depositConfirmedAt?: string;
   payoutInitiatedAt?: string;
   payoutCompletedAt?: string;
+  amlStatus?: 'success' | 'pending' | 'failed';
+  amlUid?: string;
+  amlReportUrl?: string;
+  riskScore?: number;
+  isBadFunds?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -421,6 +421,11 @@ export interface AdminTrade {
   payoutBankCode?: string;
   payoutAccountNumber?: string;
   payoutAccountName?: string;
+  amlStatus?: 'success' | 'pending' | 'failed';
+  amlUid?: string;
+  amlReportUrl?: string;
+  riskScore?: number;
+  isBadFunds?: boolean;
   createdAt: string;
   updatedAt: string;
 }

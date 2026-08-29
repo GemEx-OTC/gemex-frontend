@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft, Send, RefreshCw } from "lucide-react"
+import { Clock, CheckCircle, XCircle, AlertCircle, Loader2, Wallet, CreditCard, ArrowRightLeft, Send, RefreshCw, Shield, ExternalLink, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 import { getAdminTrades, type AdminTrade } from "@/lib/api/admin"
 import { ManualPayoutModal } from "@/components/admin/manual-payout-modal"
@@ -226,9 +226,37 @@ export default function AdminTradesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${statusConfig?.bg} ${statusConfig?.color}`}>
-                          {statusConfig?.label || trade.status}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${statusConfig?.bg} ${statusConfig?.color}`}>
+                            {statusConfig?.label || trade.status}
+                          </span>
+                          {trade.isBadFunds ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                              <AlertTriangle className="w-2.5 h-2.5" /> High Risk ({trade.riskScore ? `${(trade.riskScore * 100).toFixed(0)}%` : 'AML'})
+                            </span>
+                          ) : trade.amlStatus === 'success' ? (
+                            <div className="flex items-center gap-1">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                <Shield className="w-2.5 h-2.5" /> AML Clear {trade.riskScore !== undefined ? `(${(trade.riskScore * 100).toFixed(0)}%)` : ''}
+                              </span>
+                              {trade.amlReportUrl && (
+                                <a
+                                  href={trade.amlReportUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-purple-400 hover:text-purple-300 p-0.5"
+                                  title="Download AML Report"
+                                >
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              )}
+                            </div>
+                          ) : trade.amlStatus === 'pending' ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">
+                              AML Pending...
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="text-sm text-[#F0F0F0]">{getTimeSince(trade.createdAt)}</div>

@@ -229,10 +229,6 @@
   }
 }
 
-.debug{
-  border:1px solid red;
-}
-
 /* Remove arrows from number inputs */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -244,6 +240,73 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-.debug{
-  border: 1px solid red;
+/* ==========================================================================
+   GemOTC Thin Glowing Custom Scrollbar
+   ========================================================================== */
+
+/* Standard CSS scrollbar styling */
+:root, * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.45) rgba(26, 26, 36, 0.4);
+}
+
+/* WebKit / Chromium / Safari / Edge Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 18, 30, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #7c3aed 0%, #a855f7 100%);
+  border-radius: 9999px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 6px rgba(124, 58, 237, 0.4);
+  transition: all 0.25s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9333ea 0%, #c084fc 100%);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.85), 0 0 4px rgba(200, 245, 90, 0.5);
+  border-color: rgba(200, 245, 90, 0.6);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #a855f7 0%, #c8f55a 100%);
+  box-shadow: 0 0 16px rgba(200, 245, 90, 0.95), 0 0 8px rgba(168, 85, 247, 0.9);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Custom utility class for specific containers */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.45) rgba(26, 26, 36, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(18, 18, 30, 0.3);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #7c3aed 0%, #a855f7 100%);
+  border-radius: 9999px;
+  box-shadow: 0 0 6px rgba(124, 58, 237, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9333ea 0%, #c084fc 100%);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
 }

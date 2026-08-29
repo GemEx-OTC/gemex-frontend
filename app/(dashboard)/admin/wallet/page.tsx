@@ -184,6 +184,11 @@ export default function AdminWalletPage() {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h4 className="font-bold text-foreground text-base">{info.name}</h4>
+                        {network === "TRC20" && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-extrabold tracking-wider uppercase">
+                            Maintenance
+                          </span>
+                        )}
                         {isEvm && (
                           <span className="px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[9px] font-extrabold tracking-wider uppercase">
                             EVM

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { CRYPTO_NETWORKS, CRYPTO_ASSETS } from "@/lib/constants"
-import { Copy, Check, AlertCircle, Info, ChevronLeft, ChevronRight, Loader2, Wallet, Sparkles, Layers } from "lucide-react"
+import { Copy, Check, AlertCircle, Info, ChevronLeft, ChevronRight, Loader2, Wallet, Sparkles, Layers, Clock } from "lucide-react"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMyWallets } from "@/lib/hooks/use-wallets"
 import { QRCodeSVG } from "qrcode.react"
@@ -32,7 +32,7 @@ const NETWORK_INFO: Record<NetworkKey, { assets: string[]; fees: string; speed: 
   POLYGON: { assets: ["USDT", "USDC"], fees: "Very Low", speed: "~2 mins" },
   ARBITRUM: { assets: ["USDT", "USDC"], fees: "Very Low", speed: "~1 min" },
   OPTIMISM: { assets: ["USDT", "USDC"], fees: "Very Low", speed: "~1 min" },
-  TRC20: { assets: ["USDT"], fees: "Very Low", speed: "~1 min" },
+  TRC20: { assets: ["USDT"], fees: "Paused", speed: "Maintenance" },
   BTC: { assets: ["BTC"], fees: "Medium", speed: "~10 mins" },
 }
 
@@ -261,8 +261,8 @@ export default function ClientWalletPage() {
     if (selectedAsset) {
       const networks = getNetworksForAsset(selectedAsset)
       if (networks.length > 0 && !selectedNetwork) {
-        // Find first network that has an address
-        const validNetwork = networks.find(n => !!walletAddresses[n]) || networks[0]
+        // Find first active network that has an address and is not under maintenance
+        const validNetwork = networks.find(n => n !== "TRC20" && !!walletAddresses[n]) || networks.find(n => n !== "TRC20") || networks[0]
         setSelectedNetwork(validNetwork)
       }
     }
@@ -293,7 +293,7 @@ export default function ClientWalletPage() {
       return
     }
     const networks = getNetworksForAsset(asset)
-    const validNetwork = networks.find(n => !!walletAddresses[n]) || networks[0]
+    const validNetwork = networks.find(n => n !== "TRC20" && !!walletAddresses[n]) || networks.find(n => n !== "TRC20") || networks[0]
     setSelectedNetwork(validNetwork)
     setCurrentStep(2)
   }
@@ -398,15 +398,18 @@ export default function ClientWalletPage() {
                 </div>
                 <div className="grid gap-3">
                   {availableNetworks.map(network => {
-                    const hasAddress = !!walletAddresses[network]
+                    const isTron = network === "TRC20"
+                    const hasAddress = !isTron && !!walletAddresses[network]
                     const isEvm = EVM_NETWORKS.includes(network)
                     return (
                       <button
                         key={network}
-                        disabled={!hasAddress}
+                        disabled={!isTron && !hasAddress}
                         onClick={() => handleNetworkSelect(network)}
                         className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all ${
-                          hasAddress 
+                          isTron
+                            ? "bg-card/70 border-amber-500/30 hover:border-amber-500/50 shadow-xs"
+                            : hasAddress 
                             ? "bg-card border-border hover:border-primary/30" 
                             : "bg-card/40 border-border/40 opacity-40 cursor-not-allowed"
                         }`}
@@ -416,13 +419,20 @@ export default function ClientWalletPage() {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <h5 className="font-bold text-foreground text-sm">{CRYPTO_NETWORKS[network].name}</h5>
+                              {isTron && (
+                                <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-extrabold tracking-wide uppercase border border-amber-500/20">
+                                  Maintenance
+                                </span>
+                              )}
                               {isEvm && (
                                 <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-extrabold tracking-wide uppercase">
                                   EVM
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] text-muted-foreground">{NETWORK_INFO[network].fees} fees • {NETWORK_INFO[network].speed}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {isTron ? "Deposits paused • Scheduled upgrade" : `${NETWORK_INFO[network].fees} fees • ${NETWORK_INFO[network].speed}`}
+                            </p>
                           </div>
                         </div>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -434,8 +444,53 @@ export default function ClientWalletPage() {
             )}
 
             {/* Step 3: Mobile Address & details */}
-            {currentStep === 3 && (
-              selectedNetwork && currentAddress && (
+            {currentStep === 3 && selectedNetwork && (
+              selectedNetwork === "TRC20" ? (
+                <div className="space-y-4">
+                  <div className="p-6 bg-card border border-amber-500/30 rounded-2xl text-center space-y-5 relative overflow-hidden">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                      <Clock className="w-8 h-8 animate-pulse" />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs font-bold">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span>Under Maintenance</span>
+                      </div>
+                      <h4 className="text-xl font-extrabold text-foreground">Tron Blockchain Unavailable</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Deposits and processing on the Tron Blockchain (TRC20) are temporarily paused for maintenance and will be available soon. Please use an alternative supported network.
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-muted/40 border border-border rounded-xl text-left space-y-2.5">
+                      <p className="text-xs font-bold text-foreground">Recommended Active Networks:</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {(["BSC", "BASE", "POLYGON", "ARBITRUM"] as NetworkKey[]).map((net) => (
+                          <button
+                            key={net}
+                            onClick={() => handleNetworkSelect(net)}
+                            className="w-full p-2.5 rounded-lg bg-card border border-border hover:border-primary text-xs font-semibold text-foreground flex items-center justify-between transition-all"
+                          >
+                            <div className="flex items-center gap-2">
+                              <NetworkIconComponent network={net} size={18} />
+                              <span>{CRYPTO_NETWORKS[net].name}</span>
+                            </div>
+                            <span className="text-[10px] text-emerald-400 font-bold">Active</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentStep(2)}
+                      className="w-full py-3 rounded-xl border border-border bg-card text-foreground font-semibold text-xs hover:bg-muted/50"
+                    >
+                      Choose Another Network
+                    </button>
+                  </div>
+                </div>
+              ) : currentAddress ? (
                 <div className="space-y-4">
                   <div className="p-6 bg-card border border-border rounded-2xl text-center space-y-6">
                     <div className="flex items-center justify-between">
@@ -496,7 +551,7 @@ export default function ClientWalletPage() {
                     Start Over
                   </button>
                 </div>
-              )
+              ) : null
             )}
           </motion.div>
         </AnimatePresence>
@@ -514,7 +569,6 @@ export default function ClientWalletPage() {
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(CRYPTO_ASSETS) as AssetKey[]).map(asset => {
                 const isActive = selectedAsset === asset
-                const isComingSoon = false
                 return (
                   <button
                     key={asset}
@@ -550,19 +604,24 @@ export default function ClientWalletPage() {
 
             <div className="grid gap-3">
               {availableNetworks.map(network => {
-                const hasAddress = !!walletAddresses[network]
+                const isTron = network === "TRC20"
+                const hasAddress = !isTron && !!walletAddresses[network]
                 const isSelected = selectedNetwork === network
                 const isEvm = EVM_NETWORKS.includes(network)
 
                 return (
                   <button
                     key={network}
-                    disabled={!hasAddress}
+                    disabled={!isTron && !hasAddress}
                     onClick={() => setSelectedNetwork(network)}
                     className={`relative p-4 rounded-xl border text-left flex items-center justify-between transition-all group ${
                       isSelected 
-                        ? "bg-primary/10 border-primary shadow-md" 
-                        : hasAddress 
+                        ? isTron
+                          ? "bg-amber-500/10 border-amber-500/40 shadow-md"
+                          : "bg-primary/10 border-primary shadow-md" 
+                        : isTron
+                          ? "bg-card border-amber-500/20 hover:border-amber-500/40 hover:shadow-sm"
+                          : hasAddress 
                           ? "bg-card border-border hover:border-primary/30 hover:shadow-sm" 
                           : "bg-card/40 border-border/40 opacity-40 cursor-not-allowed"
                     }`}
@@ -576,6 +635,11 @@ export default function ClientWalletPage() {
                           <h5 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
                             {CRYPTO_NETWORKS[network].name}
                           </h5>
+                          {isTron && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-extrabold tracking-wider uppercase">
+                              Maintenance
+                            </span>
+                          )}
                           {isEvm && (
                             <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[9px] font-extrabold tracking-wider uppercase">
                               EVM
@@ -583,13 +647,17 @@ export default function ClientWalletPage() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Fees: <span className="font-semibold text-foreground/80">{NETWORK_INFO[network].fees}</span> • Time: <span className="font-semibold text-foreground/80">{NETWORK_INFO[network].speed}</span>
+                          {isTron ? (
+                            <span className="text-amber-500/90 font-medium">Deposits paused • Maintenance</span>
+                          ) : (
+                            <>Fees: <span className="font-semibold text-foreground/80">{NETWORK_INFO[network].fees}</span> • Time: <span className="font-semibold text-foreground/80">{NETWORK_INFO[network].speed}</span></>
+                          )}
                         </p>
                       </div>
                     </div>
                     {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 text-primary" />
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isTron ? "bg-amber-500/20 text-amber-400" : "bg-primary/20 text-primary"}`}>
+                        <Check className="w-3.5 h-3.5" />
                       </div>
                     )}
                   </button>
@@ -603,107 +671,183 @@ export default function ClientWalletPage() {
         {/* Column 2: Right Address Panel */}
         <div className="col-span-7">
           <AnimatePresence mode="wait">
-            {selectedAsset && selectedNetwork && currentAddress ? (
-              <motion.div
-                key={`${selectedAsset}-${selectedNetwork}`}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="bg-card border border-border rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden"
-              >
-                {/* Background decorative glows */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            {selectedAsset && selectedNetwork ? (
+              selectedNetwork === "TRC20" ? (
+                <motion.div
+                  key="TRC20-maintenance"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  className="bg-card border border-amber-500/30 rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden text-center"
+                >
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                {/* Header card details */}
-                <div className="flex items-center justify-between border-b border-border pb-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-2.5">
-                      <TokenIconComponent asset={selectedAsset} size={32} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-foreground">{selectedAsset} Deposit Address</h3>
-                      <p className="text-sm text-muted-foreground">Official secure OTC pool address</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-xl text-sm font-semibold border border-border">
-                    <NetworkIconComponent network={selectedNetwork} size={16} />
-                    <span>{CRYPTO_NETWORKS[selectedNetwork].name}</span>
-                  </div>
-                </div>
-
-                {/* Deposit Address Box and QR Code Grid */}
-                <div className="grid md:grid-cols-12 gap-8 items-center relative z-10">
-                  
-                  {/* QR Code Container */}
-                  <div className="md:col-span-4 flex flex-col items-center justify-center space-y-3">
-                    <div className="p-4 bg-white rounded-2xl shadow-lg border border-border flex items-center justify-center">
-                      <QRCodeSVG value={qrCodeValue} size={140} level="Q" includeMargin={false} fgColor="#000000" bgColor="#ffffff" />
-                    </div>
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center">
-                      {selectedNetwork === "TRC20" ? "Scan QR to Deposit" : "Scan with Trust Wallet / MetaMask"}
-                    </span>
-                  </div>
-
-                  {/* Copy details */}
-                  <div className="md:col-span-8 space-y-5">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Wallet Deposit Address</label>
-                      <div className="p-4 bg-muted/80 rounded-xl font-mono text-sm break-all text-foreground border border-border flex items-center justify-between gap-3">
-                        <span className="select-all">{currentAddress}</span>
+                  {/* Header card details */}
+                  <div className="flex items-center justify-between border-b border-border pb-6 relative z-10 text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center p-2.5">
+                        <NetworkIconComponent network="TRC20" size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-foreground">Tron (TRC20) Deposit Address</h3>
+                        <p className="text-sm text-muted-foreground">Tron Blockchain Network</p>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => handleCopy(currentAddress, selectedNetwork)}
-                      className="w-full py-4 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 flex items-center justify-center gap-2.5 text-base shadow-lg hover:shadow-primary/15 transition-all duration-200 active:scale-[0.99]"
-                    >
-                      {copiedAddress === selectedNetwork ? (
-                        <><Check className="w-5 h-5 animate-pulse" /> Address Copied!</>
-                      ) : (
-                        <><Copy className="w-5 h-5" /> Copy Wallet Address</>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm font-bold text-amber-500">
+                      <Clock className="w-4 h-4" />
+                      <span>Under Maintenance</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Shared EVM alert */}
-                {isEvmSelected && evmSharedNetworks.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-start gap-4 relative z-10"
-                  >
-                    <Layers className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm">Unified EVM Address</h4>
-                      <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                        This address represents your unified EOA wallet. Deposits sent to this address on any of the following EVM networks will be credited:
+                  {/* Maintenance Body */}
+                  <div className="py-6 space-y-6 max-w-md mx-auto relative z-10">
+                    <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                      <Clock className="w-10 h-10 animate-pulse" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-xl font-bold text-foreground">Tron Transactions Temporarily Paused</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        The platform is currently performing network maintenance on Tron (TRC20) blockchain processing. Deposit addresses for Tron are temporarily unavailable and will be restored soon.
                       </p>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {evmSharedNetworks.map(n => (
-                          <div key={n} className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400">
-                            <NetworkIconComponent network={n} size={12} />
-                            <span>{CRYPTO_NETWORKS[n].name}</span>
-                          </div>
+                    </div>
+
+                    {/* Alternative Network Switchers */}
+                    <div className="p-5 bg-muted/40 border border-border rounded-2xl text-left space-y-3">
+                      <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <span>Recommended Alternative Networks</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        You can deposit {selectedAsset} immediately with lower fees and fast confirmation on any of our supported EVM chains:
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        {(["BSC", "BASE", "POLYGON", "ARBITRUM", "OPTIMISM", "ETH"] as NetworkKey[]).map((net) => (
+                          <button
+                            key={net}
+                            onClick={() => setSelectedNetwork(net)}
+                            className="p-3 rounded-xl bg-card border border-border hover:border-primary text-xs font-semibold text-foreground flex items-center gap-2 transition-all hover:bg-muted/40 text-left"
+                          >
+                            <NetworkIconComponent network={net} size={18} />
+                            <span className="truncate">{CRYPTO_NETWORKS[net].name}</span>
+                          </button>
                         ))}
                       </div>
                     </div>
-                  </motion.div>
-                )}
-
-                {/* Important warnings */}
-                <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-4 relative z-10">
-                  <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm">Deposit Instructions</h4>
-                    <ul className="list-disc list-inside text-xs text-amber-800 dark:text-amber-300 space-y-1 leading-relaxed">
-                      <li>Send only <span className="font-bold">{selectedAsset}</span> to this deposit address.</li>
-                      <li>Sending any other token or using the incorrect network will result in permanent loss.</li>
-                    </ul>
                   </div>
-                </div>
+                </motion.div>
+              ) : currentAddress ? (
+                <motion.div
+                  key={`${selectedAsset}-${selectedNetwork}`}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  className="bg-card border border-border rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden"
+                >
+                  {/* Background decorative glows */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-              </motion.div>
+                  {/* Header card details */}
+                  <div className="flex items-center justify-between border-b border-border pb-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-2.5">
+                        <TokenIconComponent asset={selectedAsset} size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-foreground">{selectedAsset} Deposit Address</h3>
+                        <p className="text-sm text-muted-foreground">Official secure OTC pool address</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-xl text-sm font-semibold border border-border">
+                      <NetworkIconComponent network={selectedNetwork} size={16} />
+                      <span>{CRYPTO_NETWORKS[selectedNetwork].name}</span>
+                    </div>
+                  </div>
+
+                  {/* Deposit Address Box and QR Code Grid */}
+                  <div className="grid md:grid-cols-12 gap-8 items-center relative z-10">
+                    
+                    {/* QR Code Container */}
+                    <div className="md:col-span-4 flex flex-col items-center justify-center space-y-3">
+                      <div className="p-4 bg-white rounded-2xl shadow-lg border border-border flex items-center justify-center">
+                        <QRCodeSVG value={qrCodeValue} size={140} level="Q" includeMargin={false} fgColor="#000000" bgColor="#ffffff" />
+                      </div>
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center">
+                        Scan with Trust Wallet / MetaMask
+                      </span>
+                    </div>
+
+                    {/* Copy details */}
+                    <div className="md:col-span-8 space-y-5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Wallet Deposit Address</label>
+                        <div className="p-4 bg-muted/80 rounded-xl font-mono text-sm break-all text-foreground border border-border flex items-center justify-between gap-3">
+                          <span className="select-all">{currentAddress}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopy(currentAddress, selectedNetwork)}
+                        className="w-full py-4 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/95 flex items-center justify-center gap-2.5 text-base shadow-lg hover:shadow-primary/15 transition-all duration-200 active:scale-[0.99]"
+                      >
+                        {copiedAddress === selectedNetwork ? (
+                          <><Check className="w-5 h-5 animate-pulse" /> Address Copied!</>
+                        ) : (
+                          <><Copy className="w-5 h-5" /> Copy Wallet Address</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Shared EVM alert */}
+                  {isEvmSelected && evmSharedNetworks.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-start gap-4 relative z-10"
+                    >
+                      <Layers className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm">Unified EVM Address</h4>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                          This address represents your unified EOA wallet. Deposits sent to this address on any of the following EVM networks will be credited:
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-2">
+                          {evmSharedNetworks.map(n => (
+                            <div key={n} className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400">
+                              <NetworkIconComponent network={n} size={12} />
+                              <span>{CRYPTO_NETWORKS[n].name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Important warnings */}
+                  <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start gap-4 relative z-10">
+                    <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm">Deposit Instructions</h4>
+                      <ul className="list-disc list-inside text-xs text-amber-800 dark:text-amber-300 space-y-1 leading-relaxed">
+                        <li>Send only <span className="font-bold">{selectedAsset}</span> to this deposit address.</li>
+                        <li>Sending any other token or using the incorrect network will result in permanent loss.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                </motion.div>
+              ) : (
+                <div className="bg-card border-2 border-dashed border-border rounded-3xl p-16 text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+                    <Wallet className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">No Active Wallet Selected</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Please select an asset and network on the left panel to display your secure deposit address.
+                  </p>
+                </div>
+              )
             ) : (
               <div className="bg-card border-2 border-dashed border-border rounded-3xl p-16 text-center">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">

@@ -103,6 +103,11 @@ export default function TradeRequestPage() {
   }, [])
 
   const handleSubmitRequest = async () => {
+    if (tradeData.cryptoNetwork === "TRC20") {
+      setError("Tron (TRC20) network is currently undergoing maintenance. Please select another network.")
+      return
+    }
+
     setSubmitting(true)
     setError(null)
 
@@ -216,7 +221,7 @@ export default function TradeRequestPage() {
                             setTradeData({
                               ...tradeData,
                               cryptoAsset: key as AssetKey,
-                              cryptoNetwork: "TRC20"
+                              cryptoNetwork: "BSC"
                             })
                           }}
                           whileHover={{ scale: 1.02 }}
@@ -259,26 +264,41 @@ export default function TradeRequestPage() {
                       return key !== "BTC"
                     })
                     .map(([key, network]) => {
+                      const isTron = key === "TRC20"
                       const isSelected = tradeData.cryptoNetwork === key
                       return (
                         <motion.button
                           key={key}
-                          onClick={() =>
+                          disabled={isTron}
+                          onClick={() => {
+                            if (isTron) return
                             setTradeData({ ...tradeData, cryptoNetwork: key as NetworkKey })
-                          }
-                          whileHover={{ scale: 1.01 }}
-                          whileTap={{ scale: 0.99 }}
-                          className={`relative p-4 rounded-xl text-left transition-all flex items-center gap-3 ${isSelected
-                            ? "bg-[#24243D] border-2 border-[#C8F55A] text-white shadow-md"
-                            : "bg-[#12121A] text-[#cbd5e1] hover:text-white hover:bg-[#242438]/60 border border-[#2D2D42]"
-                            }`}
+                          }}
+                          whileHover={isTron ? {} : { scale: 1.01 }}
+                          whileTap={isTron ? {} : { scale: 0.99 }}
+                          className={`relative p-4 rounded-xl text-left transition-all flex items-center gap-3 ${
+                            isTron
+                              ? "bg-[#12121A]/40 border border-amber-500/20 text-[#6B7280] opacity-60 cursor-not-allowed"
+                              : isSelected
+                              ? "bg-[#24243D] border-2 border-[#C8F55A] text-white shadow-md"
+                              : "bg-[#12121A] text-[#cbd5e1] hover:text-white hover:bg-[#242438]/60 border border-[#2D2D42]"
+                          }`}
                         >
                           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[#1A1A24] border border-[#2D2D42]">
                             <NetworkIconComponent network={key as NetworkKey} size={22} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-bold text-sm text-white truncate">{network.name}</div>
-                            <div className="text-xs text-[#cbd5e1] font-medium mt-0.5">{network.chain}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-white truncate">{network.name}</span>
+                              {isTron && (
+                                <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-bold uppercase tracking-wider">
+                                  Maintenance
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-[#cbd5e1] font-medium mt-0.5">
+                              {isTron ? "Temporarily unavailable" : network.chain}
+                            </div>
                           </div>
                           {isSelected && (
                             <Check className="w-5 h-5 ml-auto flex-shrink-0 text-[#C8F55A] font-bold" />

@@ -238,7 +238,7 @@ export default function Home() {
     },
     {
       question: "How fast is trade settlement?",
-      answer: "Most trades settle in under 3 minutes upon deposit confirmation. Automated banking rails deliver Naira settlements straight to your designated bank account."
+      answer: "Payouts are near-instant, averaging just 15 seconds upon deposit confirmation. Automated banking rails deliver Naira settlements straight to your designated bank account."
     },
     {
       question: "How is security handled?",
@@ -481,7 +481,7 @@ export default function Home() {
               >
                 {[
                   { icon: DollarSign, value: 500, prefix: "$", suffix: "M+", label: "Volume Processed" },
-                  { icon: Clock, value: 3, suffix: " min", label: "Avg. Settlement" },
+                  { icon: Clock, value: 15, suffix: "s", label: "Avg. Settlement" },
                   { icon: Shield, value: 100, prefix: "", suffix: "%", label: "Bank-Grade Security" },
                 ].map((stat, idx) => (
                   <motion.div
@@ -573,7 +573,7 @@ export default function Home() {
               { step: 1, icon: Building2, title: "1. Register & Verify", desc: "Quick verification starting from $1 for regular users or $50,000 for verified businesses.", color: "from-[#a855f7] to-[#7e22ce]" },
               { step: 2, icon: RefreshCw, title: "2. Check Fair Rates", desc: "View real-time, competitive, and fair market exchange rates with zero hidden markups.", color: "from-[#7e22ce] to-[#3b82f6]" },
               { step: 3, icon: ArrowRightLeft, title: "3. Secure Deposit", desc: "Transfer USDT, USDC, or BTC to our bank-grade secure transaction system.", color: "from-[#3b82f6] to-[#06b6d4]" },
-              { step: 4, icon: CheckCircle, title: "4. Instant Payout", desc: "Receive automated settlements directly into your bank account.", color: "from-[#06b6d4] to-[#84cc16]" },
+              { step: 4, icon: CheckCircle, title: "4. Instant Payout", desc: "Receive automated settlements in an average of 15 seconds directly into your bank account.", color: "from-[#06b6d4] to-[#84cc16]" },
             ].map((item, idx) => (
               <TiltCard key={item.step} className="relative z-10">
                 <motion.div

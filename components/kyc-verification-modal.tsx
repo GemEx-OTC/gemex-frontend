@@ -20,15 +20,17 @@ interface DocumentOption {
   id: string
   label: string
   icon: React.ReactNode
-  smileIdType: string
+  product: 'biometric_kyc' | 'doc_verification'
+  idSelection: string[]
   description: string
 }
 
 const DOCUMENT_OPTIONS: DocumentOption[] = [
-  { id: "nin", label: "NIN (National ID)", icon: <FileText className="w-6 h-6" />, smileIdType: "NIN", description: "National Identification Number slip or card" },
-  { id: "drivers_license", label: "Driver's License", icon: <Car className="w-6 h-6" />, smileIdType: "DRIVERS_LICENSE", description: "Valid Nigerian driver's license" },
-  { id: "voters_card", label: "Voter's Card", icon: <CreditCard className="w-6 h-6" />, smileIdType: "VOTERS_CARD", description: "Permanent Voter's Card (PVC)" },
-  { id: "passport", label: "International Passport", icon: <Globe className="w-6 h-6" />, smileIdType: "PASSPORT", description: "Nigerian International Passport" }
+  { id: "nin", label: "NIN (National ID)", icon: <FileText className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["NIN_V2", "NATIONAL_ID"], description: "National Identification Number slip or card" },
+  { id: "bvn", label: "BVN Verification", icon: <Shield className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["BVN", "BVN_MFA"], description: "Bank Verification Number" },
+  { id: "voters_card", label: "Voter's Card", icon: <CreditCard className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["VOTER_ID"], description: "Permanent Voter's Card (PVC)" },
+  { id: "drivers_license", label: "Driver's License", icon: <Car className="w-6 h-6" />, product: "doc_verification", idSelection: ["DRIVERS_LICENSE"], description: "Valid Nigerian driver's license" },
+  { id: "passport", label: "International Passport", icon: <Globe className="w-6 h-6" />, product: "doc_verification", idSelection: ["PASSPORT"], description: "Nigerian International Passport" }
 ]
 
 export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerificationModalProps) {
@@ -64,8 +66,12 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
         throw new Error("SmileID SDK is not ready yet. Please wait a moment.")
       }
 
-      // Mint backend v3 token
-      const tokenData = await kycApi.getSmileIdToken("biometric_kyc")
+      const selectedDoc = DOCUMENT_OPTIONS.find(d => d.id === docType) || DOCUMENT_OPTIONS[0]
+      const product = selectedDoc.product || "biometric_kyc"
+      const idSelectionList = selectedDoc.idSelection || ["NIN_V2", "NATIONAL_ID"]
+
+      // Mint backend v3 token matching product
+      const tokenData = await kycApi.getSmileIdToken(product)
 
       const nameParts = profile?.fullName?.trim().split(" ") || ["User"]
       const givenNames = nameParts[0] || "User"
@@ -83,12 +89,9 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
         }
       }
 
-      const selectedDoc = DOCUMENT_OPTIONS.find(d => d.id === docType)
-      const idSelectionType = selectedDoc?.smileIdType || "NIN"
-
       const config: SmileIdentityConfig = {
         token: tokenData.token,
-        product: "biometric_kyc",
+        product,
         callback_url: tokenData.callback_url,
         environment: tokenData.environment || "sandbox",
         partner_details: {
@@ -98,6 +101,10 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
           policy_url: "https://gemotc.com/privacy",
           theme_color: "#641AE4",
         },
+        consent_information: {
+          granted: true,
+          granted_at: new Date().toISOString(),
+        },
         user_details: {
           given_names: givenNames,
           last_name: lastName,
@@ -105,7 +112,7 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
           phone_number: formattedPhone || undefined,
         },
         id_selection: {
-          NG: [idSelectionType],
+          NG: idSelectionList,
         },
         use_strict_mode: false,
         onResult: (result) => {

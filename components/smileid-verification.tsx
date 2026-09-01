@@ -92,15 +92,19 @@ export function SmileIDVerification({
           policy_url: 'https://gemotc.com/privacy',
           theme_color: '#641AE4',
         },
+        consent_information: {
+          granted: true,
+          granted_at: new Date().toISOString(),
+        },
         user_details: {
           given_names: givenNames,
           last_name: lastName,
           email: profile?.email || undefined,
           phone_number: formattedPhone || undefined,
         },
-        id_selection: {
-          NG: ['NIN', 'BVN', 'DRIVERS_LICENSE', 'PASSPORT', 'VOTERS_CARD'],
-        },
+        id_selection: product === 'doc_verification'
+          ? { NG: ['PASSPORT', 'DRIVERS_LICENSE', 'IDENTITY_CARD', 'VOTER_ID'] }
+          : { NG: ['NIN_V2', 'NATIONAL_ID', 'BVN', 'BVN_MFA', 'VOTER_ID'] },
         use_strict_mode: false,
         onResult: (result) => {
           setLoading(false)

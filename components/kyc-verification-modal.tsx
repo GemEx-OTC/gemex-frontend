@@ -166,79 +166,79 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" initial="hidden" animate="visible" exit="hidden">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
-          <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-[#1E1E2B] border border-[#2D2D3D] rounded-2xl shadow-2xl overflow-hidden">
+        <motion.div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 overflow-y-auto" initial="hidden" animate="visible" exit="hidden">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleClose} />
+          <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-[#1E1E2B] border border-[#2D2D3D] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col my-auto">
             {step !== "processing" && (
-              <button onClick={handleClose} className="absolute top-4 right-4 p-2 text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D] rounded-lg transition-all z-10">
+              <button onClick={handleClose} className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-1.5 sm:p-2 text-[#B0B0B8] hover:text-[#F0F0F0] hover:bg-[#2D2D3D] rounded-lg transition-all z-20">
                 <X className="w-5 h-5" />
               </button>
             )}
 
             <AnimatePresence mode="wait">
               {step === "intro" && (
-                <motion.div key="intro" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#641AE4] to-[#9A24D2] rounded-full flex items-center justify-center shadow-lg shadow-[#641AE4]/20">
-                      <Shield className="w-8 h-8 text-white" />
+                <motion.div key="intro" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-5 sm:p-6 overflow-y-auto">
+                  <div className="text-center mb-5 sm:mb-6">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-[#641AE4] to-[#9A24D2] rounded-full flex items-center justify-center shadow-lg shadow-[#641AE4]/20">
+                      <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                     </div>
-                    <h2 className="text-2xl font-bold text-[#F0F0F0] mb-2">Verify Your Identity</h2>
-                    <p className="text-[#B0B0B8]">Complete instant biometric KYC to unlock Tier 2 ($50,000) trading limits.</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#F0F0F0] mb-2">Verify Your Identity</h2>
+                    <p className="text-sm sm:text-base text-[#B0B0B8]">Complete instant biometric KYC to unlock Tier 2 ($50,000) trading limits.</p>
                   </div>
-                  <motion.button onClick={() => setStep("select-document")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all">
+                  <motion.button onClick={() => setStep("select-document")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-3 sm:py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all">
                     Start Verification
                   </motion.button>
-                  <button onClick={handleClose} className="w-full mt-3 py-3 text-[#B0B0B8] hover:text-[#F0F0F0] transition-colors text-sm">I&apos;ll do this later</button>
+                  <button onClick={handleClose} className="w-full mt-2 sm:mt-3 py-2 text-[#B0B0B8] hover:text-[#F0F0F0] transition-colors text-xs sm:text-sm">I&apos;ll do this later</button>
                 </motion.div>
               )}
 
               {step === "select-document" && (
-                <motion.div key="select-document" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6">
-                  <div className="mb-6">
-                    <h2 className="text-xl font-bold text-[#F0F0F0] mb-1">Select Document Type</h2>
-                    <p className="text-sm text-[#B0B0B8]">Choose the document you want to verify with</p>
+                <motion.div key="select-document" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-4 sm:p-6 flex flex-col max-h-[85vh] overflow-y-auto">
+                  <div className="mb-4 sm:mb-5">
+                    <h2 className="text-lg sm:text-xl font-bold text-[#F0F0F0] mb-1">Select Document Type</h2>
+                    <p className="text-xs sm:text-sm text-[#B0B0B8]">Choose the document you want to verify with</p>
                   </div>
-                  <div className="space-y-3 mb-6">
+                  <div className="space-y-2.5 mb-4 max-h-[45vh] overflow-y-auto pr-1">
                     {DOCUMENT_OPTIONS.map((option) => (
                       <motion.button
                         key={option.id}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => { setSelectedDocument(option.id); setError("") }}
-                        className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${selectedDocument === option.id ? "border-[#C8F55A] bg-[#C8F55A]/10" : "border-[#2D2D3D] bg-[#2D2D3D]/30 hover:border-[#641AE4]/50"}`}
+                        className={`w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 transition-all ${selectedDocument === option.id ? "border-[#C8F55A] bg-[#C8F55A]/10" : "border-[#2D2D3D] bg-[#2D2D3D]/30 hover:border-[#641AE4]/50"}`}
                       >
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedDocument === option.id ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-[#2D2D3D] text-[#B0B0B8]"}`}>{option.icon}</div>
-                        <div className="flex-1 text-left">
-                          <p className="font-medium text-[#F0F0F0]">{option.label}</p>
-                          <p className="text-sm text-[#B0B0B8]">{option.description}</p>
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${selectedDocument === option.id ? "bg-[#C8F55A]/20 text-[#C8F55A]" : "bg-[#2D2D3D] text-[#B0B0B8]"}`}>{option.icon}</div>
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="font-medium text-sm sm:text-base text-[#F0F0F0] truncate">{option.label}</p>
+                          <p className="text-xs sm:text-sm text-[#B0B0B8] truncate">{option.description}</p>
                         </div>
-                        {selectedDocument === option.id && <CheckCircle className="w-5 h-5 text-[#C8F55A]" />}
+                        {selectedDocument === option.id && <CheckCircle className="w-5 h-5 text-[#C8F55A] flex-shrink-0" />}
                       </motion.button>
                     ))}
                   </div>
                   {error && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-300 text-sm px-4 py-3 rounded-lg mb-4">
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-300 text-xs sm:text-sm px-3.5 py-2.5 rounded-lg mb-4">
                       <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>{error}</span>
+                      <span className="leading-tight">{error}</span>
                     </motion.div>
                   )}
-                  <div className="flex gap-3">
-                    <button onClick={() => setStep("intro")} className="flex-1 py-3 rounded-lg font-medium text-[#B0B0B8] border border-[#2D2D3D] hover:border-[#641AE4] hover:text-[#F0F0F0] transition-all">Back</button>
+                  <div className="flex gap-3 mt-auto pt-2">
+                    <button onClick={() => setStep("intro")} className="flex-1 py-2.5 sm:py-3 rounded-lg font-medium text-xs sm:text-sm text-[#B0B0B8] border border-[#2D2D3D] hover:border-[#641AE4] hover:text-[#F0F0F0] transition-all">Back</button>
                     <motion.button
                       onClick={() => startSmileIDVerification(selectedDocument)}
                       disabled={!selectedDocument || loading || !sdkLoaded}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 sm:py-3 rounded-lg font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           <span>Starting...</span>
                         </>
                       ) : !sdkLoaded ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           <span>Loading SDK...</span>
                         </>
                       ) : (

@@ -112,70 +112,143 @@ export default function ClientDashboardPage() {
             exit={{ opacity: 0, y: -20 }}
             className="mb-6"
           >
-            {user.phoneVerified && !user.ninVerified && user.kycSubmittedAt ? (
-              <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-6 relative overflow-hidden">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-[#641AE4]/20 text-[#c084fc] flex-shrink-0 mt-0.5">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        Identity Verification in Progress
-                      </h3>
-                      <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[#641AE4]/30 text-[#c084fc] border border-[#641AE4]/50 animate-pulse">
-                        Verifying
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mb-4">
-                      We have received your verification submission and are confirming your details with national authorities. This usually takes under a minute. Your limits will update automatically once verified.
+            {/* 1. Phone Not Verified */}
+            {!user.phoneVerified ? (
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 sm:p-5">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                      Verify Phone Number
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                      Verify your phone number to unlock Tier 1 and start receiving payouts.
                     </p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => refetch()}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2D2D3D] hover:bg-[#3D3D4D] text-[#F0F0F0] text-sm font-medium transition-all"
+                    <button 
+                      onClick={() => setShowOtpModal(true)} 
+                      className="gemex-button-primary text-xs sm:text-sm py-2 sm:py-2.5 px-4"
+                    >
+                      Verify Phone
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : !user.ninVerified ? (
+              /* 2. Identity (NIN) States */
+              user.kycStatus === "Rejected" ? (
+                /* Failed State */
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-5 relative overflow-hidden">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 text-red-400 flex-shrink-0 mt-0.5">
+                      <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                          Verification Unsuccessful
+                        </h3>
+                        <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-red-500/20 text-red-400 border border-red-500/40">
+                          Failed
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-red-300/90 mb-3 leading-relaxed">
+                        {user.kycRejectionReason 
+                          ? `${user.kycRejectionReason}. Please resubmit with clear details.` 
+                          : "We couldn't verify your document. Please verify your details and try again."}
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setShowKycModal(true)}
+                          className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 text-xs sm:text-sm font-semibold transition-all shadow-md shadow-red-500/20"
+                        >
+                          Try Again
+                        </button>
+                        <a
+                          href="mailto:support@gemotc.com"
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
+                        >
+                          Contact Support
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : user.kycSubmittedAt ? (
+                /* In Progress State (Mobile Compact) */
+                <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-4 sm:p-5 relative overflow-hidden">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-[#641AE4]/20 text-[#c084fc] flex-shrink-0 mt-0.5">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                          Verifying Identity
+                        </h3>
+                        <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[#641AE4]/30 text-[#c084fc] border border-[#641AE4]/50 animate-pulse">
+                          In Progress
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                        Documents submitted. Confirming your details (usually &lt; 1 min).
+                      </p>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <button
+                          onClick={() => refetch()}
+                          className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#2D2D3D] hover:bg-[#3D3D4D] text-[#F0F0F0] text-xs sm:text-sm font-medium transition-all"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Check Status
+                        </button>
+                        <button
+                          onClick={() => setShowKycModal(true)}
+                          className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline ml-1"
+                        >
+                          Resubmit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Not Started State */
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 sm:p-5">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                        Verify Identity (NIN)
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                        Upgrade to Tier 2 to unlock $50,000 (₦75,000,000) limits & instant automated payouts.
+                      </p>
+                      <button 
+                        onClick={() => setShowKycModal(true)} 
+                        className="gemex-button-primary text-xs sm:text-sm py-2 sm:py-2.5 px-4"
                       >
-                        <RefreshCw className="w-4 h-4" />
-                        Check Status
-                      </button>
-                      <button
-                        onClick={() => setShowKycModal(true)}
-                        className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline"
-                      >
-                        Resubmit if needed
+                        Verify Identity
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
+              )
             ) : (
-              <div className="bg-primary/10 border border-primary/30 rounded-xl p-6">
-                <div className="flex items-start gap-4">
-                  <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {!user.phoneVerified ? "Verify Phone Number" : !user.ninVerified ? "Verify Identity (NIN)" : "Verify Business (CAC)"}
+              /* 3. Business (CAC) Verification */
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 sm:p-5">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+                      Verify Business (CAC)
                     </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {!user.phoneVerified 
-                        ? "Verify your phone number to unlock Tier 1 and start receiving payouts." 
-                        : !user.ninVerified 
-                          ? "Upgrade to Tier 2 by verifying your NIN to increase your limits to $50,000."
-                          : "Unlock unrestricted payouts by verifying your business registration (CAC)."}
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                      Unlock unrestricted payouts by verifying your business registration (CAC).
                     </p>
                     <button 
-                      onClick={() => {
-                        if (!user.phoneVerified) {
-                          setShowOtpModal(true);
-                        } else if (!user.ninVerified) {
-                          setShowKycModal(true);
-                        } else {
-                          window.location.href = "/client/settings?tab=account&action=verify_cac";
-                        }
-                      }} 
-                      className="gemex-button-primary"
+                      onClick={() => (window.location.href = "/client/settings?tab=account&action=verify_cac")} 
+                      className="gemex-button-primary text-xs sm:text-sm py-2 sm:py-2.5 px-4"
                     >
-                      {!user.phoneVerified ? "Verify Phone" : !user.ninVerified ? "Verify Identity" : "Verify Business"}
+                      Verify Business
                     </button>
                   </div>
                 </div>

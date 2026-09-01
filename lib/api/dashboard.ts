@@ -8,6 +8,7 @@ export interface DashboardUser {
   email: string;
   kycStatus: 'Pending' | 'Submitted' | 'Verified' | 'Rejected';
   kycSubmittedAt?: string;
+  kycRejectionReason?: string;
   bankVerified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;

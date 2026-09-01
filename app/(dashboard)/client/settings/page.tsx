@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap, X } from "lucide-react"
+import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap, X, AlertCircle } from "lucide-react"
 import { BankSelector } from "@/components/bank-selector"
 import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
@@ -299,11 +299,13 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Tier 2 */}
-                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] shadow-inner"}`}>
+                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : profile?.kycStatus === "Rejected" ? "border-red-500/40 bg-red-500/5" : "border-[#2D2D3D] shadow-inner"}`}>
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-bold text-[#C8F55A]">TIER 2</span>
+                        <span className={`text-xs font-bold ${profile?.kycStatus === "Rejected" ? "text-red-400" : "text-[#C8F55A]"}`}>TIER 2</span>
                         {ninVerified ? (
                           <CheckCircle className="w-4 h-4 text-[#C8F55A]" />
+                        ) : profile?.kycStatus === "Rejected" ? (
+                          <AlertCircle className="w-4 h-4 text-red-400" />
                         ) : profile?.kycSubmittedAt ? (
                           <Loader2 className="w-4 h-4 text-[#641AE4] animate-spin" />
                         ) : (
@@ -311,11 +313,17 @@ export default function SettingsPage() {
                         )}
                       </div>
                       <h4 className="font-semibold text-[#F0F0F0] mb-1">
-                        {ninVerified ? "Identity Verified" : profile?.kycSubmittedAt ? "Verifying Identity..." : "Identity Verification"}
+                        {ninVerified ? "Identity Verified" : profile?.kycStatus === "Rejected" ? "Verification Failed" : profile?.kycSubmittedAt ? "Verifying Identity..." : "Identity Verification"}
                       </h4>
-                      <p className="text-xs text-[#B0B0B8] mb-3">Limit: Up to $50,000</p>
+                      <p className="text-xs text-[#B0B0B8] mb-3">
+                        {profile?.kycStatus === "Rejected" ? "Document rejected" : "Limit: Up to $50,000"}
+                      </p>
                       {!ninVerified && phoneVerified && (
-                        profile?.kycSubmittedAt ? (
+                        profile?.kycStatus === "Rejected" ? (
+                          <button onClick={() => setShowIdModal(true)} className="text-xs text-red-400 font-bold hover:underline">
+                            Retry Verification →
+                          </button>
+                        ) : profile?.kycSubmittedAt ? (
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-[#c084fc] font-semibold flex items-center gap-1">
                               <Loader2 className="w-3 h-3 animate-spin" /> Verifying...

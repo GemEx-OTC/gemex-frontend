@@ -11,6 +11,7 @@ export interface UserProfile {
   tier: number;
   kycStatus: string;
   kycSubmittedAt?: string;
+  kycRejectionReason?: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   ninVerified: boolean;

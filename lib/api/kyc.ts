@@ -145,3 +145,22 @@ export const verifyIdDirect = async (data: DirectVerificationInput): Promise<{ m
   const response = await apiClient.post<ApiResponse<{ message: string; verificationId: string; status: string }>>('/kyc/verify/direct', data);
   return response.data.data;
 };
+
+// SmileID Token Response
+export interface SmileIdTokenResponse {
+  token: string;
+  partner_id: string;
+  environment: 'sandbox' | 'production';
+  callback_url: string;
+  job_id: string;
+  user_id: string;
+}
+
+/**
+ * Mint SmileID Web SDK v3 token
+ */
+export const getSmileIdToken = async (product: string = 'biometric_kyc'): Promise<SmileIdTokenResponse> => {
+  const response = await apiClient.post<ApiResponse<SmileIdTokenResponse>>('/kyc/smile-token', { product });
+  return response.data.data;
+};
+

@@ -95,6 +95,8 @@ export function SmileIDVerification({
         consent_information: {
           granted: true,
           granted_at: new Date().toISOString(),
+          notice_language: "EN",
+          notice_privacy_policy_url: "https://gemotc.com/privacy",
         },
         user_details: {
           given_names: givenNames,

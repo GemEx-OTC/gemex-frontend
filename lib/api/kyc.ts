@@ -164,3 +164,11 @@ export const getSmileIdToken = async (product: string = 'biometric_kyc'): Promis
   return response.data.data;
 };
 
+/**
+ * Record KYC submission completion
+ */
+export const recordKycSubmitted = async (docType?: string): Promise<{ success: boolean; kycStatus: string; kycSubmittedAt?: string }> => {
+  const response = await apiClient.post<ApiResponse<{ success: boolean; kycStatus: string; kycSubmittedAt?: string }>>('/kyc/submitted', { docType });
+  return response.data.data;
+};
+

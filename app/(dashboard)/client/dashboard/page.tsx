@@ -9,7 +9,7 @@ import { OtpVerificationModal } from "@/components/otp-verification-modal"
 import { FloatingRateDock } from "@/components/floating-rate-dock"
 import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
-import { Clock, Shield, AlertCircle } from "lucide-react"
+import { Clock, Shield, AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import Image from "next/image"
 
 const ASSET_CONFIG = {
@@ -112,37 +112,75 @@ export default function ClientDashboardPage() {
             exit={{ opacity: 0, y: -20 }}
             className="mb-6"
           >
-            <div className="bg-primary/10 border border-primary/30 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {!user.phoneVerified ? "Verify Phone Number" : !user.ninVerified ? "Verify Identity (NIN)" : "Verify Business (CAC)"}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {!user.phoneVerified 
-                      ? "Verify your phone number to unlock Tier 1 and start receiving payouts." 
-                      : !user.ninVerified 
-                        ? "Upgrade to Tier 2 by verifying your NIN to increase your limits to $50,000."
-                        : "Unlock unrestricted payouts by verifying your business registration (CAC)."}
-                  </p>
-                  <button 
-                    onClick={() => {
-                      if (!user.phoneVerified) {
-                        setShowOtpModal(true);
-                      } else if (!user.ninVerified) {
-                        setShowKycModal(true);
-                      } else {
-                        window.location.href = "/client/settings?tab=account&action=verify_cac";
-                      }
-                    }} 
-                    className="gemex-button-primary"
-                  >
-                    {!user.phoneVerified ? "Verify Phone" : !user.ninVerified ? "Verify Identity" : "Verify Business"}
-                  </button>
+            {user.phoneVerified && !user.ninVerified && user.kycSubmittedAt ? (
+              <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-6 relative overflow-hidden">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-[#641AE4]/20 text-[#c084fc] flex-shrink-0 mt-0.5">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Identity Verification in Progress
+                      </h3>
+                      <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[#641AE4]/30 text-[#c084fc] border border-[#641AE4]/50 animate-pulse">
+                        Verifying
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground mb-4">
+                      We have received your verification submission and are confirming your details with national authorities. This usually takes under a minute. Your limits will update automatically once verified.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => refetch()}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2D2D3D] hover:bg-[#3D3D4D] text-[#F0F0F0] text-sm font-medium transition-all"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Check Status
+                      </button>
+                      <button
+                        onClick={() => setShowKycModal(true)}
+                        className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline"
+                      >
+                        Resubmit if needed
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {!user.phoneVerified ? "Verify Phone Number" : !user.ninVerified ? "Verify Identity (NIN)" : "Verify Business (CAC)"}
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {!user.phoneVerified 
+                        ? "Verify your phone number to unlock Tier 1 and start receiving payouts." 
+                        : !user.ninVerified 
+                          ? "Upgrade to Tier 2 by verifying your NIN to increase your limits to $50,000."
+                          : "Unlock unrestricted payouts by verifying your business registration (CAC)."}
+                    </p>
+                    <button 
+                      onClick={() => {
+                        if (!user.phoneVerified) {
+                          setShowOtpModal(true);
+                        } else if (!user.ninVerified) {
+                          setShowKycModal(true);
+                        } else {
+                          window.location.href = "/client/settings?tab=account&action=verify_cac";
+                        }
+                      }} 
+                      className="gemex-button-primary"
+                    >
+                      {!user.phoneVerified ? "Verify Phone" : !user.ninVerified ? "Verify Identity" : "Verify Business"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

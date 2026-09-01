@@ -7,6 +7,7 @@ export interface DashboardUser {
   fullName: string;
   email: string;
   kycStatus: 'Pending' | 'Submitted' | 'Verified' | 'Rejected';
+  kycSubmittedAt?: string;
   bankVerified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;

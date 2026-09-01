@@ -10,6 +10,7 @@ export interface UserProfile {
   role: 'client' | 'dealer' | 'admin';
   tier: number;
   kycStatus: string;
+  kycSubmittedAt?: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   ninVerified: boolean;

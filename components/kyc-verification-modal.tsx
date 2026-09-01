@@ -120,6 +120,9 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
         onResult: (result) => {
           setLoading(false)
           if (result.status === "success") {
+            kycApi.recordKycSubmitted(docType).catch(() => {})
+            queryClient.invalidateQueries({ queryKey: ["profile"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
             setStep("success")
           } else if (result.status === "failure") {
             const errMsg = result.error?.message || result.error?.error_code || "Verification could not be completed."

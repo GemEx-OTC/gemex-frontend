@@ -302,12 +302,31 @@ export default function SettingsPage() {
                     <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] shadow-inner"}`}>
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-bold text-[#C8F55A]">TIER 2</span>
-                        {ninVerified ? <CheckCircle className="w-4 h-4 text-[#C8F55A]" /> : <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />}
+                        {ninVerified ? (
+                          <CheckCircle className="w-4 h-4 text-[#C8F55A]" />
+                        ) : profile?.kycSubmittedAt ? (
+                          <Loader2 className="w-4 h-4 text-[#641AE4] animate-spin" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />
+                        )}
                       </div>
-                      <h4 className="font-semibold text-[#F0F0F0] mb-1">Identity Verified</h4>
+                      <h4 className="font-semibold text-[#F0F0F0] mb-1">
+                        {ninVerified ? "Identity Verified" : profile?.kycSubmittedAt ? "Verifying Identity..." : "Identity Verification"}
+                      </h4>
                       <p className="text-xs text-[#B0B0B8] mb-3">Limit: Up to $50,000</p>
                       {!ninVerified && phoneVerified && (
-                        <button onClick={() => setShowIdModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Identity</button>
+                        profile?.kycSubmittedAt ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-[#c084fc] font-semibold flex items-center gap-1">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Verifying...
+                            </span>
+                            <button onClick={() => setShowIdModal(true)} className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline">
+                              Resubmit
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setShowIdModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Identity</button>
+                        )
                       )}
                       {!phoneVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 1 first</p>}
                     </div>

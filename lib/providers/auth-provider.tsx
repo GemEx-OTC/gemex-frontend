@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useProfile } from '@/lib/hooks/use-auth';
-import { getTokens } from '@/lib/api/client';
+import { getTokens, hasSession } from '@/lib/api/client';
 import type { User } from '@/lib/api/types';
 
 interface AuthContextType {
@@ -47,11 +47,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { accessToken } = getTokens();
+  const sessionActive = hasSession() || !!accessToken;
   const { data: user, isLoading: isProfileLoading, isError } = useProfile();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const isAuthenticated = !!accessToken && !!user && !isError;
-  const isLoading = !isInitialized || (!!accessToken && isProfileLoading);
+  const isAuthenticated = !!user && !isError;
+  const isLoading = !isInitialized || (sessionActive && isProfileLoading);
 
   useEffect(() => {
     // Mark as initialized after first render
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    if (!isInitialized || isProfileLoading) return;
+    if (!isInitialized || (sessionActive && isProfileLoading)) return;
 
     const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
     const isAuthRoute = authRoutes.some(route => pathname === route || pathname.startsWith(route + '/'));
@@ -76,17 +77,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     // If user is not authenticated and trying to access protected routes
-    if (!isAuthenticated && !isPublicRoute && !accessToken) {
+    if (!sessionActive && !isPublicRoute) {
       router.replace('/auth/login');
       return;
     }
 
-    // If token exists but profile fetch failed (invalid token), redirect to login
-    if (accessToken && isError && !isPublicRoute) {
+    // If session was active but profile fetch failed (invalid/expired session), redirect to login
+    if (sessionActive && isError && !isPublicRoute) {
       router.replace('/auth/login');
       return;
     }
-  }, [isInitialized, isAuthenticated, isProfileLoading, pathname, router, user, accessToken, isError]);
+  }, [isInitialized, isAuthenticated, isProfileLoading, pathname, router, user, sessionActive, isError]);
 
   return (
     <AuthContext.Provider value={{ user: user || null, isLoading, isAuthenticated }}>

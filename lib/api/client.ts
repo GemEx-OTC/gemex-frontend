@@ -27,35 +27,38 @@ const clearSessionCookie = () => {
   }
 };
 
-// Token management
-let accessToken: string | null = null;
-let refreshToken: string | null = null;
+export const hasSession = (): boolean => {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.split(';').some(c => c.trim().startsWith('gemotc_session=1'));
+};
 
-export const setTokens = (access: string, refresh: string) => {
-  accessToken = access;
-  refreshToken = refresh;
+// Token management (in-memory only; tokens stored in httpOnly cookies)
+let accessToken: string | null = null;
+
+export const setTokens = (access?: string | null, _refresh?: string | null) => {
+  accessToken = access || null;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('accessToken', access);
-    localStorage.setItem('refreshToken', refresh);
+    // Proactively purge any legacy localStorage tokens
+    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setSessionCookie();
   }
 };
 
 export const getTokens = () => {
-  if (typeof window !== 'undefined' && !accessToken) {
-    accessToken = localStorage.getItem('accessToken');
-    refreshToken = localStorage.getItem('refreshToken');
-    if (accessToken) {
-      setSessionCookie();
-    }
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
   }
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken: null };
 };
 
 export const clearTokens = () => {
   accessToken = null;
-  refreshToken = null;
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('token');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     clearSessionCookie();
@@ -124,8 +127,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
       
-      const { refreshToken: refresh } = getTokens();
-      if (!refresh) {
+      if (!hasSession() && !accessToken) {
         isRefreshing = false;
         clearTokens();
         if (typeof window !== 'undefined') {
@@ -135,9 +137,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post(`${API_BASE_URL}${API_PREFIX}/auth/refresh-token`, {
-          refreshToken: refresh,
-        }, {
+        const response = await axios.post(`${API_BASE_URL}${API_PREFIX}/auth/refresh-token`, {}, {
           withCredentials: true,
         });
         

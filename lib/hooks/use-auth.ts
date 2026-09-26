@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import * as authApi from '@/lib/api/auth';
-import { getTokens, clearTokens } from '@/lib/api/client';
+import { getTokens, clearTokens, hasSession } from '@/lib/api/client';
 import type {
   LoginInput,
   RegisterInput,
@@ -30,7 +30,7 @@ export const useProfile = () => {
   return useQuery({
     queryKey: authKeys.profile(),
     queryFn: authApi.getProfile,
-    enabled: !!accessToken,
+    enabled: hasSession() || !!accessToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
   });

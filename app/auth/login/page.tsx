@@ -59,7 +59,10 @@ export default function LoginPage() {
             toast.info("Please set a new password to continue.")
             const tempToken = err.data?.accessToken
             if (tempToken) {
-              window.location.href = `/auth/set-password?token=${encodeURIComponent(tempToken)}`
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('gemotc_temp_password_token', tempToken)
+              }
+              router.push('/auth/set-password')
             } else {
               toast.error("Password change required but session expired. Please try again.")
             }

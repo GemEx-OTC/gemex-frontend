@@ -24,29 +24,40 @@ function SetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const [activeToken, setActiveToken] = useState<string | null>(null)
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const tempToken = searchParams.get("token")
-  
   const setNewPasswordMutation = useSetNewPassword()
 
   // Wait for client-side hydration before checking token
   useEffect(() => {
-    // Small delay to ensure searchParams is properly hydrated
+    let token = searchParams.get("token")
+    if (!token && typeof window !== "undefined") {
+      token = sessionStorage.getItem("gemotc_temp_password_token")
+    }
+
+    if (token) {
+      setActiveToken(token)
+      // Sanitize URL immediately to avoid token leaking in Referer or history
+      if (searchParams.get("token") && typeof window !== "undefined") {
+        window.history.replaceState({}, "", window.location.pathname)
+      }
+    }
+
     const timer = setTimeout(() => {
       setIsReady(true)
     }, 100)
     return () => clearTimeout(timer)
-  }, [])
+  }, [searchParams])
 
   // Redirect if no token (only after ready)
   useEffect(() => {
-    if (isReady && !tempToken) {
+    if (isReady && !activeToken) {
       console.log('No token found, redirecting to login')
       router.replace("/auth/login")
     }
-  }, [isReady, tempToken, router])
+  }, [isReady, activeToken, router])
 
   // Password validation
   const hasMinLength = password.length >= 8
@@ -59,7 +70,7 @@ function SetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!tempToken) {
+    if (!activeToken) {
       toast.error("Session expired. Please login again.")
       return
     }
@@ -70,9 +81,12 @@ function SetPasswordForm() {
     }
 
     setNewPasswordMutation.mutate(
-      { newPassword: password, tempToken },
+      { newPassword: password, tempToken: activeToken },
       {
         onSuccess: () => {
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("gemotc_temp_password_token")
+          }
           toast.success("Password set successfully!")
         },
         onError: (err: any) => {

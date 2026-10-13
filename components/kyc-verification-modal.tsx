@@ -3,7 +3,8 @@
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, CheckCircle, AlertCircle, Shield, FileText, Car, CreditCard, Loader2, Globe } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query"
+import { X, CheckCircle, AlertCircle, Shield, FileText, CreditCard, Loader2, Globe } from "lucide-react"
 import * as kycApi from "@/lib/api/kyc"
 import { useProfile } from "@/lib/hooks/use-auth"
 import type { SmileIdentityConfig } from "@/lib/api/types"
@@ -29,11 +30,11 @@ const DOCUMENT_OPTIONS: DocumentOption[] = [
   { id: "nin", label: "NIN (National ID)", icon: <FileText className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["NIN_V2", "NATIONAL_ID"], description: "National Identification Number slip or card" },
   { id: "bvn", label: "BVN Verification", icon: <Shield className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["BVN", "BVN_MFA"], description: "Bank Verification Number" },
   { id: "voters_card", label: "Voter's Card", icon: <CreditCard className="w-6 h-6" />, product: "biometric_kyc", idSelection: ["VOTER_ID"], description: "Permanent Voter's Card (PVC)" },
-  { id: "drivers_license", label: "Driver's License", icon: <Car className="w-6 h-6" />, product: "doc_verification", idSelection: ["DRIVERS_LICENSE"], description: "Valid Nigerian driver's license" },
   { id: "passport", label: "International Passport", icon: <Globe className="w-6 h-6" />, product: "doc_verification", idSelection: ["PASSPORT"], description: "Nigerian International Passport" }
 ]
 
 export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerificationModalProps) {
+  const queryClient = useQueryClient()
   const { data: profile } = useProfile()
   const [step, setStep] = useState<KycStep>("intro")
   const [selectedDocument, setSelectedDocument] = useState<string>("nin")

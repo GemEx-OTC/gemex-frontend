@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useQueryClient } from "@tanstack/react-query"
 import { Shield, AlertCircle, Loader2, X, CheckCircle } from "lucide-react"
 import * as kycApi from "@/lib/api/kyc"
 import { useProfile } from "@/lib/hooks/use-auth"
@@ -26,6 +27,7 @@ export function SmileIDVerification({
   title = "Verify Your Identity",
   description = "Complete secure identity verification using SmileID"
 }: SmileIDVerificationProps) {
+  const queryClient = useQueryClient()
   const { data: profile } = useProfile()
   const [sdkLoaded, setSdkLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -105,12 +107,16 @@ export function SmileIDVerification({
           phone_number: formattedPhone || undefined,
         },
         id_selection: product === 'doc_verification'
-          ? { NG: ['PASSPORT', 'DRIVERS_LICENSE', 'IDENTITY_CARD', 'VOTER_ID'] }
+          ? { NG: ['PASSPORT', 'VOTER_ID', 'NIN_V2', 'NATIONAL_ID'] }
           : { NG: ['NIN_V2', 'NATIONAL_ID', 'BVN', 'BVN_MFA', 'VOTER_ID'] },
         use_strict_mode: false,
         onResult: (result) => {
           setLoading(false)
           if (result.status === 'success') {
+            kycApi.recordKycSubmitted(product).catch(() => {})
+            queryClient.invalidateQueries({ queryKey: ['profile'] })
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+            queryClient.invalidateQueries({ queryKey: ['kyc-status'] })
             onSuccess(result)
             onClose()
           } else if (result.status === 'failure') {
@@ -140,7 +146,7 @@ export function SmileIDVerification({
       setError(msg)
       onError?.(err)
     }
-  }, [profile, product, onSuccess, onError, onClose])
+  }, [profile, product, onSuccess, onError, onClose, queryClient])
 
   if (!isOpen) return null
 

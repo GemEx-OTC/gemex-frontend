@@ -65,7 +65,7 @@ export default function DocumentUploadPage() {
                       <p className="text-sm text-[#F0F0F0] font-medium">Supported Government IDs:</p>
                       <ul className="text-sm text-[#B0B0B8] space-y-1">
                         <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#C8F55A]" />NIN (National Identification Number)</li>
-                        <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#C8F55A]" />Driver&apos;s License</li>
+                        <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#C8F55A]" />BVN (Bank Verification Number)</li>
                         <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#C8F55A]" />Voter&apos;s Card (PVC)</li>
                         <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-[#C8F55A]" />International Passport</li>
                       </ul>

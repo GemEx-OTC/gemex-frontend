@@ -3,10 +3,14 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
+import { AlertCircle } from "lucide-react"
+import * as kycApi from "@/lib/api/kyc"
 import { KycProgressBar } from "@/components/kyc-progress-bar"
 
 export default function PersonalDetailsPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [formData, setFormData] = useState({
     dateOfBirth: "",
     phoneNumber: "",
@@ -53,12 +57,28 @@ export default function PersonalDetailsPage() {
     e.preventDefault()
     if (!validate()) return
 
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      setLoading(true)
+      await kycApi.submitPersonalInfo({
+        dateOfBirth: formData.dateOfBirth,
+        phoneNumber: formData.phoneNumber,
+        address: {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          postalCode: formData.postalCode || undefined,
+          country: formData.country || "Nigeria",
+        },
+      })
+      queryClient.invalidateQueries({ queryKey: ["kyc-status"] })
+      queryClient.invalidateQueries({ queryKey: ["profile"] })
       router.push("/auth/onboard/document")
-    }, 1000)
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to save personal information. Please try again."
+      setErrors((prev) => ({ ...prev, form: msg }))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -78,6 +98,16 @@ export default function PersonalDetailsPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.form && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3 text-red-400 text-sm"
+              >
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{errors.form}</span>
+              </motion.div>
+            )}
             {/* Date of Birth & Phone */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>

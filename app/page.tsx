@@ -42,6 +42,7 @@ import {
   Sliders,
   Check,
   Code2,
+  MapPin,
 } from "lucide-react"
 
 // Floating Particle Component
@@ -880,6 +881,10 @@ export default function Home() {
             <p className="text-gray-400 text-xs leading-relaxed">
               GemOTC Desk is powered by GemRails, providing fair rates, instant bank settlement, and bank-grade security for USDT, USDC, and BTC.
             </p>
+            <div className="flex items-start gap-2 pt-1 text-gray-400 text-xs leading-relaxed">
+              <MapPin className="w-4 h-4 text-[#a855f7] shrink-0 mt-0.5" />
+              <span>Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan</span>
+            </div>
           </div>
 
           {/* Col 2 */}
@@ -923,7 +928,10 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 border-t border-[#2d2d42]/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-          <div>© {new Date().getFullYear()} GemOTC Desk (Powered by GemRails). All rights reserved.</div>
+          <div className="text-center sm:text-left">
+            <div>© {new Date().getFullYear()} GemOTC Desk (Powered by GemRails). All rights reserved.</div>
+            <div className="text-gray-500 text-[11px] mt-1">Flat 1b, Higher Life Building, Opposite First Bank, Onile Aro Junction, Ojoo, Ibadan</div>
+          </div>
           <div className="flex gap-6">
             <span className="hover:text-white cursor-pointer transition-colors">Privacy</span>
             <span className="hover:text-white cursor-pointer transition-colors">Terms</span>

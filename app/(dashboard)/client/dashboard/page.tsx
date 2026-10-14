@@ -173,44 +173,55 @@ export default function ClientDashboardPage() {
                     </div>
                   </div>
                 </div>
-              ) : user.kycSubmittedAt ? (
-                /* In Progress State (Mobile Compact) */
-                <div className="bg-[#641AE4]/10 border border-[#641AE4]/30 rounded-xl p-4 sm:p-5 relative overflow-hidden">
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="p-1.5 sm:p-2 rounded-lg bg-[#641AE4]/20 text-[#c084fc] flex-shrink-0 mt-0.5">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                          Verifying Identity
-                        </h3>
-                        <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[#641AE4]/30 text-[#c084fc] border border-[#641AE4]/50 animate-pulse">
-                          In Progress
-                        </span>
+              ) : user.kycSubmittedAt ? (() => {
+                const isUnderReview =
+                  Boolean(user.kycUnderReviewAt) ||
+                  Date.now() - new Date(user.kycSubmittedAt).getTime() > 15 * 60 * 1000
+                return (
+                  /* In Progress / Under Review State (Mobile Compact) */
+                  <div className={`${isUnderReview ? "bg-amber-500/10 border-amber-500/30" : "bg-[#641AE4]/10 border-[#641AE4]/30"} border rounded-xl p-4 sm:p-5 relative overflow-hidden`}>
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 mt-0.5 ${isUnderReview ? "bg-amber-500/20 text-amber-400" : "bg-[#641AE4]/20 text-[#c084fc]"}`}>
+                        {isUnderReview ? (
+                          <Clock className="w-5 h-5" />
+                        ) : (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        )}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
-                        Documents submitted. Confirming your details (usually &lt; 1 min).
-                      </p>
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <button
-                          onClick={() => refetch()}
-                          className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#2D2D3D] hover:bg-[#3D3D4D] text-[#F0F0F0] text-xs sm:text-sm font-medium transition-all"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          Check Status
-                        </button>
-                        <button
-                          onClick={() => setShowKycModal(true)}
-                          className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline ml-1"
-                        >
-                          Resubmit
-                        </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground">
+                            {isUnderReview ? "Verification Under Review" : "Verifying Identity"}
+                          </h3>
+                          <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full border ${isUnderReview ? "bg-amber-500/20 text-amber-400 border-amber-500/40" : "bg-[#641AE4]/30 text-[#c084fc] border-[#641AE4]/50 animate-pulse"}`}>
+                            {isUnderReview ? "Under Review" : "In Progress"}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                          {isUnderReview
+                            ? "Your documents have been received and are undergoing manual compliance review. This typically takes up to 24 hours — we'll notify you via email once completed."
+                            : "Documents submitted. Confirming your details (usually < 1 min)."}
+                        </p>
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <button
+                            onClick={() => refetch()}
+                            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-[#2D2D3D] hover:bg-[#3D3D4D] text-[#F0F0F0] text-xs sm:text-sm font-medium transition-all"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Check Status
+                          </button>
+                          <button
+                            onClick={() => setShowKycModal(true)}
+                            className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline ml-1"
+                          >
+                            Resubmit
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : (
+                )
+              })() : (
                 /* Not Started State */
                 <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 sm:p-5">
                   <div className="flex items-start gap-3 sm:gap-4">

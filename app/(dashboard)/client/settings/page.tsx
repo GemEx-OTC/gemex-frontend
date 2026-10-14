@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { LogOut, CheckCircle, Loader2, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap, X, AlertCircle } from "lucide-react"
+import { LogOut, CheckCircle, Loader2, Clock, User, Bell, Shield, CreditCard, ChevronRight, Lock, Zap, X, AlertCircle } from "lucide-react"
 import { BankSelector } from "@/components/bank-selector"
 import { toast } from "sonner"
 import { useLogout } from "@/lib/hooks/use-auth"
@@ -299,45 +299,65 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Tier 2 */}
-                    <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : profile?.kycStatus === "Rejected" ? "border-red-500/40 bg-red-500/5" : "border-[#2D2D3D] shadow-inner"}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className={`text-xs font-bold ${profile?.kycStatus === "Rejected" ? "text-red-400" : "text-[#C8F55A]"}`}>TIER 2</span>
-                        {ninVerified ? (
-                          <CheckCircle className="w-4 h-4 text-[#C8F55A]" />
-                        ) : profile?.kycStatus === "Rejected" ? (
-                          <AlertCircle className="w-4 h-4 text-red-400" />
-                        ) : profile?.kycSubmittedAt ? (
-                          <Loader2 className="w-4 h-4 text-[#641AE4] animate-spin" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />
-                        )}
-                      </div>
-                      <h4 className="font-semibold text-[#F0F0F0] mb-1">
-                        {ninVerified ? "Identity Verified" : profile?.kycStatus === "Rejected" ? "Verification Failed" : profile?.kycSubmittedAt ? "Verifying Identity..." : "Identity Verification"}
-                      </h4>
-                      <p className="text-xs text-[#B0B0B8] mb-3">
-                        {profile?.kycStatus === "Rejected" ? "Document rejected" : "Limit: Up to $50,000"}
-                      </p>
-                      {!ninVerified && phoneVerified && (
-                        profile?.kycStatus === "Rejected" ? (
-                          <button onClick={() => setShowIdModal(true)} className="text-xs text-red-400 font-bold hover:underline">
-                            Retry Verification →
-                          </button>
-                        ) : profile?.kycSubmittedAt ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-[#c084fc] font-semibold flex items-center gap-1">
-                              <Loader2 className="w-3 h-3 animate-spin" /> Verifying...
-                            </span>
-                            <button onClick={() => setShowIdModal(true)} className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline">
-                              Resubmit
-                            </button>
+                    {(() => {
+                      const isKycUnderReview =
+                        !ninVerified &&
+                        profile?.kycStatus !== "Rejected" &&
+                        Boolean(profile?.kycSubmittedAt) &&
+                        (Boolean(profile?.kycUnderReviewAt) ||
+                          Date.now() - new Date(profile!.kycSubmittedAt!).getTime() > 15 * 60 * 1000)
+                      return (
+                        <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 2 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : profile?.kycStatus === "Rejected" ? "border-red-500/40 bg-red-500/5" : isKycUnderReview ? "border-amber-500/40 bg-amber-500/5" : "border-[#2D2D3D] shadow-inner"}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className={`text-xs font-bold ${profile?.kycStatus === "Rejected" ? "text-red-400" : isKycUnderReview ? "text-amber-400" : "text-[#C8F55A]"}`}>TIER 2</span>
+                            {ninVerified ? (
+                              <CheckCircle className="w-4 h-4 text-[#C8F55A]" />
+                            ) : profile?.kycStatus === "Rejected" ? (
+                              <AlertCircle className="w-4 h-4 text-red-400" />
+                            ) : isKycUnderReview ? (
+                              <Clock className="w-4 h-4 text-amber-400" />
+                            ) : profile?.kycSubmittedAt ? (
+                              <Loader2 className="w-4 h-4 text-[#641AE4] animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full border border-[#B0B0B8]" />
+                            )}
                           </div>
-                        ) : (
-                          <button onClick={() => setShowIdModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Identity</button>
-                        )
-                      )}
-                      {!phoneVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 1 first</p>}
-                    </div>
+                          <h4 className="font-semibold text-[#F0F0F0] mb-1">
+                            {ninVerified ? "Identity Verified" : profile?.kycStatus === "Rejected" ? "Verification Failed" : isKycUnderReview ? "Under Review" : profile?.kycSubmittedAt ? "Verifying Identity..." : "Identity Verification"}
+                          </h4>
+                          <p className="text-xs text-[#B0B0B8] mb-3">
+                            {profile?.kycStatus === "Rejected" ? "Document rejected" : isKycUnderReview ? "Manual review in progress" : "Limit: Up to $50,000"}
+                          </p>
+                          {!ninVerified && phoneVerified && (
+                            profile?.kycStatus === "Rejected" ? (
+                              <button onClick={() => setShowIdModal(true)} className="text-xs text-red-400 font-bold hover:underline">
+                                Retry Verification →
+                              </button>
+                            ) : profile?.kycSubmittedAt ? (
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-semibold flex items-center gap-1 ${isKycUnderReview ? "text-amber-400" : "text-[#c084fc]"}`}>
+                                  {isKycUnderReview ? (
+                                    <>
+                                      <Clock className="w-3 h-3" /> Under Review
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" /> Verifying...
+                                    </>
+                                  )}
+                                </span>
+                                <button onClick={() => setShowIdModal(true)} className="text-xs text-[#B0B0B8] hover:text-[#F0F0F0] underline">
+                                  Resubmit
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setShowIdModal(true)} className="text-xs text-[#641AE4] font-bold hover:underline">Verify Identity</button>
+                            )
+                          )}
+                          {!phoneVerified && <p className="text-[10px] text-[#B0B0B8] italic">Complete Tier 1 first</p>}
+                        </div>
+                      )
+                    })()}
 
                     {/* Tier 3 */}
                     <div className={`p-4 rounded-xl border-2 transition-all ${userTier >= 3 ? "border-[#C8F55A]/50 bg-[#C8F55A]/5" : "border-[#2D2D3D] shadow-inner"}`}>

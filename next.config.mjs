@@ -24,8 +24,11 @@ const nextConfig = {
             value: 'strict-origin-when-cross-origin',
           },
           {
+            // Smile ID's Web SDK renders inside a cross-origin iframe served from
+            // cdn.usesmileid.com. camera=(self) alone blocks that iframe from
+            // using the camera, so its origin must be explicitly allowed.
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(), geolocation=()',
+            value: 'camera=(self "https://cdn.usesmileid.com" "https://cdn.smileidentity.com"), microphone=(), geolocation=()',
           },
         ],
       },

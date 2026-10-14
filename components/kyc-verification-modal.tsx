@@ -8,6 +8,7 @@ import { X, CheckCircle, AlertCircle, Shield, FileText, CreditCard, Loader2, Glo
 import * as kycApi from "@/lib/api/kyc"
 import { useProfile } from "@/lib/hooks/use-auth"
 import type { SmileIdentityConfig } from "@/lib/api/types"
+import { requestCameraPermission } from "@/lib/camera-permission"
 
 interface KycVerificationModalProps {
   isOpen: boolean
@@ -65,6 +66,15 @@ export function KycVerificationModal({ isOpen, onClose, onComplete }: KycVerific
     try {
       if (!window.SmileIdentity) {
         throw new Error("SmileID SDK is not ready yet. Please wait a moment.")
+      }
+
+      // Ask for camera access up-front, while still inside the user's click
+      // gesture, so the browser shows its permission prompt before Smile ID opens.
+      const camera = await requestCameraPermission()
+      if (!camera.granted) {
+        setLoading(false)
+        setError(camera.message)
+        return
       }
 
       const selectedDoc = DOCUMENT_OPTIONS.find(d => d.id === docType) || DOCUMENT_OPTIONS[0]

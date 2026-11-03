@@ -256,6 +256,14 @@ export default function AdminTradesPage() {
                               AML Pending...
                             </span>
                           ) : null}
+                          {trade.failureReason && trade.status !== 'Settled' && (
+                            <span
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30 max-w-[220px] truncate"
+                              title={trade.failureReason}
+                            >
+                              <AlertCircle className="w-2.5 h-2.5 shrink-0" /> {trade.failureReason}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">

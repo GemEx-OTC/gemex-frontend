@@ -6,7 +6,8 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { 
   UserX, UserCheck, Eye, X, Shield, Mail, Calendar, 
   TrendingUp, BanknoteIcon, User, Loader2, AlertTriangle, 
-  Wallet, History, FileText, ChevronDown, Users, Clock, Activity, Send
+  Wallet, History, FileText, ChevronDown, Users, Clock, Activity, Send,
+  ArrowUpCircle, CheckCircle
 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
@@ -15,6 +16,7 @@ import {
   useUserDetails,
   useSuspendUser, 
   useReactivateUser,
+  useUpdateUserTier,
   useCreateUserWallets,
   useToggleUserAutoPayout,
   useUpdateUserReferralStatus,
@@ -35,6 +37,15 @@ export default function AdminUsersPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [showReactivateModal, setShowReactivateModal] = useState(false)
+  const [showPromoteModal, setShowPromoteModal] = useState(false)
+  const [promoteUser, setPromoteUser] = useState<{
+    id: string
+    fullName: string
+    email: string
+    tier: 1 | 2 | 3
+    kycStatus: string
+  } | null>(null)
+  const [targetTier, setTargetTier] = useState<1 | 2 | 3>(2)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [detailsTab, setDetailsTab] = useState<DetailsTab>("overview")
   const [suspendReason, setSuspendReason] = useState("")
@@ -56,6 +67,7 @@ export default function AdminUsersPage() {
   const { data: userDetails, isLoading: detailsLoading } = useUserDetails(selectedUserId || "")
   const suspendMutation = useSuspendUser()
   const reactivateMutation = useReactivateUser()
+  const promoteTierMutation = useUpdateUserTier()
   const createWalletsMutation = useCreateUserWallets()
   const toggleAutoPayoutMutation = useToggleUserAutoPayout()
   const updateReferralStatusMutation = useUpdateUserReferralStatus()
@@ -83,6 +95,37 @@ export default function AdminUsersPage() {
     setSelectedUserId(user.id)
     setShowReactivateModal(true)
     setConfirmText("")
+  }
+
+  const handleOpenPromote = (user: {
+    id: string
+    fullName: string
+    email: string
+    tier?: 1 | 2 | 3
+    kycStatus: string
+  }) => {
+    const currentTier = (user.tier ?? 1) as 1 | 2 | 3
+    setPromoteUser({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      tier: currentTier,
+      kycStatus: user.kycStatus,
+    })
+    setTargetTier(currentTier === 1 ? 2 : 3)
+    setShowPromoteModal(true)
+  }
+
+  const handleConfirmPromote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!promoteUser) return
+    try {
+      const res = await promoteTierMutation.mutateAsync({ id: promoteUser.id, tier: targetTier })
+      toast.success(res.message || `User promoted to Tier ${targetTier}`)
+      setShowPromoteModal(false)
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update user tier")
+    }
   }
 
   const handleConfirmSuspend = async () => {
@@ -145,7 +188,7 @@ export default function AdminUsersPage() {
 
   const handleInitiatePayout = (txn: any) => {
     setSelectedTransaction({
-      id: txn.id,
+      id: txn.tradeId || txn.id,
       transactionId: txn.id,
       nairaAmount: txn.nairaAmount,
       cryptoAsset: txn.cryptoAsset,
@@ -329,6 +372,7 @@ export default function AdminUsersPage() {
                   <tr className="border-b border-[#2D2D3D] bg-[#2D2D3D]/50">
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">User</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">Tier</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">KYC</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">Joined</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#B0B0B8]">Actions</th>
@@ -354,6 +398,17 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                          (user.tier ?? 1) === 3
+                            ? "bg-[#C8F55A]/20 text-[#C8F55A] border border-[#C8F55A]/30"
+                            : (user.tier ?? 1) === 2
+                            ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                            : "bg-[#2D2D3D] text-[#B0B0B8]"
+                        }`}>
+                          Tier {user.tier ?? 1}{(user.tier ?? 1) === 3 ? " • Max" : ""}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                           user.kycStatus === "Verified" ? "bg-emerald-500/20 text-emerald-300"
                             : user.kycStatus === "Pending" ? "bg-amber-500/20 text-amber-300"
@@ -364,10 +419,19 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 text-[#B0B0B8] text-sm">{formatDate(user.createdAt)}</td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <button onClick={() => handleViewDetails(user)} className="text-xs px-3 py-1.5 rounded bg-[#641AE4]/20 text-[#A78BFA] hover:bg-[#641AE4]/30 transition-all font-medium flex items-center gap-1">
                             <Eye className="w-3 h-3" /> View
                           </button>
+                          {((user.tier ?? 1) < 3 || user.kycStatus !== "Verified") && (
+                            <button
+                              onClick={() => handleOpenPromote(user)}
+                              className="text-xs px-3 py-1.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all font-medium flex items-center gap-1"
+                              title="Increase user limit tier"
+                            >
+                              <ArrowUpCircle className="w-3 h-3" /> Promote Tier
+                            </button>
+                          )}
                           {user.isActive ? (
                             <button onClick={() => handleSuspendClick(user)} className="text-xs px-3 py-1.5 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-all font-medium flex items-center gap-1">
                               <UserX className="w-3 h-3" /> Suspend
@@ -475,6 +539,15 @@ export default function AdminUsersPage() {
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${userDetails.isActive ? "bg-emerald-500/20 text-emerald-300" : "bg-red-500/20 text-red-300"}`}>
                                 {userDetails.isActive ? "Active" : "Suspended"}
                               </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                (userDetails.tier ?? 1) === 3
+                                  ? "bg-[#C8F55A]/20 text-[#C8F55A] border border-[#C8F55A]/30"
+                                  : (userDetails.tier ?? 1) === 2
+                                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                  : "bg-[#2D2D3D] text-[#B0B0B8]"
+                              }`}>
+                                Tier {userDetails.tier ?? 1}{(userDetails.tier ?? 1) === 3 ? " • Max" : ""}
+                              </span>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${userDetails.kycStatus === "Verified" ? "bg-emerald-500/20 text-emerald-300" : userDetails.kycStatus === "Pending" ? "bg-amber-500/20 text-amber-300" : "bg-red-500/20 text-red-300"}`}>
                                 KYC: {userDetails.kycStatus}
                               </span>
@@ -482,6 +555,46 @@ export default function AdminUsersPage() {
                                 {userDetails.hasWallets ? "Has Wallets" : "No Wallets"}
                               </span>
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Verification Tier & Payout Limit Section */}
+                        <div className="p-4 bg-[#2D2D3D]/30 border border-[#3D3D4D] rounded-lg">
+                          <div className="flex items-center justify-between flex-wrap gap-3">
+                            <div>
+                              <div className="text-[#808090] text-xs uppercase tracking-wide mb-1">Verification Tier & Payout Limit</div>
+                              <div className="text-[#F0F0F0] font-semibold text-sm">
+                                {(userDetails.tier ?? 1) === 3
+                                  ? "Tier 3 • Unrestricted Payouts ($50k+) & Bulk Quotes"
+                                  : (userDetails.tier ?? 1) === 2
+                                  ? "Tier 2 • Up to ₦75,000,000 (~$50,000) Payout Limit"
+                                  : "Tier 1 • ₦100,000 Payout Limit"}
+                              </div>
+                              <div className="flex items-center gap-3 mt-2 text-xs">
+                                <span className={userDetails.phoneVerified ? "text-emerald-400" : "text-[#808090]"}>
+                                  {userDetails.phoneVerified ? "✓ Phone Verified" : "○ Phone Unverified"}
+                                </span>
+                                <span className={userDetails.ninVerified ? "text-emerald-400" : "text-[#808090]"}>
+                                  {userDetails.ninVerified ? "✓ Identity Verified" : "○ Identity Unverified"}
+                                </span>
+                                <span className={userDetails.cacVerified ? "text-emerald-400" : "text-[#808090]"}>
+                                  {userDetails.cacVerified ? "✓ CAC Verified" : "○ CAC Unverified"}
+                                </span>
+                              </div>
+                              {userDetails.kycStatus === "Rejected" && userDetails.kycRejectionReason && (
+                                <div className="text-xs text-red-400 mt-2">
+                                  Rejection Reason: {userDetails.kycRejectionReason}
+                                </div>
+                              )}
+                            </div>
+                            {((userDetails.tier ?? 1) < 3 || userDetails.kycStatus !== "Verified") && (
+                              <button
+                                onClick={() => handleOpenPromote(userDetails)}
+                                className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-all flex items-center gap-1.5"
+                              >
+                                <ArrowUpCircle className="w-4 h-4" /> Promote Tier
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -598,7 +711,15 @@ export default function AdminUsersPage() {
 
                         <div className="pt-4 border-t border-[#2D2D3D]">
                           <div className="text-sm font-medium text-[#808090] mb-3">Quick Actions</div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
+                            {((userDetails.tier ?? 1) < 3 || userDetails.kycStatus !== "Verified") && (
+                              <button
+                                onClick={() => handleOpenPromote(userDetails)}
+                                className="px-4 py-2 rounded-lg font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 flex items-center gap-2"
+                              >
+                                <ArrowUpCircle className="w-4 h-4" /> Promote Tier
+                              </button>
+                            )}
                             {userDetails.isActive ? (
                               <button onClick={() => { setShowDetailsModal(false); handleSuspendClick(userDetails as any); }} className="px-4 py-2 rounded-lg font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center gap-2">
                                 <UserX className="w-4 h-4" /> Suspend User
@@ -654,6 +775,12 @@ export default function AdminUsersPage() {
                                   <div className="text-[#F0F0F0] font-medium">{formatDate(txn.createdAt)}</div>
                                 </div>
                               </div>
+                              {txn.failureReason && (
+                                <div className="mt-2 pt-2 border-t border-[#3D3D4D] text-xs text-amber-300 flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{txn.failureReason}</span>
+                                </div>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -768,6 +895,123 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Promote User Tier Modal */}
+      <AnimatePresence>
+        {showPromoteModal && promoteUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            onClick={() => !promoteTierMutation.isPending && setShowPromoteModal(false)}
+          >
+            <motion.form
+              onSubmit={handleConfirmPromote}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#1E1E2B] border border-[#3D3D4D] rounded-2xl p-6 max-w-lg w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                    <ArrowUpCircle className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#F0F0F0]">Promote User Tier</h3>
+                    <p className="text-xs text-[#808090]">{promoteUser.fullName} ({promoteUser.email})</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPromoteModal(false)}
+                  className="text-[#808090] hover:text-[#F0F0F0]"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {([
+                  {
+                    tier: 1 as const,
+                    title: "Tier 1 • Phone Verified",
+                    limit: "₦100,000 Payout Limit",
+                    desc: "Marks phone number as verified. Standard starter tier.",
+                  },
+                  {
+                    tier: 2 as const,
+                    title: "Tier 2 • Identity Verified",
+                    limit: "Up to ₦75,000,000 (~$50,000) Payout Limit",
+                    desc: "Marks Identity (NIN/Passport/ID) & KYC as Verified and automatically triggers any held payouts.",
+                  },
+                  {
+                    tier: 3 as const,
+                    title: "Tier 3 • CAC Verified (Max Tier)",
+                    limit: "Unrestricted Payout Limit ($50k+) & Bulk Quotes",
+                    desc: "Marks Identity, CAC & KYC as Verified and unlocks unrestricted payouts and bulk quotes.",
+                  },
+                ]).map((opt) => {
+                  const isSelected = targetTier === opt.tier
+                  const isDisabled = opt.tier < promoteUser.tier
+                  return (
+                    <button
+                      key={opt.tier}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => setTargetTier(opt.tier)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        isSelected
+                          ? "bg-[#641AE4]/20 border-[#641AE4]"
+                          : isDisabled
+                          ? "bg-[#2D2D3D]/20 border-[#2D2D3D] opacity-40 cursor-not-allowed"
+                          : "bg-[#2D2D3D]/40 border-[#3D3D4D] hover:border-[#641AE4]/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-sm text-[#F0F0F0]">{opt.title}</span>
+                        <div className="flex items-center gap-2">
+                          {promoteUser.tier === opt.tier && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-[#2D2D3D] text-[#B0B0B8]">Current</span>
+                          )}
+                          {isSelected && <CheckCircle className="w-4 h-4 text-[#C8F55A]" />}
+                        </div>
+                      </div>
+                      <div className="text-xs font-semibold text-[#C8F55A] mb-1">{opt.limit}</div>
+                      <div className="text-xs text-[#808090]">{opt.desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPromoteModal(false)}
+                  disabled={promoteTierMutation.isPending}
+                  className="flex-1 py-2.5 rounded-lg font-semibold text-[#F0F0F0] border border-[#2D2D3D] hover:border-[#641AE4] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={promoteTierMutation.isPending}
+                  className="flex-1 py-2.5 rounded-lg font-semibold bg-[#C8F55A] text-[#1E1E2B] hover:bg-[#B8E54A] disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {promoteTierMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUpCircle className="w-4 h-4" />
+                  )}
+                  Promote to Tier {targetTier}
+                </button>
+              </div>
+            </motion.form>
           </motion.div>
         )}
       </AnimatePresence>

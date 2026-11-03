@@ -465,7 +465,7 @@ export default function ClientDashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base sm:text-lg font-bold text-foreground">Refer & Earn ₦1,000 per $500 Traded</h3>
+                <h3 className="text-base sm:text-lg font-bold text-foreground">Refer & Earn a One-Time ₦1,000 Bonus</h3>
                 {user.referralCode && (
                   <span className="px-2.5 py-0.5 text-xs font-mono font-semibold bg-primary/20 text-secondary rounded-full border border-primary/30">
                     {user.referralCode}
@@ -473,7 +473,7 @@ export default function ClientDashboardPage() {
                 )}
               </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Invite friends to GemOTC and earn ₦1,000 for every $500 they trade. Collectible from ₦15,000!
+                Earn a one-time ₦1,000 reward for every referral who completes KYC and trades up to $500. Collectible from ₦15,000!
               </p>
             </div>
           </div>

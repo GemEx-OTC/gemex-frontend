@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { DashboardHeader } from "@/components/dashboard-header"
 import {
   Users,
   Wallet,
@@ -21,6 +22,7 @@ import {
   X,
   Link as LinkIcon,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -225,45 +227,36 @@ export default function ClientReferralsPage() {
     : null
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-            <Users className="w-8 h-8 text-primary" />
-            Referral Program
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Earn <span className="text-emerald-400 font-semibold">₦1,000</span> for every{" "}
-            <span className="text-foreground font-semibold">$500</span> your referred users trade. Collectible from{" "}
-            <span className="text-foreground font-semibold">₦15,000</span>.
-          </p>
+    <div className="space-y-6">
+      <DashboardHeader
+        title="Referral Program"
+        subtitle="Earn a one-time ₦1,000 bonus for every referral who completes KYC and trades up to $500"
+      />
+
+      {isSuspended && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-destructive/10 border border-destructive/30 text-destructive rounded-xl text-sm font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          Your referral account is currently suspended. Please contact support for assistance.
         </div>
+      )}
 
-        {isSuspended && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm">
-            <AlertCircle className="w-4 h-4" />
-            Your referral account is currently suspended
-          </div>
-        )}
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Stats Cards - Styled with GemOTC Primary (Violet), Secondary (Neon Lime), and Accent (Blue) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Accrued Balance Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-card border border-border relative overflow-hidden group"
+          className="p-6 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 border-2 border-primary/40 relative overflow-hidden"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
+            <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 text-primary">
               <Wallet className="w-6 h-6" />
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                 Accrued Referral Balance
               </p>
-              <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(balance)}</p>
+              <p className="text-3xl font-bold text-secondary mt-1">{formatCurrency(balance)}</p>
             </div>
           </div>
           <div className="mt-4 space-y-1.5">
@@ -273,51 +266,53 @@ export default function ClientReferralsPage() {
                   ? "Ready to collect!"
                   : `${formatCurrency(Math.max(0, MIN_WITHDRAWAL_NGN - balance))} more to unlock withdrawal`}
               </span>
-              <span className="font-semibold text-emerald-400">{progressPercent}%</span>
+              <span className="font-semibold text-secondary">{progressPercent}%</span>
             </div>
             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
         </motion.div>
 
+        {/* Total Earned Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="p-6 rounded-2xl bg-card border border-border relative overflow-hidden group"
+          className="p-6 rounded-xl bg-gradient-to-br from-secondary/20 to-emerald-500/10 border-2 border-secondary/40 relative overflow-hidden"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400">
+            <div className="p-3 rounded-xl bg-secondary/20 border border-secondary/30 text-secondary">
               <TrendingUp className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Earned</p>
-              <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(stats?.totalEarned || 0)}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                From ${(stats?.totalVolumeUSD || 0).toLocaleString()} traded volume
+              <p className="text-3xl font-bold text-foreground mt-1">{formatCurrency(stats?.totalEarned || 0)}</p>
+              <p className="text-xs text-secondary mt-1">
+                From ${(stats?.totalVolumeUSD || 0).toLocaleString()} qualified referral volume
               </p>
             </div>
           </div>
         </motion.div>
 
+        {/* Total Referrals Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="p-6 rounded-2xl bg-card border border-border relative overflow-hidden group lg:col-span-1 sm:col-span-2"
+          className="p-6 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border-2 border-blue-500/40 relative overflow-hidden"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400">
+            <div className="p-3 rounded-xl bg-accent/20 border border-accent/30 text-accent">
               <Users className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Referrals</p>
-              <p className="text-2xl font-bold text-foreground mt-1">{stats?.referralCount || 0}</p>
-              <p className="text-xs text-muted-foreground mt-1">₦1,000 earned per $500 traded</p>
+              <p className="text-3xl font-bold text-foreground mt-1">{stats?.referralCount || 0}</p>
+              <p className="text-xs text-blue-400 mt-1">One-time ₦1,000 per verified $500 trader</p>
             </div>
           </div>
         </motion.div>
@@ -329,31 +324,51 @@ export default function ClientReferralsPage() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="p-6 sm:p-8 rounded-3xl bg-card border border-border flex flex-col justify-between"
+          className="gemex-card p-6 sm:p-8 rounded-2xl flex flex-col justify-between"
         >
           <div className="space-y-5">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-primary/15 text-primary border border-primary/30">
+                <Sparkles className="w-5 h-5" />
+              </div>
               <h2 className="text-xl font-bold text-foreground">Share Your Referral Code</h2>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Invite friends and traders to GemOTC. Whenever they complete a crypto-to-Naira trade, you automatically earn{" "}
-              <strong className="text-foreground">₦1,000 for every $500</strong> they trade.
+              Invite friends and traders to GemOTC. You earn a{" "}
+              <strong className="text-secondary">one-time ₦1,000 referral bonus</strong> for every referred user who{" "}
+              <strong className="text-foreground">completes KYC</strong> and{" "}
+              <strong className="text-foreground">trades up to $500</strong>.
             </p>
 
+            {/* Qualification Steps */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs font-medium text-foreground">1. Friend signs up</span>
+              </div>
+              <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs font-medium text-foreground">2. Completes KYC</span>
+              </div>
+              <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />
+                <span className="text-xs font-medium text-foreground">3. Trades $500+ → ₦1,000</span>
+              </div>
+            </div>
+
             {/* Unique Code Box */}
-            <div className="p-4 bg-background/80 rounded-2xl border border-border flex items-center justify-between">
+            <div className="p-4 bg-background/80 rounded-xl border border-primary/30 flex items-center justify-between gap-3">
               <div className="flex flex-col">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">
                   Your Unique Referral Code
                 </span>
-                <span className="text-xl font-mono font-bold text-emerald-400">
+                <span className="text-xl font-mono font-bold text-secondary">
                   {stats?.referralCode || "GEM-XXXXXX"}
                 </span>
               </div>
               <button
                 onClick={copyReferralCode}
-                className="px-4 py-2.5 rounded-xl bg-primary/15 text-primary hover:bg-primary hover:text-white transition-all flex items-center gap-2 text-sm font-semibold"
+                className="gemex-button-primary px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold"
               >
                 {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedCode ? "Copied" : "Copy Code"}</span>
@@ -361,7 +376,7 @@ export default function ClientReferralsPage() {
             </div>
 
             {/* Direct Signup Link Box */}
-            <div className="p-4 bg-background/80 rounded-2xl border border-border flex items-center justify-between gap-3">
+            <div className="p-4 bg-background/80 rounded-xl border border-border flex items-center justify-between gap-3">
               <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">
                   Direct Referral Signup Link
@@ -373,17 +388,19 @@ export default function ClientReferralsPage() {
               </div>
               <button
                 onClick={copyReferralLink}
-                className="px-3.5 py-2 rounded-xl bg-muted hover:bg-accent text-foreground transition-all flex items-center gap-1.5 text-xs font-semibold shrink-0"
+                className="px-3.5 py-2 rounded-xl bg-muted hover:bg-primary/20 hover:text-primary text-foreground border border-border transition-all flex items-center gap-1.5 text-xs font-semibold shrink-0"
               >
-                {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <LinkIcon className="w-4 h-4" />}
+                {copiedLink ? <Check className="w-4 h-4 text-secondary" /> : <LinkIcon className="w-4 h-4" />}
                 <span>{copiedLink ? "Copied" : "Copy Link"}</span>
               </button>
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/15">
-            <p className="text-xs text-emerald-400 text-center font-medium">
-              Earn lifetime rewards on every settled trade from your referrals • Minimum collectible balance: ₦15,000
+          <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/30">
+            <p className="text-xs text-foreground text-center font-medium">
+              One-time <span className="text-secondary font-bold">₦1,000</span> bonus per KYC-verified referral with{" "}
+              <span className="text-foreground font-bold">$500+</span> traded • Minimum collectible balance:{" "}
+              <span className="text-secondary font-bold">₦15,000</span>
             </p>
           </div>
         </motion.div>
@@ -392,10 +409,12 @@ export default function ClientReferralsPage() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="p-6 sm:p-8 rounded-3xl bg-card border border-border"
+          className="gemex-card p-6 sm:p-8 rounded-2xl"
         >
-          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Banknote className="w-6 h-6 text-emerald-400" />
+          <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-secondary/15 text-secondary border border-secondary/30">
+              <Banknote className="w-5 h-5" />
+            </div>
             Collect Referral Earnings
           </h2>
 
@@ -405,7 +424,7 @@ export default function ClientReferralsPage() {
                 Amount to Withdraw (NGN)
               </label>
               <div className="relative group">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-secondary">
                   ₦
                 </span>
                 <input
@@ -415,7 +434,7 @@ export default function ClientReferralsPage() {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="Min ₦15,000"
-                  className="w-full bg-background border border-border focus:border-primary text-foreground pl-10 pr-4 py-4 rounded-2xl outline-none transition-all text-xl font-bold"
+                  className="w-full bg-background border border-border focus:border-primary text-foreground pl-10 pr-4 py-4 rounded-xl outline-none transition-all text-xl font-bold"
                 />
               </div>
               <div className="flex justify-between mt-2 px-1">
@@ -423,7 +442,7 @@ export default function ClientReferralsPage() {
                 <button
                   type="button"
                   onClick={() => setWithdrawAmount(String(balance))}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 font-bold"
+                  className="text-xs text-secondary hover:opacity-80 font-bold"
                 >
                   Use Max ({formatCurrency(balance)})
                 </button>
@@ -433,9 +452,9 @@ export default function ClientReferralsPage() {
             {/* Payout Bank Account Box */}
             <div
               onClick={() => setShowPayoutModal(true)}
-              className="p-4 bg-background/60 rounded-2xl border border-border hover:border-primary/40 flex items-center gap-4 cursor-pointer transition-all group/payout"
+              className="p-4 bg-background/60 rounded-xl border border-border hover:border-primary/50 flex items-center gap-4 cursor-pointer transition-all group/payout"
             >
-              <div className="p-2.5 rounded-xl bg-muted text-muted-foreground group-hover/payout:bg-primary/10 group-hover/payout:text-primary transition-colors">
+              <div className="p-2.5 rounded-xl bg-primary/15 text-primary border border-primary/30 transition-colors">
                 <Building2 className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
@@ -447,7 +466,7 @@ export default function ClientReferralsPage() {
                     <p className="text-sm font-semibold text-foreground truncate">
                       {activeBankAccount.bankName} • {activeBankAccount.accountNumber}
                     </p>
-                    <p className="text-xs text-emerald-400 truncate mt-0.5">{activeBankAccount.accountName}</p>
+                    <p className="text-xs text-secondary truncate mt-0.5">{activeBankAccount.accountName}</p>
                   </>
                 ) : (
                   <>
@@ -471,7 +490,7 @@ export default function ClientReferralsPage() {
                 Number(withdrawAmount) < MIN_WITHDRAWAL_NGN ||
                 Number(withdrawAmount) > balance
               }
-              className="w-full bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-base shadow-lg shadow-primary/20"
+              className="w-full gemex-button-primary disabled:opacity-40 disabled:cursor-not-allowed font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 text-base shadow-lg shadow-primary/20"
             >
               {isWithdrawing ? (
                 <>
@@ -498,14 +517,14 @@ export default function ClientReferralsPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 sm:p-8 rounded-3xl bg-card border border-border"
+        className="gemex-card p-6 sm:p-8 rounded-2xl"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-6 border-b border-border w-full sm:w-auto">
             <button
               onClick={() => setActiveTab("bonuses")}
               className={`pb-3.5 text-sm font-bold transition-all relative ${
-                activeTab === "bonuses" ? "text-emerald-400" : "text-muted-foreground hover:text-foreground"
+                activeTab === "bonuses" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -513,13 +532,13 @@ export default function ClientReferralsPage() {
                 Bonus History
               </div>
               {activeTab === "bonuses" && (
-                <motion.div layoutId="referralActiveTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
+                <motion.div layoutId="referralActiveTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
             <button
               onClick={() => setActiveTab("withdrawals")}
               className={`pb-3.5 text-sm font-bold transition-all relative ${
-                activeTab === "withdrawals" ? "text-emerald-400" : "text-muted-foreground hover:text-foreground"
+                activeTab === "withdrawals" ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -529,13 +548,13 @@ export default function ClientReferralsPage() {
               {activeTab === "withdrawals" && (
                 <motion.div
                   layoutId="referralActiveTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
                 />
               )}
             </button>
           </div>
-          <div className="px-3 py-1 bg-muted rounded-full text-[10px] text-muted-foreground font-bold uppercase tracking-widest w-fit">
-            ₦1,000 per $500 Traded
+          <div className="px-3 py-1 bg-primary/15 border border-primary/30 rounded-full text-[10px] text-secondary font-bold uppercase tracking-widest w-fit">
+            One-Time ₦1,000 • KYC + $500 Traded
           </div>
         </div>
 
@@ -549,10 +568,10 @@ export default function ClientReferralsPage() {
                       Referred User
                     </th>
                     <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-widest text-right">
-                      Trade Volume (USD)
+                      Qualifying Volume (USD)
                     </th>
                     <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-widest text-right">
-                      Bonus Earned
+                      One-Time Bonus
                     </th>
                     <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-widest text-right">
                       Date
@@ -564,7 +583,7 @@ export default function ClientReferralsPage() {
                     <tr key={bonus.id} className="group hover:bg-muted/20 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold text-xs uppercase">
+                          <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary border border-primary/30 flex items-center justify-center font-bold text-xs uppercase">
                             {(bonus.refereeName || "T").charAt(0)}
                           </div>
                           <span className="font-medium text-foreground">{bonus.refereeName}</span>
@@ -574,7 +593,7 @@ export default function ClientReferralsPage() {
                         ${(bonus.amountUSD || bonus.amountUSDT || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold">
+                        <span className="px-3 py-1 rounded-lg bg-secondary/15 text-secondary border border-secondary/30 font-bold">
                           +{formatCurrency(bonus.bonusNGN)}
                         </span>
                       </td>
@@ -588,12 +607,12 @@ export default function ClientReferralsPage() {
             </div>
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center">
-              <div className="p-4 rounded-2xl bg-background border border-border mb-4">
-                <HistoryIcon className="w-8 h-8 text-muted-foreground" />
+              <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
+                <HistoryIcon className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-foreground font-bold text-lg">No referral bonuses yet</h3>
-              <p className="text-muted-foreground max-w-xs mt-1 text-sm">
-                Share your referral code or link above. When your referred users complete trades, your bonuses will appear here.
+              <p className="text-muted-foreground max-w-sm mt-1 text-sm">
+                Share your referral code or link above. Once a referred user completes KYC and reaches $500 in settled trades, your one-time ₦1,000 bonus will appear here.
               </p>
             </div>
           )
@@ -628,15 +647,15 @@ export default function ClientReferralsPage() {
                     <td className="px-6 py-4 text-sm text-foreground">
                       {w.bankAccount?.bankName} • {w.bankAccount?.accountNumber}
                     </td>
-                    <td className="px-6 py-4 text-right font-bold text-foreground">{formatCurrency(w.amount)}</td>
+                    <td className="px-6 py-4 text-right font-bold text-secondary">{formatCurrency(w.amount)}</td>
                     <td className="px-6 py-4 text-center">
                       <span
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${
                           w.status === "completed"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            ? "bg-secondary/15 text-secondary border-secondary/30"
                             : w.status === "failed"
-                            ? "bg-red-500/10 text-red-400 border-red-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            ? "bg-destructive/15 text-destructive border-destructive/30"
+                            : "bg-amber-500/15 text-amber-400 border-amber-500/30"
                         }`}
                       >
                         {w.status}
@@ -652,8 +671,8 @@ export default function ClientReferralsPage() {
           </div>
         ) : (
           <div className="py-16 flex flex-col items-center justify-center text-center">
-            <div className="p-4 rounded-2xl bg-background border border-border mb-4">
-              <Banknote className="w-8 h-8 text-muted-foreground" />
+            <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
+              <Banknote className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-foreground font-bold text-lg">No withdrawals yet</h3>
             <p className="text-muted-foreground max-w-xs mt-1 text-sm">
@@ -670,11 +689,11 @@ export default function ClientReferralsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-lg bg-card border border-border rounded-3xl overflow-hidden shadow-2xl z-10"
+            className="relative w-full max-w-lg bg-card border border-border rounded-2xl overflow-hidden shadow-2xl z-10"
           >
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-primary/15 text-primary">
+                <div className="p-2.5 rounded-xl bg-primary/15 text-primary border border-primary/30">
                   <Building2 className="w-6 h-6" />
                 </div>
                 <div>
@@ -700,10 +719,10 @@ export default function ClientReferralsPage() {
                       placeholder="Search Nigerian banks..."
                       value={bankSearchQuery}
                       onChange={(e) => setBankSearchQuery(e.target.value)}
-                      className="w-full bg-background border border-border focus:border-primary text-foreground pl-11 pr-4 py-3.5 rounded-2xl outline-none text-sm"
+                      className="w-full bg-background border border-border focus:border-primary text-foreground pl-11 pr-4 py-3.5 rounded-xl outline-none text-sm"
                     />
                   </div>
-                  <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1">
+                  <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                     {filteredBanks.map((bank) => (
                       <button
                         key={bank.code}
@@ -711,7 +730,7 @@ export default function ClientReferralsPage() {
                           setSelectedBank(bank)
                           setPayoutStep(2)
                         }}
-                        className="w-full p-3.5 rounded-2xl bg-background/60 hover:bg-primary/10 border border-transparent hover:border-primary/30 flex items-center justify-between transition-all text-left"
+                        className="w-full p-3.5 rounded-xl bg-background/60 hover:bg-primary/15 border border-transparent hover:border-primary/40 flex items-center justify-between transition-all text-left"
                       >
                         <span className="font-medium text-sm text-foreground">{bank.name}</span>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -723,7 +742,7 @@ export default function ClientReferralsPage() {
 
               {payoutStep === 2 && (
                 <div className="space-y-5">
-                  <div className="p-4 bg-background rounded-2xl border border-border flex items-center justify-between">
+                  <div className="p-4 bg-background rounded-xl border border-border flex items-center justify-between">
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
                         Selected Bank
@@ -749,7 +768,7 @@ export default function ClientReferralsPage() {
                       value={payoutAccountNumber}
                       onChange={(e) => setPayoutAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                       placeholder="0123456789"
-                      className="w-full bg-background border border-border focus:border-primary text-foreground px-5 py-4 rounded-2xl outline-none text-2xl font-mono font-bold text-center tracking-widest"
+                      className="w-full bg-background border border-border focus:border-primary text-foreground px-5 py-4 rounded-xl outline-none text-2xl font-mono font-bold text-center tracking-widest"
                       autoFocus
                     />
                   </div>
@@ -757,7 +776,7 @@ export default function ClientReferralsPage() {
                   <button
                     onClick={handleVerifyAccount}
                     disabled={payoutAccountNumber.length !== 10 || isVerifyingAccount}
-                    className="w-full bg-gradient-to-r from-[#641AE4] to-[#9A24D2] disabled:opacity-40 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2"
+                    className="w-full gemex-button-primary disabled:opacity-40 font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     {isVerifyingAccount ? (
                       <>
@@ -776,29 +795,29 @@ export default function ClientReferralsPage() {
 
               {payoutStep === 3 && (
                 <div className="space-y-6">
-                  <div className="p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl space-y-3">
+                  <div className="p-5 bg-secondary/10 border border-secondary/30 rounded-xl space-y-3">
                     <div className="flex justify-between items-center text-xs uppercase tracking-widest font-bold text-muted-foreground">
                       <span>Verified Account Name</span>
-                      <span className="text-emerald-400">Confirmed</span>
+                      <span className="text-secondary">Confirmed</span>
                     </div>
                     <p className="text-xl font-bold text-foreground">{verifiedAccountName}</p>
                     <div className="flex justify-between items-center text-sm text-muted-foreground pt-2 border-t border-border">
                       <span>{selectedBank?.name}</span>
-                      <span className="font-mono font-bold text-emerald-400">{payoutAccountNumber}</span>
+                      <span className="font-mono font-bold text-secondary">{payoutAccountNumber}</span>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
                     <button
                       onClick={() => setPayoutStep(2)}
-                      className="flex-1 bg-muted hover:bg-accent text-foreground font-bold py-3.5 rounded-2xl transition-all"
+                      className="flex-1 bg-muted hover:bg-muted/80 text-foreground font-bold py-3.5 rounded-xl transition-all"
                     >
                       Back
                     </button>
                     <button
                       onClick={handleSavePayoutAccount}
                       disabled={isSavingAccount}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2"
+                      className="flex-1 gemex-button-secondary font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
                     >
                       {isSavingAccount ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

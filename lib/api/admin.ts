@@ -71,6 +71,10 @@ export interface UserListItem {
   email: string;
   fullName: string;
   role: 'client' | 'dealer' | 'admin';
+  tier?: 1 | 2 | 3;
+  phoneVerified?: boolean;
+  ninVerified?: boolean;
+  cacVerified?: boolean;
   kycStatus: string;
   isActive: boolean;
   emailVerified: boolean;
@@ -204,7 +208,12 @@ export interface UserDetails {
   fullName: string;
   phoneNumber?: string;
   role: 'client' | 'dealer' | 'admin';
+  tier?: 1 | 2 | 3;
+  phoneVerified?: boolean;
+  ninVerified?: boolean;
+  cacVerified?: boolean;
   kycStatus: string;
+  kycRejectionReason?: string;
   isActive: boolean;
   emailVerified: boolean;
   autoPayoutEnabled: boolean;
@@ -237,11 +246,13 @@ export interface UserDetails {
   };
   transactions: {
     id: string;
+    tradeId?: string;
     cryptoAsset: string;
     cryptoAmount: number;
     nairaAmount: number;
     rate: number;
     status: string;
+    failureReason?: string;
     createdAt: string;
   }[];
   auditLogs: {
@@ -279,6 +290,31 @@ export const suspendUser = async (id: string, reason: string): Promise<{ message
 // Reactivate a user
 export const reactivateUser = async (id: string): Promise<{ message: string }> => {
   const response = await apiClient.post<ApiResponse<{ message: string }>>(`/admin/users/${id}/reactivate`);
+  return response.data.data;
+};
+
+// Promote / update a user's verification tier
+export const updateUserTier = async (
+  id: string,
+  tier: 1 | 2 | 3
+): Promise<{
+  message: string;
+  tier: number;
+  kycStatus: string;
+  phoneVerified: boolean;
+  ninVerified: boolean;
+  cacVerified: boolean;
+}> => {
+  const response = await apiClient.post<
+    ApiResponse<{
+      message: string;
+      tier: number;
+      kycStatus: string;
+      phoneVerified: boolean;
+      ninVerified: boolean;
+      cacVerified: boolean;
+    }>
+  >(`/admin/users/${id}/tier`, { tier });
   return response.data.data;
 };
 
@@ -436,6 +472,7 @@ export interface AdminTrade {
   nairaAmount: number;
   depositAddress: string;
   status: string;
+  failureReason?: string;
   cryptoTxId?: string;
   fiatTxRef?: string;
   payoutBankCode?: string;

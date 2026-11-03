@@ -141,6 +141,21 @@ export const useReactivateUser = () => {
   });
 };
 
+// Update user tier mutation
+export const useUpdateUserTier = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, tier }: { id: string; tier: 1 | 2 | 3 }) =>
+      adminApi.updateUserTier(id, tier),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: adminUserKey(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+      queryClient.invalidateQueries({ queryKey: adminDashboardKey });
+    },
+  });
+};
+
 // Create user wallets mutation
 export const useCreateUserWallets = () => {
   const queryClient = useQueryClient();

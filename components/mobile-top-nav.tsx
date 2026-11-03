@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
-import { Menu, X, User, LogOut, Bell, Settings, FileText, BarChart3 } from "lucide-react"
+import { Menu, X, User, LogOut, Bell, Settings, FileText, BarChart3, Users } from "lucide-react"
 import { useLogout } from "@/lib/hooks/use-auth"
 import { useAuth } from "@/lib/providers/auth-provider"
 
@@ -17,6 +17,7 @@ interface MobileTopNavProps {
 // Secondary menu items that appear in the dropdown
 const roleMenuItems = {
   client: [
+    { name: "Referrals", href: "/client/referrals", icon: Users },
     { name: "Notifications", href: "/client/notifications", icon: Bell },
     { name: "Settings", href: "/client/settings", icon: Settings },
   ],

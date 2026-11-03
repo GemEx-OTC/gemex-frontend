@@ -9,7 +9,7 @@ import { OtpVerificationModal } from "@/components/otp-verification-modal"
 import { FloatingRateDock } from "@/components/floating-rate-dock"
 import { useClientDashboard } from "@/lib/hooks/use-dashboard"
 import Link from "next/link"
-import { Clock, Shield, AlertCircle, Loader2, RefreshCw } from "lucide-react"
+import { Clock, Shield, AlertCircle, Loader2, RefreshCw, Gift, ArrowRight } from "lucide-react"
 import Image from "next/image"
 
 const ASSET_CONFIG = {
@@ -454,6 +454,43 @@ export default function ClientDashboardPage() {
             })}
           </div>
         )}
+      </motion.div>
+
+      {/* Referral Program Banner */}
+      <motion.div variants={itemVariants} className="mb-6">
+        <div className="gemex-card p-5 sm:p-6 bg-gradient-to-r from-primary/15 via-card to-secondary/10 border border-primary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+              <Gift className="w-6 h-6 text-secondary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-bold text-foreground">Refer & Earn ₦1,000 per $500 Traded</h3>
+                {user.referralCode && (
+                  <span className="px-2.5 py-0.5 text-xs font-mono font-semibold bg-primary/20 text-secondary rounded-full border border-primary/30">
+                    {user.referralCode}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Invite friends to GemOTC and earn ₦1,000 for every $500 they trade. Collectible from ₦15,000!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-border/60">
+            <div className="text-left sm:text-right">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Referral Balance</p>
+              <p className="text-lg font-bold text-secondary">₦{(user.referralBalance || 0).toLocaleString()}</p>
+            </div>
+            <Link
+              href="/client/referrals"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
+            >
+              <span>{(user.referralBalance || 0) >= 15000 ? "Collect Rewards" : "View Referrals"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </motion.div>
 
       {/* Quick Actions */}

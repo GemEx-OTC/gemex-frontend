@@ -26,6 +26,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [referralCode, setReferralCode] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
@@ -37,6 +38,14 @@ export default function SignupPage() {
   const registerMutation = useRegister()
   const verifyEmailMutation = useVerifyEmail()
   const resendOtpMutation = useResendOtp()
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get("ref")
+      if (ref) setReferralCode(ref.trim().toUpperCase())
+    }
+  }, [])
 
   useEffect(() => {
     if (step === "otp" && resendTimer > 0) {
@@ -77,9 +86,14 @@ export default function SignupPage() {
     }
 
     const normalizedEmail = email.toLowerCase().trim()
+    const normalizedRef = referralCode.trim().toUpperCase()
+    if (normalizedRef && !/^GEM-[A-Z2-9]{6}$/.test(normalizedRef)) {
+      toast.error("Invalid referral code format (expected GEM-XXXXXX).")
+      return
+    }
 
     registerMutation.mutate(
-      { fullName, email: normalizedEmail, password },
+      { fullName, email: normalizedEmail, password, ...(normalizedRef ? { referralCode: normalizedRef } : {}) },
       {
         onSuccess: () => {
           toast.success("Account created! Please verify your email.")
@@ -214,6 +228,10 @@ export default function SignupPage() {
                     </button>
                   </div>
                 </div>
+                <div>
+                  <label htmlFor="referralCode" className="block text-sm font-medium text-[#F0F0F0] mb-2">Referral Code <span className="text-[#9B9BA5] font-normal">(Optional)</span></label>
+                  <input id="referralCode" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="GEM-XXXXXX" maxLength={10} disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg font-mono uppercase tracking-wider transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
+                </div>
                 <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? "Creating account..." : "Continue"}</motion.button>
                 <p className="text-xs text-[#B0B0B8] text-center">By creating an account, you agree to our <a href="#" className="text-[#641AE4] hover:underline">Terms of Service</a> and <a href="#" className="text-[#641AE4] hover:underline">Privacy Policy</a></p>
               </form>
@@ -230,6 +248,10 @@ export default function SignupPage() {
               <form onSubmit={handleVerifyOtp} className="space-y-6">
                 <div className="flex justify-center gap-3">
                   {otp.map((digit, index) => (<input key={index} ref={(el) => { otpRefs.current[index] = el }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={(e) => handleOtpChange(index, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(index, e)} onPaste={handleOtpPaste} disabled={isLoading} className="w-12 h-14 text-center text-xl font-bold bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />))}
+                </div>
+                <div>
+                  <label htmlFor="referralCode" className="block text-sm font-medium text-[#F0F0F0] mb-2">Referral Code <span className="text-[#9B9BA5] font-normal">(Optional)</span></label>
+                  <input id="referralCode" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())} placeholder="GEM-XXXXXX" maxLength={10} disabled={isLoading} className="w-full bg-[#2D2D3D]/50 border border-[#2D2D3D] focus:border-[#641AE4] text-[#F0F0F0] placeholder-[#B0B0B8] px-4 py-3.5 rounded-lg font-mono uppercase tracking-wider transition-all focus:outline-none focus:ring-2 focus:ring-[#641AE4]/20 disabled:opacity-50" />
                 </div>
                 <motion.button type="submit" disabled={isLoading || otp.join("").length !== 6} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full py-3.5 rounded-lg font-semibold text-white bg-gradient-to-r from-[#641AE4] to-[#9A24D2] hover:shadow-lg hover:shadow-[#641AE4]/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{verifyEmailMutation.isPending ? "Verifying..." : "Verify Email"}</motion.button>
                 <div className="text-center">{canResend ? <button type="button" onClick={handleResendOtp} disabled={isLoading} className="text-[#641AE4] hover:text-neon-lime font-medium transition-colors disabled:opacity-50">Resend code</button> : <p className="text-[#B0B0B8]">Resend code in <span className="text-[#F0F0F0] font-medium">{resendTimer}s</span></p>}</div>

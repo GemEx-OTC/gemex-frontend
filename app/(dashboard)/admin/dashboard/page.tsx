@@ -207,6 +207,34 @@ export default function AdminDashboardPage() {
         </motion.div>
       </div>
 
+      {/* Referral Program Summary */}
+      {dashboard.referrals && (
+        <motion.div variants={itemVariants} className="mb-6">
+          <div className="p-6 rounded-xl bg-card border border-border">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Referral Program Overview
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Referred Users</p>
+                <p className="text-2xl font-bold text-foreground">{dashboard.referrals.totalReferredUsers.toLocaleString()}</p>
+              </div>
+              <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Bonuses Earned</p>
+                <p className="text-2xl font-bold text-emerald-400">{formatCurrency(dashboard.referrals.totalBonusAwarded)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{dashboard.referrals.totalBonusCount} qualifying trades</p>
+              </div>
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Collected</p>
+                <p className="text-2xl font-bold text-blue-400">{formatCurrency(dashboard.referrals.totalWithdrawn)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{dashboard.referrals.totalWithdrawalsCount} payouts completed</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Floating Rate Dock */}
       <FloatingRateDock exchangeRates={dashboard.exchangeRates} />
 

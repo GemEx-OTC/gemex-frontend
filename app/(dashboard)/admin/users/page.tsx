@@ -17,6 +17,7 @@ import {
   useReactivateUser,
   useCreateUserWallets,
   useToggleUserAutoPayout,
+  useUpdateUserReferralStatus,
   useAdminDashboard,
 } from "@/lib/hooks/use-admin"
 import type { ListUsersQuery, UserListItem } from "@/lib/api/admin"
@@ -57,6 +58,7 @@ export default function AdminUsersPage() {
   const reactivateMutation = useReactivateUser()
   const createWalletsMutation = useCreateUserWallets()
   const toggleAutoPayoutMutation = useToggleUserAutoPayout()
+  const updateReferralStatusMutation = useUpdateUserReferralStatus()
   
   // Fetch dashboard stats for client metrics
   const { data: dashboardStats } = useAdminDashboard()
@@ -557,6 +559,39 @@ export default function AdminUsersPage() {
                                 transition={{ type: "spring", stiffness: 500, damping: 30 }} 
                                 className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-lg" 
                               />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-[#2D2D3D]/30 rounded-lg space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-[#808090] text-sm mb-0.5">Referral Program</div>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="font-mono text-xs px-2 py-0.5 rounded bg-[#1E1E2B] text-[#C8F55A] border border-[#3D3D4D]">
+                                  {userDetails.referralCode || "No Code"}
+                                </span>
+                                <span className="text-sm font-semibold text-emerald-300">
+                                  Balance: {formatCurrency(userDetails.referralBalance || 0)}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const nextStatus = userDetails.referralStatus === "suspended" ? "active" : "suspended"
+                                updateReferralStatusMutation.mutate(
+                                  { id: userDetails.id, status: nextStatus },
+                                  { onSuccess: () => toast.success(`Referral privileges ${nextStatus === "active" ? "restored" : "suspended"}`) }
+                                )
+                              }}
+                              disabled={updateReferralStatusMutation.isPending}
+                              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                userDetails.referralStatus === "suspended"
+                                  ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                                  : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                              }`}
+                            >
+                              {userDetails.referralStatus === "suspended" ? "Enable Referrals" : "Suspend Referrals"}
                             </button>
                           </div>
                         </div>

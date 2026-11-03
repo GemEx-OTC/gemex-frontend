@@ -17,6 +17,9 @@ export interface DashboardUser {
   ninVerified: boolean;
   cacVerified: boolean;
   tier: number;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: "active" | "suspended";
 }
 
 export interface DashboardMetrics {

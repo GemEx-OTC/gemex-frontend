@@ -15,6 +15,8 @@ export interface User {
   emailVerified: boolean;
   phoneNumber?: string;
   bankVerified?: boolean;
+  referralCode?: string;
+  referralBalance?: number;
 }
 
 export interface AuthTokens {
@@ -40,6 +42,7 @@ export interface RegisterInput {
   fullName: string;
   email: string;
   password: string;
+  referralCode?: string;
 }
 
 export interface LoginInput {

@@ -179,3 +179,17 @@ export const useToggleUserAutoPayout = () => {
     },
   });
 };
+
+// Update user referral status mutation (admin)
+export const useUpdateUserReferralStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status, reason }: { id: string; status: 'active' | 'suspended'; reason?: string }) =>
+      adminApi.updateUserReferralStatus(id, status, reason),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: adminUserKey(id) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    },
+  });
+};

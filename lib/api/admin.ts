@@ -74,6 +74,9 @@ export interface UserListItem {
   kycStatus: string;
   isActive: boolean;
   emailVerified: boolean;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: "active" | "suspended";
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -170,6 +173,13 @@ export interface AdminDashboard {
     total: number;
     pending: number;
   };
+  referrals?: {
+    totalReferredUsers: number;
+    totalBonusAwarded: number;
+    totalBonusCount: number;
+    totalWithdrawn: number;
+    totalWithdrawalsCount: number;
+  };
   exchangeRates: {
     USDT_NGN: number;
     USDC_NGN: number;
@@ -198,6 +208,16 @@ export interface UserDetails {
   isActive: boolean;
   emailVerified: boolean;
   autoPayoutEnabled: boolean;
+  referralCode?: string;
+  referralBalance?: number;
+  referralStatus?: "active" | "suspended";
+  referralBankAccount?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    bankCode: string;
+    isVerified: boolean;
+  } | null;
   bankAccount?: {
     bankName: string;
     accountNumber: string;
@@ -597,5 +617,18 @@ export const getSweepHistory = async (params?: { page?: number; limit?: number }
   if (params?.limit) searchParams.append('limit', params.limit.toString());
   const query = searchParams.toString();
   const response = await apiClient.get<ApiResponse<any>>(`/admin/sweep/history${query ? `?${query}` : ''}`);
+  return response.data.data;
+};
+
+// Update user referral status (admin)
+export const updateUserReferralStatus = async (
+  id: string,
+  status: 'active' | 'suspended',
+  reason?: string
+): Promise<{ id: string; referralStatus: 'active' | 'suspended' }> => {
+  const response = await apiClient.post<ApiResponse<{ id: string; referralStatus: 'active' | 'suspended' }>>(
+    `/admin/users/${id}/referral-status`,
+    { status, reason }
+  );
   return response.data.data;
 };

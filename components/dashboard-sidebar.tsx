@@ -51,6 +51,7 @@ const roleMenus: Record<string, MenuItem[]> = {
     { name: "My Quotes", href: "/client/quotes", icon: ClipboardList },
     { name: "History", href: "/client/history", icon: History },
     { name: "Deposit", href: "/client/wallet", icon: Wallet },
+    { name: "Referrals", href: "/client/referrals", icon: Users },
     { name: "Notifications", href: "/client/notifications", icon: Bell },
     { name: "Settings", href: "/client/settings", icon: Settings },
   ],

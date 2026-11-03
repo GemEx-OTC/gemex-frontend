@@ -54,7 +54,7 @@ export function ManualPayoutModal({ trade, isOpen, onClose, onSuccess }: ManualP
   const [selectedBankCode, setSelectedBankCode] = useState("")
   const [accountNumber, setAccountNumber] = useState("")
   const [accountName, setAccountName] = useState("")
-  const [narration, setNarration] = useState(`Payout for ${trade.transactionId}`)
+  const [narration, setNarration] = useState(`Credit for ${trade.transactionId}`)
   
   // Validation state
   const [verifying, setVerifying] = useState(false)
